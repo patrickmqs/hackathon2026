@@ -196,6 +196,7 @@ Backup: vídeo gravado da jornada + PDF gerado + prints, caso a rede do evento f
 | [UX_FLOW](docs/UX_FLOW.md) | Telas, componentes, estados |
 | [TEAM_TASKS](docs/TEAM_TASKS.md) | Referência detalhada de tarefas, dependências, marcos, contingência |
 | [roadmap/](docs/roadmap/README.md) | Divisão adotada por pessoa (P1 backend · P2 frontend A · P3 frontend B · P4 IA) com roadmap individual |
+| [HANDOFF_IA](docs/HANDOFF_IA.md) | Estado do trabalho de IA (P4), resultados medidos, próximos passos e como rodar |
 | [DECISIONS](docs/DECISIONS.md) | Decisões, hipóteses, descartes, pendências |
 
 ## Licença e dados
