@@ -103,6 +103,11 @@ export interface ProposalVersion {
   pdf: { url: string; generated_at: string; size_bytes: number } | null;
 }
 export interface ProjectEvent { id: string; type: string; actor: string | null; at: string; payload: Record<string, unknown> }
+export interface WhatsappStatus {
+  configured: boolean; connected: boolean; qr: string | null;
+  pairing_code: string | null; phone_number: string | null;
+}
+export interface WhatsappTestResult { ok: boolean; provider_message_id: string | null; error: string | null }
 
 // ---------- chamadas ----------
 export const api = {
@@ -135,6 +140,10 @@ export const api = {
   approve: (id: string, n: number, contentHash: string, note?: string) =>
     request<unknown>("POST", `/proposals/${id}/versions/${n}/approve`, { auth: true, body: { content_hash: contentHash, note: note ?? null } }),
   pdfUrl: (id: string, n: number, download = false) => `${API_URL}/proposals/${id}/versions/${n}/pdf${download ? "?download=1" : ""}`,
+  whatsappStatus: () => request<WhatsappStatus>("GET", "/auth/whatsapp/status"),
+  whatsappQr: () => request<{ qr: string | null }>("GET", "/auth/whatsapp/qr"),
+  whatsappDisconnect: () => request<{ ok: boolean }>("DELETE", "/auth/whatsapp"),
+  whatsappTest: (phone: string) => request<WhatsappTestResult>("POST", "/auth/whatsapp/test", { body: { phone } }),
 };
 
 // ---------- apresentação ----------

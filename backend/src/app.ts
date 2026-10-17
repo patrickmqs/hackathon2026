@@ -6,10 +6,13 @@ import { corsMiddleware } from "./middleware/cors.js";
 import { errorHandler } from "./middleware/errors.js";
 import { analysisRouter } from "./routes/analysis.js";
 import { approvalsRouter } from "./routes/approvals.js";
+import { deliveriesRouter, proposalDeliveriesRouter } from "./routes/deliveries.js";
 import { healthRouter } from "./routes/health.js";
 import { meetingsRouter } from "./routes/meetings.js";
 import { projectsRouter } from "./routes/projects.js";
 import { proposalCreateRouter, proposalsRouter } from "./routes/proposals.js";
+import { whatsappAuthRouter } from "./routes/whatsapp-auth.js";
+import { DeliveryService } from "./services/delivery/service.js";
 
 // Fábrica da aplicação Express — separada do `listen()` para permitir testes
 // de rota com supertest e injeção de dependências (repo/storage fakes).
@@ -34,13 +37,22 @@ export function createApp(deps: AppDeps): express.Express {
     res.json({ status: "ok", message: "Backend rodando" });
   });
 
+  // Serviço de delivery: usa os adapters injetados (ou nenhum, em teste → canais skipped).
+  const deliveryService =
+    deps.deliveryService ??
+    new DeliveryService({ repo: deps.repo, storage: deps.storage, adapters: deps.adapters ?? {} });
+  const deliveryDeps = { ...deps, deliveryService };
+
   app.use(healthRouter());
   app.use("/projects", projectsRouter(deps));
   app.use("/projects/:projectId/proposals", proposalCreateRouter(deps));
   app.use("/meetings", meetingsRouter(deps));
   app.use("/meetings/:meetingId/analysis", analysisRouter(deps));
+  app.use("/proposals", proposalDeliveriesRouter(deliveryDeps));
   app.use("/proposals", proposalsRouter(deps));
   app.use("/proposals", approvalsRouter(deps));
+  app.use("/deliveries", deliveriesRouter(deliveryDeps));
+  app.use("/auth/whatsapp", whatsappAuthRouter());
 
   // 404 — rota não mapeada.
   app.use((_req, res) => {
