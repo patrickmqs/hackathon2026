@@ -6,7 +6,7 @@ import { structuredCompletion, type Usage } from "../../integrations/openai/clie
 import type { Transcript } from "../transcription/types.js";
 import { renderTranscript } from "./gapAudit.js";
 import { loadPrompt, promptId } from "./prompts/loader.js";
-import { validateSummary, type SummaryAnalysis, type SummaryBasis } from "./summaryValidator.js";
+import { itemsForBasis, validateSummary, type SummaryAnalysis, type SummaryBasis } from "./summaryValidator.js";
 
 export const SUMMARY_MAX_ATTEMPTS = 3;
 
@@ -24,11 +24,13 @@ export interface SummarizeResult {
   usage: Usage;
 }
 
-const eligible = (status: string) => status === "confirmed" || status === "edited";
-
-/** Visão enxuta da análise enviada ao modelo (sem source_refs); com basis=reviewed, só itens confirmed/edited. */
+/**
+ * Visão enxuta da análise enviada ao modelo (sem source_refs); com basis=reviewed, só itens confirmed/edited.
+ * O mesmo filtro (`itemsForBasis`) vale para a evidência de números no validador, então o que o modelo
+ * não vê também não serve de prova.
+ */
 export function analysisForPrompt(analysis: SummaryAnalysis, basis: SummaryBasis) {
-  const keep = <T extends { review_status: string }>(xs: T[]) => (basis === "reviewed" ? xs.filter((x) => eligible(x.review_status)) : xs);
+  const keep = <T extends { review_status: string }>(xs: T[]) => itemsForBasis(xs, basis);
   return {
     decisions: keep(analysis.decisions).map((d) => ({
       id: d.id, status: d.status, description: d.description, agreed_by: d.agreed_by,
