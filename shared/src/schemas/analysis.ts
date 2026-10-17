@@ -126,16 +126,46 @@ export const GapAuditOutput = z.object({
   additional_limitations: z.array(z.string()),
 });
 
+// --- Resumo da reunião (etapa 5b, estrito; docs/AI_PIPELINE.md §3) ---
+// Referencia decisões, compromissos e pendências por id: o texto vem da análise.
+export const SummaryTopic = z.object({
+  title: z.string(), // ≤ 80 caracteres
+  summary: z.string(), // 1–3 frases, ≤ 400 caracteres
+  source_refs: z.array(SourceRef), // ≥ 1; segment_id/start_ms preenchidos pelo validador
+});
+
+export const MeetingSummaryOutput = z.object({
+  headline: z.string(), // ≤ 140 caracteres
+  executive_summary: z.string(), // ≤ 700 caracteres
+  topics: z.array(SummaryTopic), // 3–8, em ordem cronológica
+  key_decisions: z.array(z.string()), // ids de decisions "confirmed"
+  pending_decisions: z.array(z.string()), // ids de decisions "pending_validation"
+  next_steps: z.array(z.string()), // ids de commitments
+  open_points: z.array(z.string()), // ids de open_issues
+});
+
+export const SummaryMeta = z.object({
+  prompt_version: z.string(), // "summarize@1.0"
+  model: z.string(),
+  generated_at: z.iso.datetime(),
+  basis: z.enum(["analysis", "reviewed"]),
+});
+
+export const MeetingSummary = MeetingSummaryOutput.extend({ meta: SummaryMeta });
+
 // --- Documento persistido / API ---
 export const MeetingAnalysis = ExtractionOutput.extend({
   meeting_id: z.uuid(),
   open_issues: z.array(OpenIssue),
   transcript_metadata: TranscriptMetadata,
+  meeting_summary: MeetingSummary.nullable(), // null até a etapa 5b concluir
   review_completed: z.boolean().default(false),
   meta: AnalysisMeta,
 });
 
 export type SourceRef = z.infer<typeof SourceRef>;
+export type MeetingSummaryOutput = z.infer<typeof MeetingSummaryOutput>;
+export type MeetingSummary = z.infer<typeof MeetingSummary>;
 export type ExtractionOutput = z.infer<typeof ExtractionOutput>;
 export type GapAuditOutput = z.infer<typeof GapAuditOutput>;
 export type MeetingAnalysis = z.infer<typeof MeetingAnalysis>;

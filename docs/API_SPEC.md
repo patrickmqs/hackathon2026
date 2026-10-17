@@ -38,6 +38,7 @@ Todas as respostas de erro:
 | 400 | `MEETING_INPUT_REQUIRED` | Nem áudio nem transcrição fornecidos |
 | 401 | `DEMO_USER_REQUIRED` | Header `X-Demo-User` ausente em operação que exige ator |
 | 404 | `NOT_FOUND` | Recurso inexistente (`details.resource`, `details.id`) |
+| 404 | `SUMMARY_NOT_AVAILABLE` | A reunião existe e está `analysis_ready`/`reviewed`, mas `meeting_summary` é `null` (etapa 5b falhou ou ainda não foi gerada) — use `POST …/summary` |
 | 409 | `MEETING_NOT_READY` | Análise ainda não está `analysis_ready` |
 | 409 | `ANALYSIS_REVIEW_INCOMPLETE` | Tentativa de gerar proposta sem `review_completed` |
 | 409 | `ANALYSIS_LOCKED` | Tentativa de editar análise após proposta gerada (precisa reabrir — P1) |
@@ -151,6 +152,8 @@ Quando `status ∈ {analysis_ready, reviewed}`, `transcript` está preenchido:
 ```
 `segments` pode ser `[]` para entrada textual sem marcação. Quando `status = failed`, `error = { "code": "AI_PROVIDER_ERROR", "message": "…" }`.
 
+`progress.step` ao longo do pipeline: `transcribing` → `extracting` → `auditing` → `summarizing` → (fim). `summarizing` é uma sub-etapa de `status = analyzing` (não há novo valor de `MeetingStatus`). Quando a reunião chega a `analysis_ready`, o resumo normalmente já está disponível; se a etapa falhou, `meeting_summary` é `null`.
+
 #### `POST /meetings/{meeting_id}/reprocess`
 Reexecuta a análise (e transcrição, se áudio e transcrição ausente). Só permitido em `failed`, `analysis_ready` ou `reviewed` (substitui a análise — a UI pede confirmação). `202 Meeting`.
 
@@ -160,11 +163,40 @@ Reexecuta a análise (e transcrição, se áudio e transcrição ausente). Só p
 
 #### `GET /meetings/{meeting_id}/analysis`
 `200` → `MeetingAnalysis` (schema completo em AI_PIPELINE §3; exemplo em [examples/analysis.example.json](examples/analysis.example.json)).
-`409 MEETING_NOT_READY` se status anterior a `analysis_ready`.
+`409 MEETING_NOT_READY` se status anterior a `analysis_ready`. Inclui `meeting_summary` (objeto `MeetingSummary` ou `null`).
+
+#### `GET /meetings/{meeting_id}/summary`
+`200` → `MeetingSummary` (schema em AI_PIPELINE §3; mesmo objeto de `analysis.meeting_summary`):
+```json
+{
+  "headline": "Portal B2B de pedidos para a Distribuidora Horizonte: primeira fase web, integração com ERP ainda em aberto",
+  "executive_summary": "A Distribuidora Horizonte recebe pedidos por WhatsApp e planilha e quer um portal em que os clientes montem pedidos com sua tabela de preço. Ficou fechado que a primeira fase será web e que o faturamento continua no ERP. A aprovação de crédito no portal, o escopo de relatórios e a integração com o ERP seguem pendentes. O cliente envia a planilha de produtos até sexta e a software house entrega a proposta em uma semana.",
+  "topics": [
+    { "title": "Como os pedidos chegam hoje", "summary": "Pedidos por WhatsApp e planilha, com erros de digitação e atraso no faturamento.", "source_refs": [ { "quote": "os pedidos chegam por WhatsApp e planilha, e a gente erra muito na digitação", "segment_id": "s004", "speaker": "Ana Souza", "start_ms": 41200, "end_ms": 48900 } ] }
+  ],
+  "key_decisions": ["dec_01"],
+  "pending_decisions": ["dec_02"],
+  "next_steps": ["com_01", "com_02", "com_03"],
+  "open_points": ["iss_01", "iss_03"],
+  "meta": { "prompt_version": "summarize@1.0", "model": "<OPENAI_MODEL>", "generated_at": "2026-10-17T14:03:40Z", "basis": "analysis" }
+}
+```
+`404 SUMMARY_NOT_AVAILABLE` se `meeting_summary` é `null`; `409 MEETING_NOT_READY` se a reunião ainda não está `analysis_ready`. O texto, a citação e o status de cada id (`dec_*`, `com_*`, `iss_*`) vêm de `GET …/analysis`; o frontend resolve os ids localmente.
+
+#### `POST /meetings/{meeting_id}/summary` · requer `X-Demo-User`
+(Re)gera o resumo, substituindo o atual. Síncrono (alvo < 30 s, RNF04). Corpo opcional:
+```json
+{ "basis": "analysis" }
+```
+- `basis = "analysis"` (padrão): usa todos os itens da análise, como na geração automática.
+- `basis = "reviewed"`: usa só itens `confirmed`/`edited`; exige `review_completed = true` (`409 ANALYSIS_REVIEW_INCOMPLETE`). É o resumo a mostrar depois da revisão, já sem itens rejeitados.
+
+`200` → `MeetingSummary`. Erros: `409 MEETING_NOT_READY`, `409 ANALYSIS_REVIEW_INCOMPLETE`, `500 AI_OUTPUT_INVALID`, `500 AI_PROVIDER_ERROR`. Gera o evento `analysis.summary_generated`. Permitido mesmo com `review_completed = true` (o resumo não é parte da análise travada por `ANALYSIS_LOCKED`).
 
 #### `PUT /meetings/{meeting_id}/analysis` · requer `X-Demo-User`
 Substitui o conteúdo revisado. O corpo é o `MeetingAnalysis` completo; o backend:
 - preserva `meta` original e grava `meta.reviewed_by`, `meta.reviewed_at`;
+- preserva `meeting_summary` como está no servidor (campo gerenciado só por `POST …/summary` e pelo pipeline; valor enviado no corpo é ignorado);
 - aceita alterações em texto dos itens e em `review_status`/`reviewer_note`;
 - rejeita se `review_completed` já é `true` e existe proposta (`409 ANALYSIS_LOCKED`).
 
@@ -324,13 +356,14 @@ Valida `X-Hub-Signature-256` com `WHATSAPP_APP_SECRET`. Para cada `statuses[]`: 
 ### 4.10 Histórico (P1)
 
 #### `GET /projects/{project_id}/events?limit&offset`
-`200 { items: [ { "id", "type", "actor", "at", "payload" } ], total }` — tipos: `project.created`, `meeting.created`, `meeting.transcribed`, `analysis.ready`, `analysis.reviewed`, `proposal.version_created`, `proposal.approved`, `delivery.authorized`, `channel.sent`, `channel.failed`, `channel.skipped`, `channel.delivered`.
+`200 { items: [ { "id", "type", "actor", "at", "payload" } ], total }` — tipos: `project.created`, `meeting.created`, `meeting.transcribed`, `analysis.ready`, `analysis.summary_generated`, `analysis.reviewed`, `proposal.version_created`, `proposal.approved`, `delivery.authorized`, `channel.sent`, `channel.failed`, `channel.skipped`, `channel.delivered`.
 
 ## 5. Resumo dos contratos
 
 | # | Contrato | Onde está definido | Exemplo |
 |---|----------|--------------------|---------|
-| 1 | Schema da análise (`MeetingAnalysis`) | AI_PIPELINE §3 | `examples/analysis.example.json` |
+| 1 | Schema da análise (`MeetingAnalysis`, inclui `meeting_summary`) | AI_PIPELINE §3 | `examples/analysis.example.json` |
+| 1b | Resumo da reunião (`MeetingSummary`) | AI_PIPELINE §3, §4.4 | `examples/summary.example.json` |
 | 2 | Schema da proposta (`ProposalContent`) | AI_PIPELINE §8 | `examples/proposal_content.example.json` |
 | 3 | Modelo de aprovação (`Approval`) | §4.6 | `examples/approval.example.json` |
 | 4 | Geração/recuperação de PDF | §4.5 | — |
@@ -347,7 +380,7 @@ Valida `X-Hub-Signature-256` com `WHATSAPP_APP_SECRET`. Para cada `statuses[]`: 
 | Novo projeto | `POST /projects` |
 | Projeto | `GET /projects/{id}`, `GET /meetings/{id}`, `GET /proposals/{id}`, `GET /projects/{id}/events` |
 | Nova reunião | `POST /projects/{id}/meetings`, `GET /meetings/{id}` (polling) |
-| Revisão da análise | `GET/PUT /meetings/{id}/analysis`, `POST …/complete-review` |
+| Revisão da análise | `GET/PUT /meetings/{id}/analysis`, `POST …/complete-review`, `GET/POST /meetings/{id}/summary` |
 | Proposta (editor) | `POST /projects/{id}/proposals`, `GET /proposals/{id}/versions/{n}`, `POST /proposals/{id}/versions` |
 | PDF | `POST/GET /proposals/{id}/versions/{n}/pdf` |
 | Aprovação | `POST /proposals/{id}/versions/{n}/approve` |

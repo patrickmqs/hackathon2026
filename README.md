@@ -8,7 +8,7 @@ Plataforma que transforma reuniões comerciais (áudio ou transcrição) em prop
 
 1. Você cria um projeto com os dados do cliente.
 2. Envia o áudio da reunião (ou cola a transcrição).
-3. A IA transcreve (se áudio) e extrai, em categorias separadas: **necessidades**, **requisitos e módulos**, **decisões** (confirmadas × pendentes), **compromissos** (quem, o quê, prazo dito), **pendências e ambiguidades** e **sugestões técnicas da IA** — cada item com citação literal da transcrição.
+3. A IA transcreve (se áudio), gera um **resumo da reunião** (manchete, resumo executivo e tópicos, para leitura em ~1 minuto) e extrai, em categorias separadas: **necessidades**, **requisitos e módulos**, **decisões** (confirmadas × pendentes), **compromissos** (quem, o quê, prazo dito), **pendências e ambiguidades** e **sugestões técnicas da IA** — cada item com citação literal da transcrição.
 4. Você revisa: confirma, edita, rejeita ou marca "precisa esclarecimento".
 5. O sistema monta a proposta (16 seções) a partir dos dados validados; horas, equipe e cronograma vêm de um motor de regras determinístico — a IA redige, não estima.
 6. Gera o PDF da versão; cada edição é uma nova versão imutável.
@@ -143,6 +143,8 @@ Não há autenticação real neste MVP. Operações de revisão, aprovação e a
 | Prisma Studio | `npx prisma studio` (em `backend/`) |
 | Seed de demo | `npm run seed:demo` |
 | Verificar OpenAI | `npm run check:openai` |
+| Gerar áudio sintético da reunião de exemplo | `npm run tts:sample` (em `scripts/`) |
+| Comparar modelos de transcrição | `npm run bench:transcribe -- <audio.mp3>` (em `scripts/`) |
 | Typecheck geral | `npm run typecheck --workspaces` |
 
 ## Testes
@@ -154,7 +156,7 @@ npm test -w frontend             # componentes (se houver tempo — P1)
 npm run e2e:demo                 # scripts/e2e-demo.ts: percorre a jornada completa pela API e valida estados
 ```
 
-O que os testes de IA verificam (gabarito em `sample_data/sample_analysis_expected.json`): schema válido, ≥ 90% das citações existem na transcrição, ≥ 80% dos itens do gabarito presentes, nenhuma sugestão classificada como decisão, contradição plantada detectada, compromisso condicional não sai como confirmado, estimativas determinísticas. Detalhes: [docs/AI_PIPELINE.md §11](docs/AI_PIPELINE.md).
+O que os testes de IA verificam (gabarito em `sample_data/sample_analysis_expected.json`): schema válido, ≥ 90% das citações existem na transcrição, ≥ 80% dos itens do gabarito presentes, nenhuma sugestão classificada como decisão, contradição plantada detectada, compromisso condicional não sai como confirmado, estimativas determinísticas, e o resumo da reunião (decisões pendentes nunca em `key_decisions`, contradição em `open_points`, sem números inventados). Detalhes: [docs/AI_PIPELINE.md §11](docs/AI_PIPELINE.md).
 
 ## Integrações externas
 
@@ -171,8 +173,8 @@ Limitações conhecidas: Gmail `sent` = aceito pela API, não entregue; WhatsApp
 Pré-demo: `npm run seed:demo` cria um projeto em cada etapa; destinatário de teste envia "oi" ao número WhatsApp de teste (abre janela de 24 h); Gmail já conectado em *Configurações*.
 
 1. **Dashboard** → "Novo projeto" → *Distribuidora Horizonte (fictícia)*.
-2. **Nova reunião** → aba *Enviar áudio* → `sample_data/sample_meeting.mp3` → painel de progresso (transcrevendo → analisando → auditando). *(Plano B: colar `sample_transcript_pt.txt`.)*
-3. **Revisão** → mostrar categorias; abrir um compromisso e "ver na transcrição"; mostrar decisão pendente vs confirmada; mostrar sugestão da IA rotulada; **rejeitar** um requisito; marcar uma pendência como "precisa esclarecimento"; concluir revisão.
+2. **Nova reunião** → aba *Enviar áudio* → `sample_data/sample_meeting.mp3` (~10 min, voz sintética; não toque o áudio inteiro na demo) → painel de progresso (transcrevendo → analisando → auditando → resumindo). *(Plano B: colar `sample_transcript_pt.txt`.)*
+3. **Revisão** → ler o **resumo da reunião** no topo (manchete, resumo executivo, tópicos; clicar num tópico salta para o trecho da transcrição) em vez de ouvir o áudio; mostrar categorias; abrir um compromisso e "ver na transcrição"; mostrar decisão pendente vs confirmada; mostrar sugestão da IA rotulada; **rejeitar** um requisito; marcar uma pendência como "precisa esclarecimento"; concluir revisão.
 4. **Proposta** → gerar; navegar seções; mostrar estimativas com faixa e premissas ("base demonstrativa"); mostrar que o item rejeitado não entrou e o pendente foi para "Pontos pendentes"; editar sumário → **v2**.
 5. **PDF** → gerar v2 → abrir; rodapé "v2 · rascunho".
 6. **Aprovar** v2 como "Rafael" → badge "Aprovada". Tentar editar → bloqueado → "criar nova versão".

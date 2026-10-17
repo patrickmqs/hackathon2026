@@ -54,7 +54,14 @@
       { "key": "falta_prazo", "topic": "prazo ou evento-alvo do cliente" },
       { "key": "falta_orcamento", "topic": "orçamento ou faixa de investimento" },
       { "key": "falta_decisor", "topic": "quem decide do lado do cliente" }
-    ]
+    ],
+    "summary": {
+      "key_decisions_must_include": ["dec_web_first", "dec_faturamento_erp"],
+      "pending_decisions_must_include": ["dec_credito_no_portal", "dec_relatorios_fase1"],
+      "open_points_must_include": ["iss_credito_todo_pedido"],
+      "must_not_appear_as_decision_or_next_step": ["sug_app_representantes_offline"],
+      "limits": { "headline_max_chars": 140, "executive_summary_max_chars": 700, "min_topics": 3, "max_topics": 8 }
+    }
   },
   "thresholds": {
     "min_quote_fidelity": 0.9,
