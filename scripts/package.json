@@ -3,15 +3,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check:openai": "tsx --env-file=../.env check-openai.ts"
+    "check:openai": "tsx --env-file=../.env check-openai.ts",
+    "tts:sample": "tsx --env-file=../.env tts-sample-meeting.ts",
+    "bench:transcribe": "tsx --env-file=../.env bench-transcribe.ts"
   },
   "dependencies": {
     "openai": "^6.0.0",
     "zod": "^4.0.0"
   },
   "devDependencies": {
+    "@types/node": "^22.0.0",
     "tsx": "^4.19.0",
-    "typescript": "^5.6.0",
-    "@types/node": "^22.0.0"
+    "typescript": "^5.6.0"
   }
 }

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="{{ content.meta.language }}">
+<head>
+  <meta charset="utf-8" />
+  <title>{{ content.title }}</title>
+  <style>{{ styles | safe }}</style>
+</head>
+<body>
+  <header>
+    <h1>{{ content.title }}</h1>
+    <p class="client">{{ content.client.company }}</p>
+    <p class="meta">{{ content.meta.revision_label }} · gerado em {{ content.meta.created_at }}</p>
+  </header>
+
+  <section>
+    <h2>Sumário executivo</h2>
+    <p>{{ content.executive_summary }}</p>
+  </section>
+
+  <section>
+    <h2>Contexto de negócio</h2>
+    <p>{{ content.business_context }}</p>
+  </section>
+
+  {% if content.objectives.length %}
+  <section>
+    <h2>Objetivos</h2>
+    <ul>{% for obj in content.objectives %}<li>{{ obj }}</li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+
+  <section>
+    <h2>Escopo</h2>
+    <h3>Incluído</h3>
+    <ul>{% for item in content.scope.in_scope %}<li>{{ item }}</li>{% else %}<li><em>—</em></li>{% endfor %}</ul>
+    <h3>Fora do escopo</h3>
+    <ul>{% for item in content.scope.out_of_scope %}<li>{{ item }}</li>{% else %}<li><em>—</em></li>{% endfor %}</ul>
+  </section>
+
+  <section>
+    <h2>Módulos</h2>
+    {% for m in content.modules %}
+    <article>
+      <h3>{{ m.name }} <span class="complexity">(complexidade {{ m.complexity }})</span></h3>
+      <p>{{ m.description }}</p>
+      {% if m.features.length %}
+      <ul>{% for f in m.features %}<li>{{ f }}</li>{% endfor %}</ul>
+      {% endif %}
+    </article>
+    {% else %}
+    <p><em>Nenhum módulo identificado.</em></p>
+    {% endfor %}
+  </section>
+
+  <section>
+    <h2>Estimativas</h2>
+    <p>Total: <strong>{{ content.estimates.total_hours_min }}–{{ content.estimates.total_hours_max }} horas</strong>
+      · {{ content.total_weeks }} semanas · confiança {{ content.estimates.confidence }}</p>
+    <table>
+      <thead><tr><th>Perfil</th><th>Min</th><th>Max</th></tr></thead>
+      <tbody>
+        {% for profile, totals in content.estimates.totals_by_profile %}
+        <tr><td>{{ profile }}</td><td>{{ totals.hours_min }}</td><td>{{ totals.hours_max }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Cronograma</h2>
+    {% for phase in content.schedule %}
+    <p><strong>{{ phase.name }}</strong> — {{ phase.duration_weeks }} semana(s)</p>
+    {% endfor %}
+  </section>
+
+  <section>
+    <h2>Condições comerciais</h2>
+    <p>Status: {{ content.commercial.status }}</p>
+    {% if content.commercial.hourly_rates %}
+    <ul>{% for profile, rate in content.commercial.hourly_rates %}<li>{{ profile }}: {{ content.commercial.currency }} {{ rate }}/h</li>{% endfor %}</ul>
+    {% endif %}
+    {% if content.commercial.disclaimer %}<p class="disclaimer">{{ content.commercial.disclaimer }}</p>{% endif %}
+  </section>
+
+  {% if content.risks.length %}
+  <section>
+    <h2>Riscos</h2>
+    {% for r in content.risks %}
+    <p><strong>{{ r.description }}</strong>{% if r.mitigation %} — mitigação: {{ r.mitigation }}{% endif %}</p>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if content.next_steps.length %}
+  <section>
+    <h2>Próximos passos</h2>
+    <ul>{% for step in content.next_steps %}<li>{{ step }}</li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+
+  <footer>
+    <p>Proposta gerada por Proposal AI · {{ content.vendor.company }}</p>
+  </footer>
+</body>
+</html>

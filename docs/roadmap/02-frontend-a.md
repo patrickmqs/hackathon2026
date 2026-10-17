@@ -16,6 +16,7 @@ Pastas: setup do `frontend/`, `services/api.ts`, `lib/`, `features/{projects,mee
 | FA6 | T4 Nova reunião: abas texto/áudio, dropzone, `ProcessingPanel` com polling, erro + reprocessar | P0 | H5–8 | FA5, B5 | Critérios "Reunião (texto)" |
 | FA7 | T5 Revisão — estrutura: `AnalysisSections` por categoria, barra de progresso, salvar/concluir | P0 | H7–10 | FA3, B7 | **Marco H+10:** revisar e concluir pela UI |
 | FA8 | T5 Revisão — `ReviewableItemCard` (confirmar/editar/rejeitar/precisa esclarecimento, edição inline), `TranscriptPane` com destaque da citação, rótulo visual de sugestão da IA e de decisão pendente × confirmada | P0 | H9–13 | FA7 | Critérios "Análise" e "Revisão" |
+| FA8b | T5/T3 — `SummaryPanel` (manchete, resumo executivo, tópicos com salto para a transcrição, chips por id que levam ao item, badge de base, "Atualizar resumo", "Copiar resumo", estado vazio) e resumo no card da reunião em T3; mock a partir de `docs/examples/summary.example.json` | P0 | H10–13 | FA8, P4:IA17 | UX_FLOW T5; leitura do resumo ≲ 1 min |
 | FA9 | Guard de alterações não salvas; estados vazio/erro/carregando em todas as telas | P0 | H13–16 | FA8 | Sem erro no console |
 | FA10 | Ajudar P3 (editor de proposta / tela de envio) conforme gargalo | P0 | H14–20 | — | Combinado no checkpoint H+14 |
 | FA11 | `EventTimeline` em T3 | P1 | H20–22 | P1:B17 | — |

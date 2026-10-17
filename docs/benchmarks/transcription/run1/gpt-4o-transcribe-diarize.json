@@ -1,0 +1,2161 @@
+{
+  "text": "Pessoal, bom dia! Obrigado por separarem esse tempo. Eu sou Rafael, gerente de contas da Software House. A Marina é nossa tech lead e vai participar mais na parte técnica.\nAnna, Carlos, quero ouvir de vocês como funciona a operação hoje e o que vocês imaginam para esse portal. Bom dia, Rafael. Bom dia, Marina. Eu sou a Ana, diretora comercial da distribuidora Horizonte.\nO Carlos é o responsável pela ti aqui. Vou começar explicando o nosso problema, porque é ele que está pesando. Bom dia: eu cuido da infra estrutura e dos sistemas internos, inclusive do nosso e r p. Nós somos uma distribuidora de alimentos e bebidas. Atendemos mercados e restaurantes da região. Hoje os pedidos chegam por WhatsApp e planilha, e a gente erra muito na digitação.\nO vendedor recebe a mensagem, digita no sistema, e quando o cliente muda de idéia, a gente perde o controle do que foi alterado. Entendi; e esse erro de digitação gera o quê, na prática? Devolução? Divergência na entrega? Os dois: tem entrega com produto trocado, tem nota emitida errada, e o pior é o atraso, porque o pedido fica parado esperando alguém digitar.\nO que a gente quer é faturar no mesmo dia. Faz sentido. Então o objetivo principal é tirar a digitação manual do meio e acelerar o faturamento. Isso.\nE tem uma segunda coisa: os nossos clientes reclamam que não sabem o que está disponível. Eles ligam perguntando se tem determinado produto, e o vendedor precisa olhar o estoque. Então vocês imaginam um portal onde o cliente final, o dono do mercado ou do restaurante entra, vê o que tem, e monta o pedido sozinho. Exatamente; um catálogo de produtos...\nO cliente escolhe, coloca no carrinho e envia. Só que cada cliente tem uma tabela de preço diferente. Isso tem que aparecer certo. Se o preço aparecer errado, o portal perde a credibilidade no primeiro dia. Tabela de preço por cliente\nQuantas tabelas vocês têm, mais ou menos? Ih! são várias! Tem a tabela por região, tem condição especial para com os clientes grandes... A Carla sabe melhor como isso tá no sistema. Está tudo no e r p, em cadastros separados. Eu consigo exportar, mas a regra de qual cliente usa qual tabela, às vezes está na cabeça do pessoal comercial. Isto é importante para a gente.\nVamos precisar mapear essa regra, Anna, sobre o fluxo do pedido. O cliente monta o pedido no portal, e o que acontece depois? O cliente monta o pedido ali e manda. Aí cai pra gente e o vendedor da conta confere. E o faturamento? Hoje sai pelo r p, certo? A idéia é o portal passar a emitir nota também?\nO portal só envia o pedido para o erp. Não. Nota fiscal é com o erp. A gente não quer mexer nisso. O portal só envia o pedido e o erp continua faturando. Ótimo! Então fechamos que o faturamento continua saindo pelo erp e o portal só envia o pedido. Carlos, está de acordo? Está.\nFechado, não quero mudar o fluxo de nota, de jeito nenhum. Perfeito! Isso simplifica bastante o escopo. Agora, Carlos, a integração. O portal precisa conversar com o r p para consultar estoque e para enviar o pedido aprovado. Precisa falar com o nosso r p, senão não adianta. O estoque que o cliente vê tem que ser o estoque real.\nQual é a versão do r p? Vocês têm contato com fornecedor? Porque o esforço muda muito se ele tem uma a p i documentada ou se vamos depender de exportação de arquivos. Isso eu não sei te dizer agora. Faz tempo que ninguém mexe nessa parte. Se o pessoal do r p responder, eu vejo se tem a p i. Combinado. Mas você consegue ter uma resposta até quando? Depende deles.\nEu mando o e mail hoje, mas não controlo a resposta. Outra coisa importante: o sistema tem de ser rápido; o pessoal do mercado não tem paciência.\nSe demorar para abrir eles voltam para o WhatsApp. Rápido! Em que sentido? Abrir a página, carregar o catálogo, enviar o pedido tem algum número em mente? Quantos usuários ao mesmo tempo? Ah! rápido normal, que não trave. Eu não sei falar em número, só sei que não pode ser lento. Tudo bem, a gente volta nesse ponto depois. Falando de plataforma.\nVocês pensam em site, em aplicativo no celular, nos dois? Os clientes usam muito o celular; eu queria algo simples de usar, tipo o app do iFood, que qualquer um aprende em um minuto. Entendi a referência. Mas o iFood é um app nativo. Para primeira fase, a gente recomenda começar com site responsivo que funciona bem no celular.\nE deixar o aplicativo nativo para uma fase posterior. Isso reduz custo e prazo. Faz sentido. Se funcionar bem o celular pelo navegador, para mim está ótimo. Então, para registrar: primeiro web, app depois. Isso, pode ser. Primeiro web, app depois. ANOTADO: DECISÃO FECHADA.\nFalando em app, tenho uma sugestão para o futuro: os representantes de vendas de vocês visitam clientes em campo, muitas vezes sem sinal bom. A gente poderia pensar em um aplicativo para os representantes, com um modo off line, que sincroniza quando voltar a ter internet. Não sei, isto é mais complicado, e eu nem sei se os representantes irão usar.\nSem problema -deixo registrada como uma idéia para uma fase futura. Ana, vamos falar de crédito. Vocês fazem análise de crédito dos clientes antes de aprovar o pedido? Fazemos.\nTodo pedido passa pelo crédito antes de ser liberado. O Financeiro olha o limite e a inadimplência do cliente. Então o portal precisaria ter uma etapa de aprovação de crédito dentro do fluxo? A aprovação de crédito talvez entre no portal. Preciso ver com o Financeiro como eles querem trabalhar. Pode ser que eles prefiram continuar aprovando fora do portal.\nDo Portal. Certo, então esse ponto fica pendente de validação do lado de vocês. Fica. Eu falo com o financeiro essa semana e te dou um retorno. Outro ponto, relatórios. Vocês falaram dos vendedores. Eles vão querer acompanhar pedidos, ver o que cada cliente comprou. Querem, sim. Um relatório de pedidos por cliente seria muito bom.\nMas acho que isso pode ficar para depois. Não sei se na primeira fase. Se der tempo, a gente coloca. Tudo bem; então relatórios ficam como possível, sem compromisso de entrar na primeira fase. Isso! Vamos ver como fica depois que vocês mandarem a proposta. Sobre integração, Anna, você mencionou mais coisas além do r p?\nVocês usam outros sistemas? Usamos várias coisas: tem o sistema de logística, tem a planilha do financeiro, tem o crm; o portal precisa integrar com tudo o que a gente usa, pra não ficar uma ilha. Quando você diz tudo, são esses três, erp, logística, crm? Em princípio, sim, mas pode ter mais.\nEu preciso confirmar com o Carlos. Eu levanto a lista de sistemas, mas a prioridade é o r p. O resto a gente vê. Combinado. Vamos tratar o r p como a integração principal, e os outros como a confirmar. Voltando ao fluxo de pedido.\nAna, uma dúvida: se o crédito é analisado em todo pedido, isso pode atrasar justamente o faturamento no mesmo dia que vocês querem. Olha, na verdade isso só vale para os clientes novos. Os clientes antigos compram direto, sem análise, porque já têm limite liberado. Entendi.\nMas antes você disse que todo pedido passa pelo crédito. É, eu me expressei mal; mas também tem cliente antigo que passa quando o pedido é muito grande; preciso ver isso melhor com o financeiro. Isso afeta bastante o desenho do fluxo.\nEntão vou anotar como ponto a esclarecer. Sobre usuários e acesso, o cliente vai precisar de login, imagino, cada mercado com a sua senha. Sim, vamos precisar de autenticação. Vocês têm preferência, algum login único da empresa? Não, pode ser email e senha mesmo. Não temos nada de s s o por aqui. Certo. Então a gente assume e email e senha e deixa registrado como premissa.\nVamos fechar os próximos passos. Ana, o que a Marina e a equipe precisam de vocês para montar uma proposta bem feita? Eu te mando a planilha de produtos até sexta, com as tabelas de preço que a gente usa hoje. Perfeito.\nEssa planilha vai ajudar a gente a dimensionar o catálogo. Do nosso lado, a gente volta com a proposta em uma semana. Isso mesmo. Em uma semana vocês recebem a proposta. Carlos, qualquer novidade do erp você me avisa. Aviso, sim, assim que o fornecedor responder. Ótimo! Foi bem produtiva essa conversa.\nPara nós também. Obrigado, pessoal. Até a próxima. Obrigada a todos.",
+  "task": "transcribe",
+  "duration": 625.08,
+  "segments": [
+    {
+      "type": "transcript.text.segment",
+      "text": " Pessoal,",
+      "speaker": "A",
+      "start": 0.15000000000000013,
+      "end": 0.6500000000000001,
+      "id": "seg_0"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " bom dia!",
+      "speaker": "A",
+      "start": 0.8500000000000003,
+      "end": 1.3500000000000003,
+      "id": "seg_1"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Obrigado por separarem esse tempo.",
+      "speaker": "A",
+      "start": 1.9000000000000006,
+      "end": 3.95,
+      "id": "seg_2"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Eu sou Rafael,",
+      "speaker": "A",
+      "start": 4.6000000000000005,
+      "end": 5.45,
+      "id": "seg_3"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " gerente de contas da Software House.",
+      "speaker": "A",
+      "start": 5.75,
+      "end": 7.7,
+      "id": "seg_4"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " A Marina é nossa tech lead e vai participar mais na parte técnica.",
+      "speaker": "A",
+      "start": 8.3,
+      "end": 12.4,
+      "id": "seg_5"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Anna,",
+      "speaker": "A",
+      "start": 13.166,
+      "end": 13.516,
+      "id": "seg_6"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Carlos,",
+      "speaker": "A",
+      "start": 13.816,
+      "end": 14.266,
+      "id": "seg_7"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " quero ouvir de vocês como funciona a operação hoje e o que vocês imaginam para esse portal.",
+      "speaker": "A",
+      "start": 14.766,
+      "end": 20.366,
+      "id": "seg_8"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Bom dia,",
+      "speaker": "B",
+      "start": 20.916000000000004,
+      "end": 21.466,
+      "id": "seg_9"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Rafael.",
+      "speaker": "B",
+      "start": 21.866000000000003,
+      "end": 22.166000000000004,
+      "id": "seg_10"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Bom dia, Marina.",
+      "speaker": "B",
+      "start": 22.566000000000003,
+      "end": 23.366000000000007,
+      "id": "seg_11"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Eu sou a Ana,",
+      "speaker": "B",
+      "start": 24.066000000000003,
+      "end": 24.816000000000003,
+      "id": "seg_12"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " diretora comercial da distribuidora Horizonte.",
+      "speaker": "B",
+      "start": 25.066000000000003,
+      "end": 27.366000000000007,
+      "id": "seg_13"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " O Carlos é o responsável pela ti aqui.",
+      "speaker": "B",
+      "start": 27.732,
+      "end": 30.381999999999998,
+      "id": "seg_14"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Vou começar explicando o nosso problema,",
+      "speaker": "B",
+      "start": 31.082,
+      "end": 32.882,
+      "id": "seg_15"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " porque é ele que está pesando.",
+      "speaker": "B",
+      "start": 33.332,
+      "end": 34.682,
+      "id": "seg_16"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Bom dia:",
+      "speaker": "A",
+      "start": 34.932,
+      "end": 35.532,
+      "id": "seg_17"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " eu cuido da infra estrutura e dos sistemas internos, inclusive do nosso e r p.",
+      "speaker": "A",
+      "start": 36.082,
+      "end": 41.682,
+      "id": "seg_18"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Nós somos uma distribuidora de alimentos e bebidas.",
+      "speaker": "B",
+      "start": 42.082,
+      "end": 45.282,
+      "id": "seg_19"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Atendemos mercados e restaurantes da região.",
+      "speaker": "B",
+      "start": 45.682,
+      "end": 48.182,
+      "id": "seg_20"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Hoje os pedidos chegam por WhatsApp e planilha,",
+      "speaker": "B",
+      "start": 49.032,
+      "end": 51.932,
+      "id": "seg_21"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " e a gente erra muito na digitação.",
+      "speaker": "B",
+      "start": 52.382,
+      "end": 54.282,
+      "id": "seg_22"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " O vendedor recebe a mensagem,",
+      "speaker": "B",
+      "start": 54.716,
+      "end": 56.666,
+      "id": "seg_23"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " digita no sistema,",
+      "speaker": "B",
+      "start": 57.116,
+      "end": 58.166,
+      "id": "seg_24"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " e quando o cliente muda de idéia,",
+      "speaker": "B",
+      "start": 58.666,
+      "end": 60.416,
+      "id": "seg_25"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " a gente perde o controle do que foi alterado.",
+      "speaker": "B",
+      "start": 60.866,
+      "end": 63.266,
+      "id": "seg_26"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Entendi; e esse erro de digitação gera o quê,",
+      "speaker": "C",
+      "start": 63.416,
+      "end": 67.116,
+      "id": "seg_27"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " na prática?",
+      "speaker": "C",
+      "start": 67.366,
+      "end": 67.916,
+      "id": "seg_28"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Devolução?",
+      "speaker": "C",
+      "start": 68.566,
+      "end": 69.166,
+      "id": "seg_29"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Divergência na entrega?",
+      "speaker": "C",
+      "start": 69.666,
+      "end": 70.816,
+      "id": "seg_30"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Os dois:",
+      "speaker": "B",
+      "start": 70.966,
+      "end": 71.566,
+      "id": "seg_31"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " tem entrega com produto trocado,",
+      "speaker": "B",
+      "start": 72.066,
+      "end": 73.916,
+      "id": "seg_32"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " tem nota emitida errada,",
+      "speaker": "B",
+      "start": 74.316,
+      "end": 75.76599999999999,
+      "id": "seg_33"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " e o pior é o atraso, porque o pedido fica parado esperando alguém digitar.",
+      "speaker": "B",
+      "start": 76.366,
+      "end": 81.166,
+      "id": "seg_34"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " O que a gente quer é faturar no mesmo dia.",
+      "speaker": "B",
+      "start": 81.716,
+      "end": 84.616,
+      "id": "seg_35"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Faz sentido.",
+      "speaker": "A",
+      "start": 84.966,
+      "end": 86.01599999999999,
+      "id": "seg_36"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Então o objetivo principal é tirar a digitação manual do meio e acelerar o faturamento.",
+      "speaker": "A",
+      "start": 86.616,
+      "end": 93.06599999999999,
+      "id": "seg_37"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Isso.",
+      "speaker": "B",
+      "start": 93.966,
+      "end": 94.366,
+      "id": "seg_38"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " E tem uma segunda coisa:",
+      "speaker": "B",
+      "start": 94.836,
+      "end": 96.536,
+      "id": "seg_39"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " os nossos clientes reclamam que não sabem o que está disponível.",
+      "speaker": "B",
+      "start": 96.93599999999999,
+      "end": 100.236,
+      "id": "seg_40"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Eles ligam perguntando se tem determinado produto,",
+      "speaker": "B",
+      "start": 100.786,
+      "end": 103.536,
+      "id": "seg_41"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " e o vendedor precisa olhar o estoque.",
+      "speaker": "B",
+      "start": 104.086,
+      "end": 106.286,
+      "id": "seg_42"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Então vocês imaginam um portal onde o cliente final,",
+      "speaker": "C",
+      "start": 106.48599999999999,
+      "end": 109.93599999999999,
+      "id": "seg_43"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " o dono do mercado ou do restaurante entra,",
+      "speaker": "C",
+      "start": 110.336,
+      "end": 113.136,
+      "id": "seg_44"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " vê o que tem,",
+      "speaker": "C",
+      "start": 113.636,
+      "end": 114.286,
+      "id": "seg_45"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " e monta o pedido sozinho.",
+      "speaker": "C",
+      "start": 114.636,
+      "end": 116.086,
+      "id": "seg_46"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Exatamente; um catálogo de produtos...",
+      "speaker": "B",
+      "start": 116.386,
+      "end": 119.536,
+      "id": "seg_47"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " O cliente escolhe,",
+      "speaker": "B",
+      "start": 119.54,
+      "end": 120.89,
+      "id": "seg_48"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " coloca no carrinho e envia.",
+      "speaker": "B",
+      "start": 121.24000000000001,
+      "end": 123.14,
+      "id": "seg_49"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Só que cada cliente tem uma tabela de preço diferente.",
+      "speaker": "B",
+      "start": 123.69000000000001,
+      "end": 126.89,
+      "id": "seg_50"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Isso tem que aparecer certo.",
+      "speaker": "B",
+      "start": 127.54,
+      "end": 129.14000000000001,
+      "id": "seg_51"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Se o preço aparecer errado,",
+      "speaker": "B",
+      "start": 129.79000000000002,
+      "end": 131.19,
+      "id": "seg_52"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " o portal perde a credibilidade no primeiro dia.",
+      "speaker": "B",
+      "start": 131.69,
+      "end": 134.29000000000002,
+      "id": "seg_53"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Tabela de preço por cliente",
+      "speaker": "C",
+      "start": 134.54000000000002,
+      "end": 136.74,
+      "id": "seg_54"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Quantas tabelas vocês têm,",
+      "speaker": "C",
+      "start": 137.236,
+      "end": 139.036,
+      "id": "seg_55"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " mais ou menos?",
+      "speaker": "C",
+      "start": 139.236,
+      "end": 139.736,
+      "id": "seg_56"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Ih!",
+      "speaker": "B",
+      "start": 140.08599999999998,
+      "end": 140.286,
+      "id": "seg_57"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " são várias!",
+      "speaker": "B",
+      "start": 140.68599999999998,
+      "end": 141.486,
+      "id": "seg_58"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Tem a tabela por região,",
+      "speaker": "B",
+      "start": 142.286,
+      "end": 143.636,
+      "id": "seg_59"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " tem condição especial para com os clientes grandes... A Carla sabe melhor como isso tá no sistema.",
+      "speaker": "B",
+      "start": 144.286,
+      "end": 150.636,
+      "id": "seg_60"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Está tudo no e r p,",
+      "speaker": "A",
+      "start": 150.886,
+      "end": 152.58599999999998,
+      "id": "seg_61"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " em cadastros separados.",
+      "speaker": "A",
+      "start": 153.136,
+      "end": 154.58599999999998,
+      "id": "seg_62"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Eu consigo exportar,",
+      "speaker": "A",
+      "start": 155.036,
+      "end": 156.386,
+      "id": "seg_63"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " mas a regra de qual cliente usa qual tabela,",
+      "speaker": "A",
+      "start": 156.58599999999998,
+      "end": 159.036,
+      "id": "seg_64"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " às vezes está na cabeça do pessoal comercial.",
+      "speaker": "A",
+      "start": 159.286,
+      "end": 161.536,
+      "id": "seg_65"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Isto é importante para a gente.",
+      "speaker": "C",
+      "start": 161.886,
+      "end": 163.386,
+      "id": "seg_66"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Vamos precisar mapear essa regra,",
+      "speaker": "C",
+      "start": 163.572,
+      "end": 165.672,
+      "id": "seg_67"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Anna,",
+      "speaker": "C",
+      "start": 165.922,
+      "end": 166.122,
+      "id": "seg_68"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " sobre o fluxo do pedido.",
+      "speaker": "C",
+      "start": 166.422,
+      "end": 167.722,
+      "id": "seg_69"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " O cliente monta o pedido no portal,",
+      "speaker": "C",
+      "start": 168.122,
+      "end": 169.972,
+      "id": "seg_70"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " e o que acontece depois?",
+      "speaker": "C",
+      "start": 170.272,
+      "end": 171.272,
+      "id": "seg_71"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " O cliente monta o pedido ali e manda.",
+      "speaker": "B",
+      "start": 172.672,
+      "end": 176.172,
+      "id": "seg_72"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Aí cai pra gente e o vendedor da conta confere.",
+      "speaker": "B",
+      "start": 176.622,
+      "end": 180.022,
+      "id": "seg_73"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " E o faturamento?",
+      "speaker": "A",
+      "start": 180.822,
+      "end": 181.772,
+      "id": "seg_74"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Hoje sai pelo r p,",
+      "speaker": "A",
+      "start": 182.272,
+      "end": 183.722,
+      "id": "seg_75"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " certo?",
+      "speaker": "A",
+      "start": 183.922,
+      "end": 184.272,
+      "id": "seg_76"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " A idéia é o portal passar a emitir nota também?",
+      "speaker": "A",
+      "start": 184.922,
+      "end": 187.822,
+      "id": "seg_77"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " O portal só envia o pedido para o erp.",
+      "speaker": "A",
+      "start": 188.308,
+      "end": 191.308,
+      "id": "seg_78"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Não.",
+      "speaker": "B",
+      "start": 191.558,
+      "end": 191.908,
+      "id": "seg_79"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Nota fiscal é com o erp.",
+      "speaker": "B",
+      "start": 192.358,
+      "end": 194.75799999999998,
+      "id": "seg_80"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " A gente não quer mexer nisso.",
+      "speaker": "B",
+      "start": 195.208,
+      "end": 196.608,
+      "id": "seg_81"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " O portal só envia o pedido e o erp continua faturando.",
+      "speaker": "B",
+      "start": 197.158,
+      "end": 201.108,
+      "id": "seg_82"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Ótimo!",
+      "speaker": "A",
+      "start": 201.308,
+      "end": 201.908,
+      "id": "seg_83"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Então fechamos que o faturamento continua saindo pelo erp e o portal só envia o pedido.",
+      "speaker": "A",
+      "start": 202.408,
+      "end": 209.25799999999998,
+      "id": "seg_84"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Carlos,",
+      "speaker": "A",
+      "start": 209.958,
+      "end": 210.458,
+      "id": "seg_85"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " está de acordo?",
+      "speaker": "A",
+      "start": 210.808,
+      "end": 211.658,
+      "id": "seg_86"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Está.",
+      "speaker": "A",
+      "start": 211.958,
+      "end": 212.358,
+      "id": "seg_87"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Fechado,",
+      "speaker": "A",
+      "start": 213.076,
+      "end": 213.926,
+      "id": "seg_88"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " não quero mudar o fluxo de nota,",
+      "speaker": "A",
+      "start": 214.326,
+      "end": 216.326,
+      "id": "seg_89"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " de jeito nenhum.",
+      "speaker": "A",
+      "start": 216.626,
+      "end": 217.326,
+      "id": "seg_90"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Perfeito!",
+      "speaker": "C",
+      "start": 217.876,
+      "end": 218.576,
+      "id": "seg_91"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Isso simplifica bastante o escopo.",
+      "speaker": "C",
+      "start": 219.076,
+      "end": 221.176,
+      "id": "seg_92"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Agora,",
+      "speaker": "C",
+      "start": 221.576,
+      "end": 221.926,
+      "id": "seg_93"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Carlos,",
+      "speaker": "C",
+      "start": 222.126,
+      "end": 222.476,
+      "id": "seg_94"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " a integração.",
+      "speaker": "C",
+      "start": 222.876,
+      "end": 223.576,
+      "id": "seg_95"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " O portal precisa conversar com o r p para consultar estoque e para enviar o pedido aprovado.",
+      "speaker": "C",
+      "start": 224.126,
+      "end": 229.976,
+      "id": "seg_96"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Precisa falar com o nosso r p,",
+      "speaker": "A",
+      "start": 230.126,
+      "end": 232.426,
+      "id": "seg_97"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " senão não adianta.",
+      "speaker": "A",
+      "start": 232.726,
+      "end": 233.926,
+      "id": "seg_98"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " O estoque que o cliente vê tem que ser o estoque real.",
+      "speaker": "A",
+      "start": 234.276,
+      "end": 237.176,
+      "id": "seg_99"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Qual é a versão do r p?",
+      "speaker": "C",
+      "start": 238.10799999999998,
+      "end": 239.50799999999998,
+      "id": "seg_100"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Vocês têm contato com fornecedor?",
+      "speaker": "C",
+      "start": 240.058,
+      "end": 241.958,
+      "id": "seg_101"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Porque o esforço muda muito se ele tem uma a p i documentada ou se vamos depender de exportação de arquivos.",
+      "speaker": "C",
+      "start": 242.75799999999998,
+      "end": 249.408,
+      "id": "seg_102"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Isso eu não sei te dizer agora.",
+      "speaker": "A",
+      "start": 249.908,
+      "end": 251.908,
+      "id": "seg_103"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Faz tempo que ninguém mexe nessa parte.",
+      "speaker": "A",
+      "start": 252.558,
+      "end": 254.858,
+      "id": "seg_104"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Se o pessoal do r p responder,",
+      "speaker": "A",
+      "start": 255.608,
+      "end": 257.45799999999997,
+      "id": "seg_105"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " eu vejo se tem a p i.",
+      "speaker": "A",
+      "start": 258.058,
+      "end": 259.408,
+      "id": "seg_106"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Combinado.",
+      "speaker": "C",
+      "start": 259.70799999999997,
+      "end": 260.308,
+      "id": "seg_107"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Mas você consegue ter uma resposta até quando?",
+      "speaker": "C",
+      "start": 260.858,
+      "end": 263.508,
+      "id": "seg_108"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Depende deles.",
+      "speaker": "A",
+      "start": 263.95799999999997,
+      "end": 264.858,
+      "id": "seg_109"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Eu mando o e mail hoje,",
+      "speaker": "A",
+      "start": 265.524,
+      "end": 267.024,
+      "id": "seg_110"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " mas não controlo a resposta.",
+      "speaker": "A",
+      "start": 267.574,
+      "end": 269.024,
+      "id": "seg_111"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Outra coisa importante:",
+      "speaker": "B",
+      "start": 269.424,
+      "end": 271.024,
+      "id": "seg_112"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " o sistema tem de ser rápido; o pessoal do mercado não tem paciência.",
+      "speaker": "B",
+      "start": 271.724,
+      "end": 276.524,
+      "id": "seg_113"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Se demorar para abrir eles voltam para o WhatsApp.",
+      "speaker": "B",
+      "start": 276.916,
+      "end": 280.316,
+      "id": "seg_114"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Rápido!",
+      "speaker": "C",
+      "start": 280.566,
+      "end": 281.066,
+      "id": "seg_115"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Em que sentido?",
+      "speaker": "C",
+      "start": 281.266,
+      "end": 282.066,
+      "id": "seg_116"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Abrir a página,",
+      "speaker": "C",
+      "start": 282.566,
+      "end": 283.416,
+      "id": "seg_117"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " carregar o catálogo,",
+      "speaker": "C",
+      "start": 283.766,
+      "end": 284.816,
+      "id": "seg_118"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " enviar o pedido tem algum número em mente?",
+      "speaker": "C",
+      "start": 285.116,
+      "end": 287.666,
+      "id": "seg_119"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Quantos usuários ao mesmo tempo?",
+      "speaker": "C",
+      "start": 288.116,
+      "end": 289.716,
+      "id": "seg_120"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Ah! rápido normal,",
+      "speaker": "B",
+      "start": 290.216,
+      "end": 291.466,
+      "id": "seg_121"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " que não trave.",
+      "speaker": "B",
+      "start": 291.966,
+      "end": 292.766,
+      "id": "seg_122"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Eu não sei falar em número,",
+      "speaker": "B",
+      "start": 293.166,
+      "end": 294.516,
+      "id": "seg_123"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " só sei que não pode ser lento.",
+      "speaker": "B",
+      "start": 295.016,
+      "end": 296.616,
+      "id": "seg_124"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Tudo bem,",
+      "speaker": "C",
+      "start": 296.816,
+      "end": 297.266,
+      "id": "seg_125"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " a gente volta nesse ponto depois.",
+      "speaker": "C",
+      "start": 297.716,
+      "end": 299.316,
+      "id": "seg_126"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Falando de plataforma.",
+      "speaker": "C",
+      "start": 300.016,
+      "end": 300.916,
+      "id": "seg_127"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Vocês pensam em site,",
+      "speaker": "C",
+      "start": 301.492,
+      "end": 302.992,
+      "id": "seg_128"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " em aplicativo no celular,",
+      "speaker": "C",
+      "start": 303.392,
+      "end": 304.642,
+      "id": "seg_129"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " nos dois?",
+      "speaker": "C",
+      "start": 305.04200000000003,
+      "end": 305.59200000000004,
+      "id": "seg_130"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Os clientes usam muito o celular; eu queria algo simples de usar,",
+      "speaker": "B",
+      "start": 305.942,
+      "end": 310.59200000000004,
+      "id": "seg_131"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " tipo o app do iFood,",
+      "speaker": "B",
+      "start": 311.142,
+      "end": 312.54200000000003,
+      "id": "seg_132"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " que qualquer um aprende em um minuto.",
+      "speaker": "B",
+      "start": 312.79200000000003,
+      "end": 314.992,
+      "id": "seg_133"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Entendi a referência.",
+      "speaker": "C",
+      "start": 315.29200000000003,
+      "end": 316.54200000000003,
+      "id": "seg_134"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Mas o iFood é um app nativo.",
+      "speaker": "C",
+      "start": 317.142,
+      "end": 319.142,
+      "id": "seg_135"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Para primeira fase,",
+      "speaker": "C",
+      "start": 319.992,
+      "end": 320.992,
+      "id": "seg_136"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " a gente recomenda começar com site responsivo que funciona bem no celular.",
+      "speaker": "C",
+      "start": 321.442,
+      "end": 325.79200000000003,
+      "id": "seg_137"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " E deixar o aplicativo nativo para uma fase posterior.",
+      "speaker": "C",
+      "start": 326.324,
+      "end": 329.67400000000004,
+      "id": "seg_138"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Isso reduz custo e prazo.",
+      "speaker": "C",
+      "start": 330.624,
+      "end": 332.374,
+      "id": "seg_139"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Faz sentido.",
+      "speaker": "B",
+      "start": 332.624,
+      "end": 333.624,
+      "id": "seg_140"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Se funcionar bem o celular pelo navegador,",
+      "speaker": "B",
+      "start": 334.374,
+      "end": 336.824,
+      "id": "seg_141"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " para mim está ótimo.",
+      "speaker": "B",
+      "start": 337.374,
+      "end": 338.42400000000004,
+      "id": "seg_142"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Então,",
+      "speaker": "C",
+      "start": 338.774,
+      "end": 339.374,
+      "id": "seg_143"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " para registrar:",
+      "speaker": "C",
+      "start": 339.624,
+      "end": 340.574,
+      "id": "seg_144"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " primeiro web,",
+      "speaker": "C",
+      "start": 341.024,
+      "end": 341.92400000000004,
+      "id": "seg_145"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " app depois.",
+      "speaker": "C",
+      "start": 342.374,
+      "end": 343.024,
+      "id": "seg_146"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Isso,",
+      "speaker": "B",
+      "start": 343.724,
+      "end": 344.124,
+      "id": "seg_147"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " pode ser.",
+      "speaker": "B",
+      "start": 344.524,
+      "end": 345.124,
+      "id": "seg_148"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Primeiro web,",
+      "speaker": "B",
+      "start": 345.624,
+      "end": 346.424,
+      "id": "seg_149"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " app depois.",
+      "speaker": "B",
+      "start": 346.824,
+      "end": 347.424,
+      "id": "seg_150"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " ANOTADO:",
+      "speaker": "A",
+      "start": 348.074,
+      "end": 349.124,
+      "id": "seg_151"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " DECISÃO FECHADA.",
+      "speaker": "A",
+      "start": 349.424,
+      "end": 350.724,
+      "id": "seg_152"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Falando em app,",
+      "speaker": "C",
+      "start": 351.366,
+      "end": 352.26599999999996,
+      "id": "seg_153"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " tenho uma sugestão para o futuro:",
+      "speaker": "C",
+      "start": 352.616,
+      "end": 354.416,
+      "id": "seg_154"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " os representantes de vendas de vocês visitam clientes em campo,",
+      "speaker": "C",
+      "start": 355.116,
+      "end": 358.26599999999996,
+      "id": "seg_155"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " muitas vezes sem sinal bom.",
+      "speaker": "C",
+      "start": 358.71599999999995,
+      "end": 360.166,
+      "id": "seg_156"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " A gente poderia pensar em um aplicativo para os representantes,",
+      "speaker": "C",
+      "start": 360.816,
+      "end": 363.76599999999996,
+      "id": "seg_157"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " com um modo off line,",
+      "speaker": "C",
+      "start": 364.166,
+      "end": 365.01599999999996,
+      "id": "seg_158"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " que sincroniza quando voltar a ter internet.",
+      "speaker": "C",
+      "start": 365.46599999999995,
+      "end": 367.566,
+      "id": "seg_159"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Não sei,",
+      "speaker": "B",
+      "start": 368.46599999999995,
+      "end": 369.76599999999996,
+      "id": "seg_160"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " isto é mais complicado,",
+      "speaker": "B",
+      "start": 370.51599999999996,
+      "end": 371.616,
+      "id": "seg_161"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " e eu nem sei se os representantes irão usar.",
+      "speaker": "B",
+      "start": 372.21599999999995,
+      "end": 374.46599999999995,
+      "id": "seg_162"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Sem problema-deixo registrada como uma idéia para uma fase futura.",
+      "speaker": "C",
+      "start": 375.182,
+      "end": 379.53200000000004,
+      "id": "seg_163"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Ana,",
+      "speaker": "A",
+      "start": 380.432,
+      "end": 380.832,
+      "id": "seg_164"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " vamos falar de crédito.",
+      "speaker": "A",
+      "start": 381.28200000000004,
+      "end": 382.732,
+      "id": "seg_165"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Vocês fazem análise de crédito dos clientes antes de aprovar o pedido?",
+      "speaker": "A",
+      "start": 383.332,
+      "end": 387.882,
+      "id": "seg_166"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Fazemos.",
+      "speaker": "C",
+      "start": 388.132,
+      "end": 388.832,
+      "id": "seg_167"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Todo pedido passa pelo crédito antes de ser liberado.",
+      "speaker": "B",
+      "start": 389.332,
+      "end": 393.132,
+      "id": "seg_168"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " O Financeiro olha o limite e a inadimplência do cliente.",
+      "speaker": "B",
+      "start": 393.682,
+      "end": 397.48199999999997,
+      "id": "seg_169"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Então o portal precisaria ter uma etapa de aprovação de crédito dentro do fluxo?",
+      "speaker": "C",
+      "start": 397.632,
+      "end": 402.932,
+      "id": "seg_170"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " A aprovação de crédito talvez entre no portal.",
+      "speaker": "B",
+      "start": 403.382,
+      "end": 406.682,
+      "id": "seg_171"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Preciso ver com o Financeiro como eles querem trabalhar.",
+      "speaker": "B",
+      "start": 407.282,
+      "end": 410.48199999999997,
+      "id": "seg_172"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Pode ser que eles prefiram continuar aprovando fora do portal.",
+      "speaker": "B",
+      "start": 411.23199999999997,
+      "end": 414.682,
+      "id": "seg_173"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Do Portal.",
+      "speaker": "B",
+      "start": 414.484,
+      "end": 414.88399999999996,
+      "id": "seg_174"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Certo,",
+      "speaker": "A",
+      "start": 415.334,
+      "end": 415.984,
+      "id": "seg_175"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " então esse ponto fica pendente de validação do lado de vocês.",
+      "speaker": "A",
+      "start": 416.284,
+      "end": 420.88399999999996,
+      "id": "seg_176"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Fica. Eu falo com o financeiro essa semana e te dou um retorno.",
+      "speaker": "B",
+      "start": 421.484,
+      "end": 426.18399999999997,
+      "id": "seg_177"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Outro ponto,",
+      "speaker": "C",
+      "start": 426.584,
+      "end": 427.43399999999997,
+      "id": "seg_178"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " relatórios.",
+      "speaker": "C",
+      "start": 427.834,
+      "end": 428.584,
+      "id": "seg_179"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Vocês falaram dos vendedores.",
+      "speaker": "C",
+      "start": 429.084,
+      "end": 430.734,
+      "id": "seg_180"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Eles vão querer acompanhar pedidos,",
+      "speaker": "C",
+      "start": 431.334,
+      "end": 433.13399999999996,
+      "id": "seg_181"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " ver o que cada cliente comprou.",
+      "speaker": "C",
+      "start": 433.584,
+      "end": 435.13399999999996,
+      "id": "seg_182"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Querem,",
+      "speaker": "B",
+      "start": 435.584,
+      "end": 435.984,
+      "id": "seg_183"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " sim.",
+      "speaker": "B",
+      "start": 436.284,
+      "end": 436.68399999999997,
+      "id": "seg_184"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Um relatório de pedidos por cliente seria muito bom.",
+      "speaker": "B",
+      "start": 437.38399999999996,
+      "end": 441.234,
+      "id": "seg_185"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Mas acho que isso pode ficar para depois.",
+      "speaker": "C",
+      "start": 441.652,
+      "end": 444.102,
+      "id": "seg_186"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Não sei se na primeira fase.",
+      "speaker": "C",
+      "start": 444.652,
+      "end": 446.05199999999996,
+      "id": "seg_187"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Se der tempo,",
+      "speaker": "C",
+      "start": 446.55199999999996,
+      "end": 447.402,
+      "id": "seg_188"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " a gente coloca.",
+      "speaker": "C",
+      "start": 447.702,
+      "end": 448.502,
+      "id": "seg_189"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Tudo bem; então relatórios ficam como possível,",
+      "speaker": "C",
+      "start": 448.902,
+      "end": 452.30199999999996,
+      "id": "seg_190"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " sem compromisso de entrar na primeira fase.",
+      "speaker": "C",
+      "start": 452.80199999999996,
+      "end": 454.952,
+      "id": "seg_191"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Isso!",
+      "speaker": "B",
+      "start": 455.30199999999996,
+      "end": 455.752,
+      "id": "seg_192"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Vamos ver como fica depois que vocês mandarem a proposta.",
+      "speaker": "B",
+      "start": 456.202,
+      "end": 459.902,
+      "id": "seg_193"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Sobre integração,",
+      "speaker": "A",
+      "start": 460.30199999999996,
+      "end": 461.602,
+      "id": "seg_194"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Anna,",
+      "speaker": "A",
+      "start": 461.852,
+      "end": 462.152,
+      "id": "seg_195"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " você mencionou mais coisas além do r p?",
+      "speaker": "A",
+      "start": 462.702,
+      "end": 465.502,
+      "id": "seg_196"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Vocês usam outros sistemas?",
+      "speaker": "A",
+      "start": 466.004,
+      "end": 468.004,
+      "id": "seg_197"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Usamos várias coisas:",
+      "speaker": "B",
+      "start": 468.504,
+      "end": 470.30400000000003,
+      "id": "seg_198"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " tem o sistema de logística,",
+      "speaker": "B",
+      "start": 470.904,
+      "end": 472.404,
+      "id": "seg_199"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " tem a planilha do financeiro,",
+      "speaker": "B",
+      "start": 472.904,
+      "end": 474.30400000000003,
+      "id": "seg_200"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " tem o crm; o portal precisa integrar com tudo o que a gente usa,",
+      "speaker": "B",
+      "start": 474.85400000000004,
+      "end": 479.954,
+      "id": "seg_201"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " pra não ficar uma ilha.",
+      "speaker": "B",
+      "start": 480.504,
+      "end": 481.704,
+      "id": "seg_202"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Quando você diz tudo,",
+      "speaker": "C",
+      "start": 482.004,
+      "end": 483.404,
+      "id": "seg_203"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " são esses três,",
+      "speaker": "C",
+      "start": 483.904,
+      "end": 484.85400000000004,
+      "id": "seg_204"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " erp,",
+      "speaker": "C",
+      "start": 485.204,
+      "end": 485.85400000000004,
+      "id": "seg_205"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " logística,",
+      "speaker": "C",
+      "start": 486.30400000000003,
+      "end": 487.004,
+      "id": "seg_206"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " crm?",
+      "speaker": "C",
+      "start": 487.30400000000003,
+      "end": 487.904,
+      "id": "seg_207"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Em princípio, sim,",
+      "speaker": "B",
+      "start": 488.35400000000004,
+      "end": 489.55400000000003,
+      "id": "seg_208"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " mas pode ter mais.",
+      "speaker": "B",
+      "start": 490.05400000000003,
+      "end": 491.204,
+      "id": "seg_209"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Eu preciso confirmar com o Carlos.",
+      "speaker": "C",
+      "start": 491.668,
+      "end": 493.668,
+      "id": "seg_210"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Eu levanto a lista de sistemas,",
+      "speaker": "A",
+      "start": 494.418,
+      "end": 496.26800000000003,
+      "id": "seg_211"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " mas a prioridade é o r p.",
+      "speaker": "A",
+      "start": 496.668,
+      "end": 498.068,
+      "id": "seg_212"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " O resto a gente vê.",
+      "speaker": "A",
+      "start": 498.76800000000003,
+      "end": 500.01800000000003,
+      "id": "seg_213"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Combinado.",
+      "speaker": "C",
+      "start": 500.368,
+      "end": 500.918,
+      "id": "seg_214"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Vamos tratar o r p como a integração principal,",
+      "speaker": "C",
+      "start": 501.568,
+      "end": 504.76800000000003,
+      "id": "seg_215"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " e os outros como a confirmar.",
+      "speaker": "C",
+      "start": 505.168,
+      "end": 506.868,
+      "id": "seg_216"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Voltando ao fluxo de pedido.",
+      "speaker": "A",
+      "start": 507.51800000000003,
+      "end": 509.318,
+      "id": "seg_217"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Ana,",
+      "speaker": "A",
+      "start": 509.716,
+      "end": 510.266,
+      "id": "seg_218"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " uma dúvida:",
+      "speaker": "A",
+      "start": 510.466,
+      "end": 511.06600000000003,
+      "id": "seg_219"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " se o crédito é analisado em todo pedido,",
+      "speaker": "A",
+      "start": 511.616,
+      "end": 513.966,
+      "id": "seg_220"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " isso pode atrasar justamente o faturamento no mesmo dia que vocês querem.",
+      "speaker": "A",
+      "start": 514.516,
+      "end": 518.916,
+      "id": "seg_221"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Olha,",
+      "speaker": "B",
+      "start": 519.266,
+      "end": 519.616,
+      "id": "seg_222"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " na verdade isso só vale para os clientes novos.",
+      "speaker": "B",
+      "start": 520.116,
+      "end": 523.116,
+      "id": "seg_223"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Os clientes antigos compram direto,",
+      "speaker": "B",
+      "start": 523.616,
+      "end": 525.966,
+      "id": "seg_224"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " sem análise,",
+      "speaker": "B",
+      "start": 526.366,
+      "end": 527.116,
+      "id": "seg_225"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " porque já têm limite liberado.",
+      "speaker": "B",
+      "start": 527.516,
+      "end": 529.166,
+      "id": "seg_226"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Entendi.",
+      "speaker": "A",
+      "start": 529.366,
+      "end": 529.966,
+      "id": "seg_227"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Mas antes você disse que todo pedido passa pelo crédito.",
+      "speaker": "A",
+      "start": 530.652,
+      "end": 534.702,
+      "id": "seg_228"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " É,",
+      "speaker": "B",
+      "start": 535.002,
+      "end": 535.252,
+      "id": "seg_229"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " eu me expressei mal; mas também tem cliente antigo que passa quando o pedido é muito grande; preciso ver isso melhor com o financeiro.",
+      "speaker": "B",
+      "start": 535.652,
+      "end": 545.152,
+      "id": "seg_230"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Isso afeta bastante o desenho do fluxo.",
+      "speaker": "C",
+      "start": 545.802,
+      "end": 548.402,
+      "id": "seg_231"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Então vou anotar como ponto a esclarecer.",
+      "speaker": "C",
+      "start": 548.9240000000001,
+      "end": 551.374,
+      "id": "seg_232"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Sobre usuários e acesso,",
+      "speaker": "A",
+      "start": 551.774,
+      "end": 553.3240000000001,
+      "id": "seg_233"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " o cliente vai precisar de login,",
+      "speaker": "A",
+      "start": 553.774,
+      "end": 555.3240000000001,
+      "id": "seg_234"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " imagino,",
+      "speaker": "A",
+      "start": 555.774,
+      "end": 556.274,
+      "id": "seg_235"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " cada mercado com a sua senha.",
+      "speaker": "A",
+      "start": 556.8240000000001,
+      "end": 558.374,
+      "id": "seg_236"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Sim,",
+      "speaker": "C",
+      "start": 558.5740000000001,
+      "end": 558.874,
+      "id": "seg_237"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " vamos precisar de autenticação.",
+      "speaker": "C",
+      "start": 559.224,
+      "end": 560.9240000000001,
+      "id": "seg_238"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Vocês têm preferência,",
+      "speaker": "C",
+      "start": 561.474,
+      "end": 562.524,
+      "id": "seg_239"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " algum login único da empresa?",
+      "speaker": "C",
+      "start": 562.874,
+      "end": 564.274,
+      "id": "seg_240"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Não,",
+      "speaker": "A",
+      "start": 564.8240000000001,
+      "end": 565.124,
+      "id": "seg_241"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " pode ser email e senha mesmo.",
+      "speaker": "A",
+      "start": 565.524,
+      "end": 567.3240000000001,
+      "id": "seg_242"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Não temos nada de s s o por aqui.",
+      "speaker": "A",
+      "start": 567.9240000000001,
+      "end": 570.124,
+      "id": "seg_243"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Certo.",
+      "speaker": "C",
+      "start": 570.3240000000001,
+      "end": 570.874,
+      "id": "seg_244"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Então a gente assume e email e senha e deixa registrado como premissa.",
+      "speaker": "C",
+      "start": 571.1740000000001,
+      "end": 575.374,
+      "id": "seg_245"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Vamos fechar os próximos passos.",
+      "speaker": "A",
+      "start": 575.54,
+      "end": 578.54,
+      "id": "seg_246"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Ana,",
+      "speaker": "A",
+      "start": 579.04,
+      "end": 579.3399999999999,
+      "id": "seg_247"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " o que a Marina e a equipe precisam de vocês para montar uma proposta bem feita?",
+      "speaker": "A",
+      "start": 579.89,
+      "end": 585.24,
+      "id": "seg_248"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Eu te mando a planilha de produtos até sexta,",
+      "speaker": "B",
+      "start": 585.64,
+      "end": 589.04,
+      "id": "seg_249"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " com as tabelas de preço que a gente usa hoje.",
+      "speaker": "B",
+      "start": 589.29,
+      "end": 591.79,
+      "id": "seg_250"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Perfeito.",
+      "speaker": "A",
+      "start": 592.1899999999999,
+      "end": 592.89,
+      "id": "seg_251"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Essa planilha vai ajudar a gente a dimensionar o catálogo.",
+      "speaker": "A",
+      "start": 593.46,
+      "end": 598.01,
+      "id": "seg_252"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Do nosso lado,",
+      "speaker": "C",
+      "start": 598.51,
+      "end": 599.36,
+      "id": "seg_253"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " a gente volta com a proposta em uma semana.",
+      "speaker": "C",
+      "start": 599.61,
+      "end": 601.8100000000001,
+      "id": "seg_254"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Isso mesmo.",
+      "speaker": "A",
+      "start": 602.21,
+      "end": 602.9100000000001,
+      "id": "seg_255"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Em uma semana vocês recebem a proposta.",
+      "speaker": "A",
+      "start": 603.5600000000001,
+      "end": 606.21,
+      "id": "seg_256"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Carlos,",
+      "speaker": "A",
+      "start": 606.96,
+      "end": 607.4100000000001,
+      "id": "seg_257"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " qualquer novidade do erp você me avisa.",
+      "speaker": "A",
+      "start": 607.9100000000001,
+      "end": 610.8100000000001,
+      "id": "seg_258"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Aviso,",
+      "speaker": "A",
+      "start": 611.11,
+      "end": 611.86,
+      "id": "seg_259"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " sim,",
+      "speaker": "A",
+      "start": 612.36,
+      "end": 612.71,
+      "id": "seg_260"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " assim que o fornecedor responder.",
+      "speaker": "A",
+      "start": 613.26,
+      "end": 615.0600000000001,
+      "id": "seg_261"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Ótimo! Foi bem produtiva essa conversa.",
+      "speaker": "B",
+      "start": 615.76,
+      "end": 618.76,
+      "id": "seg_262"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Para nós também.",
+      "speaker": "A",
+      "start": 619.4979999999999,
+      "end": 620.548,
+      "id": "seg_263"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Obrigado,",
+      "speaker": "A",
+      "start": 621.098,
+      "end": 621.6479999999999,
+      "id": "seg_264"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " pessoal.",
+      "speaker": "A",
+      "start": 621.7479999999999,
+      "end": 622.048,
+      "id": "seg_265"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Até a próxima.",
+      "speaker": "A",
+      "start": 622.4979999999999,
+      "end": 623.198,
+      "id": "seg_266"
+    },
+    {
+      "type": "transcript.text.segment",
+      "text": " Obrigada a todos.",
+      "speaker": "C",
+      "start": 623.548,
+      "end": 624.4979999999999,
+      "id": "seg_267"
+    }
+  ],
+  "usage": {
+    "type": "tokens",
+    "total_tokens": 32635,
+    "input_tokens": 12983,
+    "input_token_details": {
+      "text_tokens": 1012,
+      "audio_tokens": 11971
+    },
+    "output_tokens": 19652
+  }
+}

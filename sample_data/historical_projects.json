@@ -1,0 +1,131 @@
+{
+  "is_demo": true,
+  "projects": [
+    {
+      "name": "Portal de Pedidos B2B - Distribuidora Alfa",
+      "tags": ["b2b", "portal-pedidos", "erp"],
+      "modules": [
+        { "name": "Autenticação e perfis", "complexity": "M", "hours_actual": 64 },
+        { "name": "Catálogo de produtos", "complexity": "L", "hours_actual": 120 },
+        { "name": "Tabelas de preço por cliente", "complexity": "L", "hours_actual": 140 },
+        { "name": "Carrinho e envio de pedido", "complexity": "M", "hours_actual": 96 },
+        { "name": "Integração com ERP", "complexity": "XL", "hours_actual": 220 },
+        { "name": "Painel do vendedor", "complexity": "M", "hours_actual": 88 }
+      ],
+      "team_size": 5,
+      "weeks": 16
+    },
+    {
+      "name": "Portal de Pedidos B2B - Atacado Beta",
+      "tags": ["b2b", "portal-pedidos"],
+      "modules": [
+        { "name": "Autenticação e perfis", "complexity": "S", "hours_actual": 40 },
+        { "name": "Catálogo de produtos", "complexity": "M", "hours_actual": 80 },
+        { "name": "Carrinho e envio de pedido", "complexity": "M", "hours_actual": 90 },
+        { "name": "Histórico e repetição de pedidos", "complexity": "S", "hours_actual": 44 },
+        { "name": "Notificações por e-mail", "complexity": "S", "hours_actual": 30 }
+      ],
+      "team_size": 4,
+      "weeks": 10
+    },
+    {
+      "name": "ERP de Gestão para Indústria Gama",
+      "tags": ["erp", "indústria"],
+      "modules": [
+        { "name": "Cadastros base", "complexity": "L", "hours_actual": 150 },
+        { "name": "Controle de estoque", "complexity": "XL", "hours_actual": 260 },
+        { "name": "Compras e fornecedores", "complexity": "L", "hours_actual": 170 },
+        { "name": "Faturamento e notas fiscais", "complexity": "XL", "hours_actual": 300 },
+        { "name": "Relatórios gerenciais", "complexity": "M", "hours_actual": 110 }
+      ],
+      "team_size": 8,
+      "weeks": 28
+    },
+    {
+      "name": "Catálogo Digital Delta",
+      "tags": ["catálogo", "e-commerce"],
+      "modules": [
+        { "name": "Gestão de produtos", "complexity": "M", "hours_actual": 90 },
+        { "name": "Busca e filtros", "complexity": "M", "hours_actual": 70 },
+        { "name": "Importação de planilhas", "complexity": "S", "hours_actual": 36 },
+        { "name": "Painel administrativo", "complexity": "M", "hours_actual": 84 }
+      ],
+      "team_size": 3,
+      "weeks": 9
+    },
+    {
+      "name": "Integração ERP-Marketplace Épsilon",
+      "tags": ["integração", "erp", "marketplace"],
+      "modules": [
+        { "name": "Conector de produtos", "complexity": "L", "hours_actual": 130 },
+        { "name": "Sincronização de estoque", "complexity": "L", "hours_actual": 110 },
+        { "name": "Conector de pedidos", "complexity": "XL", "hours_actual": 190 },
+        { "name": "Monitoramento e logs", "complexity": "S", "hours_actual": 40 }
+      ],
+      "team_size": 4,
+      "weeks": 12
+    },
+    {
+      "name": "App de Força de Vendas Zeta",
+      "tags": ["mobile", "vendas", "offline"],
+      "modules": [
+        { "name": "Login e sincronização offline", "complexity": "XL", "hours_actual": 210 },
+        { "name": "Catálogo mobile", "complexity": "M", "hours_actual": 85 },
+        { "name": "Captura de pedidos", "complexity": "L", "hours_actual": 140 },
+        { "name": "Mapa e rotas de visitas", "complexity": "L", "hours_actual": 120 },
+        { "name": "Painel de metas", "complexity": "M", "hours_actual": 70 }
+      ],
+      "team_size": 5,
+      "weeks": 18
+    },
+    {
+      "name": "Portal do Cliente Ômega (Self-service)",
+      "tags": ["portal", "self-service"],
+      "modules": [
+        { "name": "Autenticação e perfis", "complexity": "M", "hours_actual": 60 },
+        { "name": "Segunda via de boletos", "complexity": "M", "hours_actual": 72 },
+        { "name": "Acompanhamento de entregas", "complexity": "L", "hours_actual": 125 },
+        { "name": "Abertura de chamados", "complexity": "M", "hours_actual": 80 }
+      ],
+      "team_size": 4,
+      "weeks": 11
+    },
+    {
+      "name": "Plataforma de Cotações Sigma",
+      "tags": ["b2b", "cotações"],
+      "modules": [
+        { "name": "Cadastro de fornecedores", "complexity": "M", "hours_actual": 74 },
+        { "name": "Fluxo de cotação e aprovação", "complexity": "XL", "hours_actual": 230 },
+        { "name": "Comparativo de propostas", "complexity": "L", "hours_actual": 115 },
+        { "name": "Relatórios", "complexity": "S", "hours_actual": 42 }
+      ],
+      "team_size": 5,
+      "weeks": 15
+    },
+    {
+      "name": "Dashboard de BI Logístico Theta",
+      "tags": ["bi", "dashboards", "logística"],
+      "modules": [
+        { "name": "Ingestão de dados", "complexity": "L", "hours_actual": 135 },
+        { "name": "Modelagem de indicadores", "complexity": "L", "hours_actual": 120 },
+        { "name": "Dashboards interativos", "complexity": "XL", "hours_actual": 200 },
+        { "name": "Alertas por e-mail", "complexity": "S", "hours_actual": 34 }
+      ],
+      "team_size": 4,
+      "weeks": 13
+    },
+    {
+      "name": "Gestão de Pedidos e Faturamento Lambda",
+      "tags": ["erp", "pedidos", "faturamento"],
+      "modules": [
+        { "name": "Cadastro de clientes", "complexity": "S", "hours_actual": 46 },
+        { "name": "Fluxo de pedidos", "complexity": "L", "hours_actual": 150 },
+        { "name": "Emissão de notas fiscais", "complexity": "XL", "hours_actual": 240 },
+        { "name": "Conciliação financeira", "complexity": "L", "hours_actual": 130 },
+        { "name": "Controle de acesso", "complexity": "S", "hours_actual": 38 }
+      ],
+      "team_size": 6,
+      "weeks": 20
+    }
+  ]
+}

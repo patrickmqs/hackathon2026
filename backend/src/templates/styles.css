@@ -1,0 +1,56 @@
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #1a1a2e;
+  line-height: 1.5;
+  margin: 2rem;
+  max-width: 820px;
+}
+
+h1 {
+  border-bottom: 2px solid #1a1a2e;
+  padding-bottom: 0.5rem;
+}
+
+h2 {
+  margin-top: 2rem;
+  color: #16213e;
+}
+
+.client {
+  font-weight: 600;
+}
+
+.meta,
+.disclaimer,
+footer {
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.complexity {
+  color: #888;
+  font-size: 0.85rem;
+  font-weight: normal;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th,
+td {
+  border: 1px solid #ddd;
+  padding: 0.4rem;
+  text-align: left;
+}
+
+th {
+  background: #f0f0f5;
+}
+
+footer {
+  margin-top: 3rem;
+  border-top: 1px solid #ddd;
+  padding-top: 1rem;
+}

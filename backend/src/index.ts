@@ -1,18 +1,26 @@
-import express from 'express';
+import { config } from "./core/config.js";
+import { createPipeline, createRepository } from "./core/container.js";
+import { FileStorage } from "./core/storage.js";
+import { JobRunner } from "./services/jobs/runner.js";
+import { createApp } from "./app.js";
 
-const app = express();
-const port = Number(process.env.PORT) || 3000;
-
-app.use(express.json());
-
-app.get('/', (_req, res) => {
-  res.json({ status: 'ok', message: 'Backend rodando' });
+const repo = createRepository();
+const storage = new FileStorage(config.storageDir);
+const jobs = new JobRunner({
+  repo,
+  storage,
+  pipeline: createPipeline(),
+  staleMinutes: config.jobStaleMinutes,
 });
 
-app.get('/health', (_req, res) => {
-  res.json({ status: 'up' });
+const app = createApp({
+  repo,
+  storage,
+  jobs,
+  maxUploadMb: config.maxUploadMb,
+  corsOrigins: config.corsOrigins,
 });
 
-app.listen(port, () => {
-  console.log(`Servidor rodando em http://localhost:${port}`);
+app.listen(config.port, () => {
+  console.log(`Servidor rodando em http://localhost:${config.port}`);
 });

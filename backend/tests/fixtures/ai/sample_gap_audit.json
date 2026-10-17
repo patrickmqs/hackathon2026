@@ -1,0 +1,177 @@
+{
+  "open_issues": [
+    {
+      "id": "iss_01",
+      "confidence": "high",
+      "source_refs": [
+        {
+          "quote": "Todo pedido passa pelo crédito antes de ser liberado",
+          "segment_id": null,
+          "speaker": "Ana Souza",
+          "start_ms": null,
+          "end_ms": null
+        },
+        {
+          "quote": "Os clientes antigos compram direto, sem análise",
+          "segment_id": null,
+          "speaker": "Ana Souza",
+          "start_ms": null,
+          "end_ms": null
+        }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null,
+      "type": "contradiction",
+      "description": "Ana afirmou que todo pedido passa pelo crédito e depois que os clientes antigos compram direto, sem análise (e ainda que clientes antigos com pedido grande passam). A regra real não está definida.",
+      "impact": [
+        "scope",
+        "effort"
+      ],
+      "suggested_question": "Quais pedidos passam pela análise de crédito: só clientes novos, também pedidos grandes de clientes antigos?",
+      "related_ids": [
+        "dec_03"
+      ]
+    },
+    {
+      "id": "iss_02",
+      "confidence": "high",
+      "source_refs": [
+        {
+          "quote": "Isso eu não sei te dizer agora.",
+          "segment_id": null,
+          "speaker": "Carlos Lima",
+          "start_ms": null,
+          "end_ms": null
+        }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null,
+      "type": "missing_info",
+      "description": "Não se sabe qual é o ERP, a versão, nem se há API documentada.",
+      "impact": [
+        "effort",
+        "architecture"
+      ],
+      "suggested_question": "Qual é o ERP e a versão, e há API documentada ou só exportação de arquivos?",
+      "related_ids": [
+        "req_03",
+        "com_03"
+      ]
+    },
+    {
+      "id": "iss_03",
+      "confidence": "medium",
+      "source_refs": [
+        {
+          "quote": "Eu não sei falar em número, só sei que não pode ser lento.",
+          "segment_id": null,
+          "speaker": "Ana Souza",
+          "start_ms": null,
+          "end_ms": null
+        }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null,
+      "type": "missing_info",
+      "description": "Não há volume de clientes, usuários simultâneos nem pedidos por mês.",
+      "impact": [
+        "effort",
+        "architecture",
+        "cost"
+      ],
+      "suggested_question": "Quantos clientes, usuários simultâneos e pedidos por mês o portal deve suportar?",
+      "related_ids": []
+    },
+    {
+      "id": "iss_04",
+      "confidence": "medium",
+      "source_refs": [
+        {
+          "quote": "o sistema tem que ser rápido",
+          "segment_id": null,
+          "speaker": "Ana Souza",
+          "start_ms": null,
+          "end_ms": null
+        }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null,
+      "type": "vague_requirement",
+      "description": "\"Rápido\" não foi definido em critérios mensuráveis.",
+      "impact": [
+        "effort"
+      ],
+      "suggested_question": "Que tempo de carregamento do catálogo e de envio de pedido é aceitável?",
+      "related_ids": []
+    },
+    {
+      "id": "iss_05",
+      "confidence": "medium",
+      "source_refs": [
+        {
+          "quote": "simples de usar, tipo o app do iFood",
+          "segment_id": null,
+          "speaker": "Ana Souza",
+          "start_ms": null,
+          "end_ms": null
+        }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null,
+      "type": "vague_requirement",
+      "description": "\"Simples, tipo o app do iFood\" é uma referência de experiência, não um requisito.",
+      "impact": [
+        "scope",
+        "effort"
+      ],
+      "suggested_question": "O que na experiência do iFood deve ser reproduzido (busca, recompra, rastreio)?",
+      "related_ids": []
+    },
+    {
+      "id": "iss_06",
+      "confidence": "medium",
+      "source_refs": [
+        {
+          "quote": "O portal precisa integrar com tudo que a gente usa",
+          "segment_id": null,
+          "speaker": "Ana Souza",
+          "start_ms": null,
+          "end_ms": null
+        }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null,
+      "type": "vague_requirement",
+      "description": "\"Integrar com tudo\" não está delimitado: logística, planilha do financeiro e CRM foram citados, sem confirmação.",
+      "impact": [
+        "scope",
+        "effort",
+        "cost"
+      ],
+      "suggested_question": "Quais sistemas, além do ERP, entram na primeira fase?",
+      "related_ids": [
+        "req_03"
+      ]
+    },
+    {
+      "id": "iss_07",
+      "confidence": "low",
+      "source_refs": [],
+      "review_status": "pending",
+      "reviewer_note": null,
+      "type": "missing_info",
+      "description": "Não foram mencionados prazo ou evento-alvo do cliente, orçamento ou faixa de investimento, nem quem decide do lado do cliente.",
+      "impact": [
+        "timeline",
+        "cost",
+        "scope"
+      ],
+      "suggested_question": "Há data-alvo, faixa de investimento e quem aprova a proposta do lado do cliente?",
+      "related_ids": []
+    }
+  ],
+  "downgrades": [],
+  "additional_limitations": [
+    "A transcrição não traz marcação de tempo."
+  ]
+}

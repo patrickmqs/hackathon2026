@@ -1,0 +1,19 @@
+{
+  "is_demo_profile": true,
+  "name": "Atelier Código Demo Ltda.",
+  "contact": {
+    "name": "Rafael Costa",
+    "email": "contato@ateliercodigo.example",
+    "phone": "+55 11 90000-0000"
+  },
+  "site": "https://ateliercodigo.example",
+  "hourly_rates": {
+    "currency": "BRL",
+    "backend_dev": 180,
+    "frontend_dev": 170,
+    "qa": 120,
+    "ux": 150,
+    "pm": 200,
+    "devops": 190
+  }
+}

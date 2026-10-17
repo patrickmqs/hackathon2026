@@ -1,1 +1,2 @@
-export * from "./schemas/analysis";
+export * from "./schemas/analysis.js";
+export * from "./schemas/proposal.js";

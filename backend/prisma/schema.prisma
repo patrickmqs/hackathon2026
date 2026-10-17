@@ -1,0 +1,188 @@
+// Proposal AI — modelo de dados (ARCHITECTURE §3).
+// Produção usa PostgreSQL (Neon), via DATABASE_URL. Campos de estado são String
+// (validados por Zod na camada de API), para portabilidade.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  client      Json
+  status      String   @default("no_meeting")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  meetings  Meeting[]
+  proposals Proposal[]
+  events    Event[]
+}
+
+model Meeting {
+  id         String   @id @default(cuid())
+  projectId  String
+  sourceType String   @default("text") // "text" | "audio"
+  status     String   @default("created")
+  title      String?
+  audioPath  String?
+  error      Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  project    Project    @relation(fields: [projectId], references: [id])
+  transcript Transcript?
+  analysis   Analysis?
+
+  @@index([projectId])
+}
+
+model Transcript {
+  id        String   @id @default(cuid())
+  meetingId String   @unique
+  text      String
+  segments  Json?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  meeting Meeting @relation(fields: [meetingId], references: [id])
+}
+
+model Analysis {
+  id              String    @id @default(cuid())
+  meetingId       String    @unique
+  content         Json
+  promptVersion   String?
+  reviewCompleted Boolean   @default(false)
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  meeting Meeting @relation(fields: [meetingId], references: [id])
+}
+
+model Proposal {
+  id             String   @id @default(cuid())
+  projectId      String
+  meetingId       String?
+  status          String   @default("draft")
+  currentVersion  Int      @default(1)
+  approvedVersion Int?
+  createdAt       DateTime @default(now())
+
+  project  Project           @relation(fields: [projectId], references: [id])
+  versions ProposalVersion[]
+
+  @@index([projectId])
+}
+
+model ProposalVersion {
+  id          String   @id @default(cuid())
+  proposalId  String
+  number      Int
+  content     Json
+  contentHash String
+  status      String   @default("draft") // "draft" | "approved" | "superseded"
+  createdBy   String
+  createdAt   DateTime @default(now())
+
+  proposal Proposal       @relation(fields: [proposalId], references: [id])
+  approval Approval?
+  pdfs     PdfArtifact[]
+
+  @@unique([proposalId, number])
+}
+
+model Approval {
+  id                String   @id @default(cuid())
+  proposalVersionId String   @unique
+  approvedBy        String
+  contentHash       String
+  note              String?
+  approvedAt        DateTime @default(now())
+
+  proposalVersion ProposalVersion @relation(fields: [proposalVersionId], references: [id])
+  deliveries      Delivery[]
+}
+
+model PdfArtifact {
+  id                String   @id @default(cuid())
+  proposalVersionId String
+  path              String
+  sizeBytes         Int
+  generatedAt       DateTime @default(now())
+
+  proposalVersion ProposalVersion @relation(fields: [proposalVersionId], references: [id])
+
+  @@index([proposalVersionId])
+}
+
+model Delivery {
+  id             String   @id @default(cuid())
+  approvalId     String
+  idempotencyKey String   @unique
+  authorizedBy   String
+  status         String   @default("authorized")
+  authorizedAt   DateTime @default(now())
+
+  approval Approval          @relation(fields: [approvalId], references: [id])
+  channels DeliveryChannel[]
+}
+
+model DeliveryChannel {
+  id                String    @id @default(cuid())
+  deliveryId        String
+  channel           String // "gmail" | "whatsapp"
+  recipient         Json
+  status            String    @default("queued")
+  providerMessageId String?
+  error             Json?
+  attempts          Int       @default(0)
+  sentAt            DateTime?
+  deliveredAt       DateTime?
+  lastAttemptAt     DateTime?
+
+  delivery Delivery       @relation(fields: [deliveryId], references: [id])
+  events   ChannelEvent[]
+
+  @@index([deliveryId])
+}
+
+model ChannelEvent {
+  id        String   @id @default(cuid())
+  channelId String
+  type      String
+  payload   Json?
+  at        DateTime @default(now())
+
+  channel DeliveryChannel @relation(fields: [channelId], references: [id])
+
+  @@index([channelId])
+}
+
+model Event {
+  id        String   @id @default(cuid())
+  projectId String
+  type      String
+  actor     String?
+  payload   Json?
+  at        DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id])
+
+  @@index([projectId])
+}
+
+model OAuthCredential {
+  provider     String   @id
+  accountEmail String
+  token        Json
+  updatedAt    DateTime @updatedAt
+}

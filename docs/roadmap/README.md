@@ -34,6 +34,7 @@ Legenda: **P0** essencial · **P1** se der tempo · ⛓ depende de · ✅ pronto
 | F17 | Usuário demo (`X-Demo-User`) e configurações | ● | ● | ● | |
 | F18 | Timeline de eventos (P1) | ● | ● | | |
 | F19 | Testes de IA, E2E e roteiro da demo | ● | | | ● |
+| F20 | Resumo da reunião (geração, exibição no topo da Revisão e no card da reunião, regenerar/copiar) | ● | ● | | ● |
 
 ● = participa · primeira coluna marcada com dono em cada roadmap individual.
 

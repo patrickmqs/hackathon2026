@@ -213,10 +213,15 @@ sequenceDiagram
     JOB->>JOB: validators (quotes existem, ids, rebaixamentos)
     JOB->>OAI: responses.parse(gap_audit, zodTextFormat)
     OAI-->>JOB: GapAuditOutput
-    JOB->>DB: Analysis(content); status=analysis_ready
+    JOB->>OAI: responses.parse(summarize, zodTextFormat)
+    OAI-->>JOB: MeetingSummaryOutput
+    JOB->>JOB: validateSummary (ids, quotes, números); falha não bloqueia
+    JOB->>DB: Analysis(content + meeting_summary); status=analysis_ready
     FE->>API: GET /meetings/{id}/analysis
     API-->>FE: MeetingAnalysis
 ```
+
+O resumo (`meeting_summary`) é gravado **dentro do mesmo documento `content` da análise** — não há tabela nova. A etapa de resumo é não bloqueante: se falhar, a reunião segue para `analysis_ready` com `meeting_summary = null` e o resumo pode ser gerado depois por `POST /meetings/{id}/summary`. O progresso expõe `progress.step ∈ {transcribing, extracting, auditing, summarizing}` dentro de `status = analyzing`.
 
 `runPipeline` é chamado sem `await` dentro de um `try/catch` que grava `failed` + `error` em qualquer exceção. Um job preso (processo reiniciado) é detectado no `GET /meetings/{id}`: se `status ∈ {transcribing, analyzing}` e `updated_at` mais antigo que `JOB_STALE_MINUTES`, marca `failed` com `JOB_STALE`.
 
@@ -271,6 +276,7 @@ sequenceDiagram
 | 3 Extrair | `aiAnalysis/extract.ts` | transcrição | `ExtractionOutput` | sim, structured output |
 | 4 Validar | `aiAnalysis/validators.ts` | extração | extração + `limitations[]` | não |
 | 5 Auditar lacunas | `aiAnalysis/gapAudit.ts` | transcrição + extração | `GapAuditOutput` | sim, structured output |
+| 5b Resumir | `aiAnalysis/summarize.ts` | transcrição + análise validada | `MeetingSummaryOutput` → `meeting_summary` | sim, structured output (não bloqueante) |
 | 6 Revisar | UI + `PUT /analysis` | análise | análise com `review_status` por item | humano |
 | 7 Construir proposta | `proposal/builder.ts` | análise revisada | `ProposalContent` parcial | não |
 | 8 Estimar | `estimation/engine.ts` | módulos + pendências | horas, equipe, cronograma | não |
