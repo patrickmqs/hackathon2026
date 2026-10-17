@@ -27,7 +27,8 @@ Documento para quem continuar o trabalho de IA em outra sessão. Fonte de verdad
 ## 2. Próximos passos, em ordem
 
 1. **Recarregar o saldo da OpenAI** (os créditos acabaram durante os testes: `429 You have no credits remaining`). Nada ao vivo é confiável até isso.
-2. **Ligar o composer ao builder (A9):** `proposal/builder.ts` do P1 preenche `executive_summary` com `analysis.summary` cru; o meu `composer.ts` (texto redigido pela IA, com `assertNumbersUnchanged`) **não é chamado**. A saída do `engine` é plana (`total_hours_min`, `lines`…) e o composer espera `{estimates:{method,basis_label,lines com rationale…}}`: é preciso um adaptador. Passar `integrationCount`, `nfrCount` e `unresolvedEffortIssues` ao `estimate()` e calibrar com `sample_data/historical_projects.json`.
+2. **Calibrar as estimativas:** o builder do P1 já passa `integrationCount`, `nfrCount` e `unresolvedEffortIssues` ao `estimate()`; falta calibrar `rules.ts` com `sample_data/historical_projects.json` e conferir a faixa na reunião de exemplo (meta 300–900 h).
+2b. **Rodar o composer de verdade (com crédito)** via `POST /projects/{id}/proposals` e ler o texto gerado: até aqui só foi testado com composer falso na API e ao vivo isolado.
 3. **Medir a estabilidade da extração:** `AI_RUNS=4 AI_TESTS=1 node --env-file=../.env node_modules/vitest/vitest.mjs run tests/ai/robustness.live.test.ts` (em `backend/`). Ler o resultado antes de mexer em prompt.
 4. **Estabilizar `dec_web_first` e `dec_faturamento_erp`**, que oscilam entre execuções. Causa observada: o extrator deixa `agreed_by` vazio (ou só com um nome) e a decisão é rebaixada a `pending_validation` ("ninguém registrado em agreed_by"). Se continuar abaixo de 3/4, o ajuste é no `extract.md`.
 5. IA13 (comando único e gabarito), IA14 (E2E, quando as rotas existirem), IA15, IA16.
@@ -88,6 +89,9 @@ npm run bench:transcribe -- <audio>    # compara 5 modelos de transcrição
 - **Dívida:** existem dois schemas de análise (`shared/` e `backend/src/schemas/`) e dois de proposta. Ambos validam os exemplos, mas podem divergir. Unificar em `shared/` exige ajustar fixtures dele (`meeting_id` dele é `z.string()`, o meu é UUID).
 - O P1 trocou `UNCERTAINTY_PCT` (array → objeto) e `NFR_SURCHARGE_MIN_COUNT` (→ `_MIN_REQUIREMENTS`) em `rules.ts`; ajustei o meu teste.
 - `npx prisma generate` é necessário depois do `npm install` para o typecheck passar.
+
+- **Composer ligado à API (feito):** `services/proposal/compose-step.ts` roda DEPOIS do `buildProposalContent` e troca só os campos de texto (nunca estimativas, equipe, cronograma, valores, cliente, fornecedor, meta). `AppDeps.composer` é opcional; `createComposer()` devolve o real com `OPENAI_API_KEY` e sem `AI_PIPELINE=stub`. **Não bloqueante:** se a IA falha, a proposta é criada com o texto determinístico e o aviso vai para `console.warn`. O resultado valida em `ProposalContentSchema`. Testes com composer falso (unitário e rota).
+- O fornecedor passado ao composer é `content.vendor` do builder ("Proposal AI (demo)"), não `sample_data/vendor_profile.json`.
 
 ## 7b. Atenção com o time (ainda não comunicado ao P1/P2/P3)
 

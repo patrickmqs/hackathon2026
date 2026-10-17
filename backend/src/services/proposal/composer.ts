@@ -14,7 +14,7 @@ interface ReviewedItem {
   id: string;
   review_status: string;
   source_refs: unknown;
-  reviewer_note: unknown;
+  reviewer_note?: unknown;
 }
 export interface ComposerAnalysis {
   summary: string;
@@ -269,7 +269,7 @@ export function assertModulesMatch(text: ProposalTextOutput, analysis: MeetingAn
 
 function buildInput(analysis: MeetingAnalysis, est: ComposerEstimates, vendor: VendorProfileInput, feedback?: string) {
   // Sem source_refs/metadados: o redator não precisa de citações nem de ids de revisão.
-  const strip = <T extends { source_refs: unknown; review_status: unknown; reviewer_note: unknown }>(items: T[]) =>
+  const strip = <T extends { source_refs: unknown; review_status: unknown; reviewer_note?: unknown }>(items: T[]) =>
     items.map(({ source_refs: _s, review_status: _r, reviewer_note: _n, ...rest }) => rest);
   const payload = {
     analysis: {

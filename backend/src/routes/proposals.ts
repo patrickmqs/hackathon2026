@@ -11,6 +11,7 @@ import type { MeetingAnalysis } from "../schemas/analysis.js";
 import { ProposalContentSchema, type ProposalContent } from "../schemas/proposal.js";
 import { generatePdf } from "../services/pdf/renderer.js";
 import { buildProposalContent } from "../services/proposal/builder.js";
+import { applyComposedText } from "../services/proposal/compose-step.js";
 import { contentHash } from "../services/proposal/versioning.js";
 
 // Rotas de Propostas — API_SPEC §4.5.
@@ -130,7 +131,7 @@ async function renderPdfSafely(content: ProposalContent): Promise<Buffer> {
 }
 
 export function proposalCreateRouter(deps: AppDeps): Router {
-  const { repo } = deps;
+  const { repo, composer } = deps;
   const router = Router({ mergeParams: true });
 
   router.post("/", requireDemoUser, async (req, res) => {
@@ -156,13 +157,20 @@ export function proposalCreateRouter(deps: AppDeps): Router {
       );
     }
 
-    const content = buildProposalContent({
+    const built = buildProposalContent({
       project,
       meeting,
       analysis: analysisContent,
       language: input.options?.language,
       includeDemoRates: input.options?.include_demo_rates,
     });
+    // Texto redigido pela IA (opcional e não bloqueante): só campos textuais; números vêm do builder.
+    let content = built;
+    if (composer) {
+      const step = await applyComposedText(built, analysisContent, composer);
+      content = step.content;
+      if (step.warning) console.warn(`[proposal] ${step.warning}`);
+    }
 
     const proposal = await repo.createProposal({ projectId, meetingId: meeting.id });
     await repo.createVersion({
