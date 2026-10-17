@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import QRCode from "qrcode";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { AppShell, Badge, Button, Card } from "@/components/AppShell";
 import { projects } from "@/lib/mocks";
 
@@ -10,16 +9,8 @@ export default function Home() {
   const [period, setPeriod] = useState("30 dias");
   const [status, setStatus] = useState("Todos os status");
   const [reportOpen, setReportOpen] = useState(false);
-  const [qrCode, setQrCode] = useState("");
   const filteredProjects = useMemo(() => status === "Todos os status" ? projects : projects.filter((project) => project.status === status), [status]);
   const reportUrl = typeof window === "undefined" ? "" : `${window.location.origin}/reports/dashboard?period=${encodeURIComponent(period)}&status=${encodeURIComponent(status)}`;
-
-  useEffect(() => {
-    if (!reportOpen || !reportUrl) return;
-    QRCode.toDataURL(reportUrl, { width: 220, margin: 2, color: { dark: "#1d2938", light: "#ffffff" } })
-      .then(setQrCode)
-      .catch(() => setQrCode(""));
-  }, [reportOpen, reportUrl]);
 
   return <AppShell title="Projetos" eyebrow="VISÃO GERAL" action={<div className="header-actions"><Button variant="secondary" onClick={() => setReportOpen(true)}>▣ Gerar relatório</Button><Button href="/projects/new">+ Novo projeto</Button></div>}>
     <div className="welcome"><div><h2>Bom dia, Marina <span>✦</span></h2><p>Acompanhe suas propostas e transforme conversas em próximos passos.</p></div><div className="metrics"><b>03<small>projetos ativos</small></b><b>01<small>aguardando revisão</small></b></div></div>
@@ -29,6 +20,6 @@ export default function Home() {
       <Card><div className="card-heading"><div><h2>Saúde dos canais</h2><p>Prontos para enviar</p></div><b className="green-text">●</b></div><div className="health-list"><p><b className="channel gmail">M</b><span><strong>Gmail</strong><small>Conectado como marina@acme.io</small></span><b className="green-text">✓</b></p><p><b className="channel whatsapp">◔</b><span><strong>WhatsApp</strong><small>Não configurado</small></span><b>—</b></p></div><Link href="/settings">Gerenciar canais →</Link></Card>
     </div>
     <Card className="activity"><div className="card-heading"><div><h2>Atividade recente</h2><p>Eventos dos seus projetos</p></div><Link href="/projects/demo">Ver timeline →</Link></div><p className="activity-row"><i className="dot green" /><span><strong>Proposta aprovada</strong><small>App de fidelidade · Rafael Mendes</small></span><time>Ontem, 16:42</time></p><p className="activity-row"><i className="dot blue" /><span><strong>Análise pronta para revisão</strong><small>Portal de Pedidos B2B · Proposal AI</small></span><time>Hoje, 10:18</time></p></Card>
-    {reportOpen && <div className="modal-backdrop" role="presentation" onClick={() => setReportOpen(false)}><div className="report-modal" role="dialog" aria-modal="true" aria-labelledby="report-title" onClick={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setReportOpen(false)} aria-label="Fechar">×</button><span className="report-icon">▣</span><h2 id="report-title">Relatório do dashboard</h2><p>Escaneie para abrir um resumo dos gráficos e indicadores exibidos agora.</p>{qrCode ? <img className="qr-code" src={qrCode} alt="QR Code para abrir o relatório do dashboard" /> : <div className="qr-loading">Gerando QR Code...</div>}<strong>{period} · {status}</strong><small>O relatório é somente leitura e reflete os filtros selecionados.</small><div className="modal-actions"><Button variant="secondary" onClick={() => navigator.clipboard?.writeText(reportUrl)}>Copiar link</Button><a className="button primary" href={reportUrl} target="_blank" rel="noreferrer">Abrir relatório</a></div></div></div>}
+    {reportOpen && <div className="modal-backdrop" role="presentation" onClick={() => setReportOpen(false)}><div className="report-modal" role="dialog" aria-modal="true" aria-labelledby="report-title" onClick={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setReportOpen(false)} aria-label="Fechar">×</button><span className="report-icon">▣</span><h2 id="report-title">Relatório do dashboard</h2><p>Abra o resumo dos gráficos e indicadores exibidos agora.</p><strong>{period} · {status}</strong><small>O relatório é somente leitura e reflete os filtros selecionados.</small><div className="modal-actions"><Button variant="secondary" onClick={() => navigator.clipboard?.writeText(reportUrl)}>Copiar link</Button><a className="button primary" href={reportUrl} target="_blank" rel="noreferrer">Abrir relatório</a></div></div></div>}
   </AppShell>;
 }
