@@ -226,6 +226,6 @@ describe("estimation rules", () => {
   it("PROFILE_SPLIT soma 1 e faixas são coerentes", () => {
     expect(Object.values(rules.PROFILE_SPLIT).reduce((a, b) => a + (b ?? 0), 0)).toBeCloseTo(1);
     for (const [lo, hi] of Object.values(rules.HOURS_BY_COMPLEXITY)) expect(lo).toBeLessThan(hi);
-    expect(rules.UNCERTAINTY_PCT).toHaveLength(4);
+    expect(Object.keys(rules.UNCERTAINTY_PCT)).toHaveLength(4);
   });
 });

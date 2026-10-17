@@ -1,4 +1,4 @@
-# Handoff — P4 (IA) · estado em 2026-10-17
+# Handoff — P4 (IA) · estado em 2026-10-17 (atualizado após integrar o backend do P1)
 
 Documento para quem continuar o trabalho de IA em outra sessão. Fonte de verdade das tarefas: [roadmap/04-ia.md](roadmap/04-ia.md). Contratos: [AI_PIPELINE.md](AI_PIPELINE.md).
 
@@ -16,7 +16,7 @@ Documento para quem continuar o trabalho de IA em outra sessão. Fonte de verdad
 | IA8 | `services/transcription/service.ts` | Feito |
 | IA9 | `historical_projects.json`, `vendor_profile.json`, áudio | Parcial: JSONs prontos; áudio é **sintético e só local** |
 | IA10 | `compose_proposal.md` + `composer.ts` | Feito |
-| IA11 | Estimativas | **Parcial: só `rules.ts` (constantes). O motor `engine.ts` não existe** |
+| IA11 | Estimativas | **O P1 entregou `engine.ts`** (316–596 h, 7 semanas na reunião de exemplo, sem sobretaxa de integração: chamei só com módulos). Falta calibrar com o histórico e passar integração/NFR/pendências ao motor |
 | IA12 | Repair | Feito, dentro de `pipeline.ts` (`analyzeMeeting`) |
 | IA13 | Suíte `tests/ai` consolidada | Parcial: testes ao vivo existem, falta um comando único e a meta de gabarito estabilizada |
 | IA14 | E2E (`scripts/e2e-demo.ts`) | Não iniciado; depende das rotas do P1 |
@@ -27,7 +27,7 @@ Documento para quem continuar o trabalho de IA em outra sessão. Fonte de verdad
 ## 2. Próximos passos, em ordem
 
 1. **Recarregar o saldo da OpenAI** (os créditos acabaram durante os testes: `429 You have no credits remaining`). Nada ao vivo é confiável até isso.
-2. **Estimativas (IA11):** escrever `backend/src/services/estimation/engine.ts` como **função pura** (módulos + complexidade + pendências → horas por perfil, equipe e cronograma por fase) usando `rules.ts` e `sample_data/historical_projects.json`, com testes. Combinar com o P1, dono nominal do B8, para não duplicar. Meta do projeto: 300–900 h para um sistema médio; checar na reunião de exemplo.
+2. **Ligar o composer ao builder (A9):** `proposal/builder.ts` do P1 preenche `executive_summary` com `analysis.summary` cru; o meu `composer.ts` (texto redigido pela IA, com `assertNumbersUnchanged`) **não é chamado**. A saída do `engine` é plana (`total_hours_min`, `lines`…) e o composer espera `{estimates:{method,basis_label,lines com rationale…}}`: é preciso um adaptador. Passar `integrationCount`, `nfrCount` e `unresolvedEffortIssues` ao `estimate()` e calibrar com `sample_data/historical_projects.json`.
 3. **Medir a estabilidade da extração:** `AI_RUNS=4 AI_TESTS=1 node --env-file=../.env node_modules/vitest/vitest.mjs run tests/ai/robustness.live.test.ts` (em `backend/`). Ler o resultado antes de mexer em prompt.
 4. **Estabilizar `dec_web_first` e `dec_faturamento_erp`**, que oscilam entre execuções. Causa observada: o extrator deixa `agreed_by` vazio (ou só com um nome) e a decisão é rebaixada a `pending_validation` ("ninguém registrado em agreed_by"). Se continuar abaixo de 3/4, o ajuste é no `extract.md`.
 5. IA13 (comando único e gabarito), IA14 (E2E, quando as rotas existirem), IA15, IA16.
@@ -81,7 +81,15 @@ npm run bench:transcribe -- <audio>    # compara 5 modelos de transcrição
 - **O checador de números do composer** (`findNumberViolations`) não cobre números por extenso e isenta contextos como SLA e duração de reunião.
 - **Transcrição do áudio não tem tempo** (`has_timestamps=false`): o "ver na transcrição" destaca o trecho sem `mm:ss`.
 
-## 7. Atenção com o time (ainda não comunicado ao P1/P2/P3)
+## 7. Integração com o backend do P1 (feita localmente, ainda não enviada)
+
+- `services/ai/openai.ts` (`OpenAiPipeline`) implementa o contrato `AiPipeline` dele; `createPipeline()` usa o real quando há `OPENAI_API_KEY` e o stub caso contrário (`AI_PIPELINE=stub` força o stub). O runner agora passa `filename` para preservar a extensão do áudio. Testado só com mocks: **nunca rodou contra a OpenAI neste caminho** (sem crédito).
+- **Bug corrigido:** `backend/src/schemas/analysis.ts` descartava `meeting_summary` ao validar, então `PUT /analysis` apagava o resumo. Agora o campo existe (`default(null)`, compatível com análises antigas). Há teste de regressão.
+- **Dívida:** existem dois schemas de análise (`shared/` e `backend/src/schemas/`) e dois de proposta. Ambos validam os exemplos, mas podem divergir. Unificar em `shared/` exige ajustar fixtures dele (`meeting_id` dele é `z.string()`, o meu é UUID).
+- O P1 trocou `UNCERTAINTY_PCT` (array → objeto) e `NFR_SURCHARGE_MIN_COUNT` (→ `_MIN_REQUIREMENTS`) em `rules.ts`; ajustei o meu teste.
+- `npx prisma generate` é necessário depois do `npm install` para o typecheck passar.
+
+## 7b. Atenção com o time (ainda não comunicado ao P1/P2/P3)
 
 - Alterei `backend/tsconfig.json` (`rootDir: ".."`, `include` de `../shared/src`) e o script `start` do `backend/package.json` (agora `node dist/backend/src/index.js`). Um Dockerfile precisa seguir esse caminho.
 - O contrato do resumo mudou: `GET/POST /meetings/{id}/summary`, `progress.step=summarizing` (API_SPEC §4.4). Tarefas novas: **B7b** (P1) e **FA8b** (P2).

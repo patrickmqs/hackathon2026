@@ -36,6 +36,7 @@ export class StubAiPipeline implements AiPipeline {
         source_type: options.sourceType,
       },
       limitations: ["Extração stub (demo): pipeline OpenAI real é responsabilidade A5/A9."],
+      meeting_summary: null,
       review_completed: false,
       meta: {
         schema_version: "1.0",

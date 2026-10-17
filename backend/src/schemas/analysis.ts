@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { Confidence, ReviewStatus } from "./common.js";
+import { MeetingSummary } from "../../../shared/src/schemas/analysis.js";
 
 // Schema `MeetingAnalysis` — AI_PIPELINE §3. Contrato entre o pipeline de IA e a API.
 // Espelha exatamente o schema Zod documentado; é o que valida a saída da extração
@@ -113,6 +114,9 @@ export const MeetingAnalysisSchema = z.object({
   tech_suggestions: z.array(TechSuggestion),
   transcript_metadata: TranscriptMetadata,
   limitations: z.array(z.string()),
+  // Resumo da reunião (etapa 5b, AI_PIPELINE §3). Sem este campo o parse descartava o resumo em
+  // PUT /analysis; `default(null)` mantém compatíveis as análises já gravadas antes dele existir.
+  meeting_summary: MeetingSummary.nullable().default(null),
   review_completed: z.boolean().default(false),
   meta: AnalysisMeta,
 });

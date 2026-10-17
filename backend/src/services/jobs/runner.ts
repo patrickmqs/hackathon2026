@@ -84,7 +84,7 @@ export class JobRunner {
         throw new DomainError("AI_PROVIDER_ERROR", "Áudio ausente para transcrição.");
       }
       const audio = this.storage.read(meeting.audioPath);
-      const result = await this.pipeline.transcribe(audio, { language: null });
+      const result = await this.pipeline.transcribe(audio, { language: null, filename: meeting.audioPath });
       await this.repo.createTranscript({
         meetingId,
         text: result.text,
