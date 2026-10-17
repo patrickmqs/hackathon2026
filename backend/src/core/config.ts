@@ -33,6 +33,8 @@ const EnvSchema = z.object({
   OPENAI_TIMEOUT_S: z.coerce.number().int().positive().default(120),
   GMAIL_FORCE_FAIL: z.string().default("false"),
   WHATSAPP_FORCE_FAIL: z.string().default("false"),
+  WHATSAPP_SESSION_DIR: z.string().optional(),
+  WHATSAPP_PAIRING_CODE_MODE: z.string().default("false"),
 });
 
 const parsed = EnvSchema.safeParse(process.env);
@@ -63,6 +65,8 @@ export const config = {
   openaiTimeoutS: data.OPENAI_TIMEOUT_S,
   gmailForceFail: data.GMAIL_FORCE_FAIL === "true",
   whatsappForceFail: data.WHATSAPP_FORCE_FAIL === "true",
+  whatsappSessionDir: data.WHATSAPP_SESSION_DIR ?? `${data.STORAGE_DIR}/whatsapp`,
+  whatsappPairingCodeMode: data.WHATSAPP_PAIRING_CODE_MODE === "true",
   aiConfigured: Boolean(data.OPENAI_API_KEY),
 };
 

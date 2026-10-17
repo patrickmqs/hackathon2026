@@ -94,6 +94,38 @@ export interface EventRecord {
   at: string;
 }
 
+export interface DeliveryRecord {
+  id: string;
+  approvalId: string;
+  idempotencyKey: string;
+  authorizedBy: string;
+  status: string;
+  authorizedAt: string;
+}
+
+export interface DeliveryChannelRecord {
+  id: string;
+  deliveryId: string;
+  channel: string;
+  // JSON flexível: { email?/phone?/name? } + opções de mensagem (subject/caption/body_text).
+  recipient: Record<string, unknown>;
+  status: string;
+  providerMessageId: string | null;
+  error: Record<string, unknown> | null;
+  attempts: number;
+  sentAt: string | null;
+  deliveredAt: string | null;
+  lastAttemptAt: string | null;
+}
+
+export interface ChannelEventRecord {
+  id: string;
+  channelId: string;
+  type: string;
+  payload: Record<string, unknown> | null;
+  at: string;
+}
+
 export interface Page<T> {
   items: T[];
   total: number;
@@ -154,6 +186,24 @@ export interface CreateEventInput {
   payload: unknown;
 }
 
+export interface CreateDeliveryInput {
+  approvalId: string;
+  idempotencyKey: string;
+  authorizedBy: string;
+}
+
+export interface CreateChannelInput {
+  deliveryId: string;
+  channel: string;
+  recipient: Record<string, unknown>;
+}
+
+export interface CreateChannelEventInput {
+  channelId: string;
+  type: string;
+  payload: Record<string, unknown> | null;
+}
+
 export interface Repository {
   // Projects
   createProject(input: CreateProjectInput): Promise<ProjectRecord>;
@@ -183,16 +233,36 @@ export interface Repository {
   updateProposal(id: string, patch: Patch<ProposalRecord>): Promise<ProposalRecord | null>;
   createVersion(input: CreateVersionInput): Promise<ProposalVersionRecord>;
   getVersion(proposalId: string, number: number): Promise<ProposalVersionRecord | null>;
+  getVersionById(id: string): Promise<ProposalVersionRecord | null>;
   listVersions(proposalId: string): Promise<ProposalVersionRecord[]>;
   updateVersion(id: string, patch: Patch<ProposalVersionRecord>): Promise<ProposalVersionRecord | null>;
 
   // Approval
   createApproval(input: CreateApprovalInput): Promise<ApprovalRecord>;
   getApprovalByVersion(proposalVersionId: string): Promise<ApprovalRecord | null>;
+  getApprovalById(id: string): Promise<ApprovalRecord | null>;
 
   // PDF artifact
   createPdf(input: CreatePdfInput): Promise<PdfArtifactRecord>;
   getPdf(proposalVersionId: string): Promise<PdfArtifactRecord | null>;
+
+  // Deliveries
+  createDelivery(input: CreateDeliveryInput): Promise<DeliveryRecord>;
+  getDelivery(id: string): Promise<DeliveryRecord | null>;
+  getDeliveryByIdempotencyKey(idempotencyKey: string): Promise<DeliveryRecord | null>;
+  listDeliveriesByProposal(proposalId: string): Promise<DeliveryRecord[]>;
+  updateDelivery(id: string, patch: Patch<DeliveryRecord>): Promise<DeliveryRecord | null>;
+
+  // Delivery channels
+  createChannel(input: CreateChannelInput): Promise<DeliveryChannelRecord>;
+  getChannel(id: string): Promise<DeliveryChannelRecord | null>;
+  listChannels(deliveryId: string): Promise<DeliveryChannelRecord[]>;
+  updateChannel(id: string, patch: Patch<DeliveryChannelRecord>): Promise<DeliveryChannelRecord | null>;
+  findChannelByProviderMessageId(providerMessageId: string): Promise<DeliveryChannelRecord | null>;
+
+  // Channel events
+  createChannelEvent(input: CreateChannelEventInput): Promise<ChannelEventRecord>;
+  listChannelEvents(channelId: string): Promise<ChannelEventRecord[]>;
 
   // Events
   createEvent(input: CreateEventInput): Promise<EventRecord>;

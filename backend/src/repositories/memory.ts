@@ -2,14 +2,20 @@ import { randomUUID } from "node:crypto";
 import type {
   ApprovalRecord,
   AnalysisRecord,
+  ChannelEventRecord,
   CreateApprovalInput,
   CreateAnalysisInput,
+  CreateChannelEventInput,
+  CreateChannelInput,
+  CreateDeliveryInput,
   CreateEventInput,
   CreateMeetingInput,
   CreatePdfInput,
   CreateProjectInput,
   CreateProposalInput,
   CreateVersionInput,
+  DeliveryChannelRecord,
+  DeliveryRecord,
   EventRecord,
   MeetingRecord,
   Page,
@@ -37,6 +43,9 @@ export class MemoryRepository implements Repository {
   private versions = new Map<string, ProposalVersionRecord>();
   private approvals = new Map<string, ApprovalRecord>();
   private pdfs = new Map<string, PdfArtifactRecord>();
+  private deliveries = new Map<string, DeliveryRecord>();
+  private channels = new Map<string, DeliveryChannelRecord>();
+  private channelEvents = new Map<string, ChannelEventRecord>();
   private events = new Map<string, EventRecord>();
 
   private id(): string {
@@ -233,6 +242,10 @@ export class MemoryRepository implements Repository {
     return null;
   }
 
+  async getVersionById(id: string): Promise<ProposalVersionRecord | null> {
+    return this.versions.get(id) ?? null;
+  }
+
   async listVersions(proposalId: string): Promise<ProposalVersionRecord[]> {
     return [...this.versions.values()]
       .filter((v) => v.proposalId === proposalId)
@@ -268,6 +281,10 @@ export class MemoryRepository implements Repository {
     return null;
   }
 
+  async getApprovalById(id: string): Promise<ApprovalRecord | null> {
+    return this.approvals.get(id) ?? null;
+  }
+
   // PDF
   async createPdf(input: CreatePdfInput): Promise<PdfArtifactRecord> {
     const rec: PdfArtifactRecord = {
@@ -283,6 +300,114 @@ export class MemoryRepository implements Repository {
 
   async getPdf(proposalVersionId: string): Promise<PdfArtifactRecord | null> {
     return this.pdfs.get(proposalVersionId) ?? null;
+  }
+
+  // Deliveries
+  async createDelivery(input: CreateDeliveryInput): Promise<DeliveryRecord> {
+    const rec: DeliveryRecord = {
+      id: this.id(),
+      approvalId: input.approvalId,
+      idempotencyKey: input.idempotencyKey,
+      authorizedBy: input.authorizedBy,
+      status: "authorized",
+      authorizedAt: now(),
+    };
+    this.deliveries.set(rec.id, rec);
+    return rec;
+  }
+
+  async getDelivery(id: string): Promise<DeliveryRecord | null> {
+    return this.deliveries.get(id) ?? null;
+  }
+
+  async getDeliveryByIdempotencyKey(idempotencyKey: string): Promise<DeliveryRecord | null> {
+    for (const d of this.deliveries.values()) {
+      if (d.idempotencyKey === idempotencyKey) return d;
+    }
+    return null;
+  }
+
+  async listDeliveriesByProposal(proposalId: string): Promise<DeliveryRecord[]> {
+    const versionIds = new Set(
+      [...this.versions.values()].filter((v) => v.proposalId === proposalId).map((v) => v.id),
+    );
+    const approvalIds = new Set(
+      [...this.approvals.values()].filter((a) => versionIds.has(a.proposalVersionId)).map((a) => a.id),
+    );
+    return [...this.deliveries.values()]
+      .filter((d) => approvalIds.has(d.approvalId))
+      .sort((a, b) => b.authorizedAt.localeCompare(a.authorizedAt));
+  }
+
+  async updateDelivery(id: string, patch: Patch<DeliveryRecord>): Promise<DeliveryRecord | null> {
+    const rec = this.deliveries.get(id);
+    if (!rec) return null;
+    const updated = { ...rec, ...patch, id: rec.id };
+    this.deliveries.set(id, updated);
+    return updated;
+  }
+
+  // Delivery channels
+  async createChannel(input: CreateChannelInput): Promise<DeliveryChannelRecord> {
+    const rec: DeliveryChannelRecord = {
+      id: this.id(),
+      deliveryId: input.deliveryId,
+      channel: input.channel,
+      recipient: input.recipient,
+      status: "queued",
+      providerMessageId: null,
+      error: null,
+      attempts: 0,
+      sentAt: null,
+      deliveredAt: null,
+      lastAttemptAt: null,
+    };
+    this.channels.set(rec.id, rec);
+    return rec;
+  }
+
+  async getChannel(id: string): Promise<DeliveryChannelRecord | null> {
+    return this.channels.get(id) ?? null;
+  }
+
+  async listChannels(deliveryId: string): Promise<DeliveryChannelRecord[]> {
+    return [...this.channels.values()]
+      .filter((c) => c.deliveryId === deliveryId)
+      .sort((a, b) => a.channel.localeCompare(b.channel));
+  }
+
+  async updateChannel(id: string, patch: Patch<DeliveryChannelRecord>): Promise<DeliveryChannelRecord | null> {
+    const rec = this.channels.get(id);
+    if (!rec) return null;
+    const updated = { ...rec, ...patch, id: rec.id };
+    this.channels.set(id, updated);
+    return updated;
+  }
+
+  async findChannelByProviderMessageId(providerMessageId: string): Promise<DeliveryChannelRecord | null> {
+    for (const c of this.channels.values()) {
+      if (c.providerMessageId === providerMessageId) return c;
+    }
+    return null;
+  }
+
+  // Channel events
+  async createChannelEvent(input: CreateChannelEventInput): Promise<ChannelEventRecord> {
+    const rec: ChannelEventRecord = {
+      id: this.id(),
+      channelId: input.channelId,
+      type: input.type,
+      payload: input.payload,
+      at: now(),
+    };
+    this.channelEvents.set(rec.id, rec);
+    return rec;
+  }
+
+  async listChannelEvents(channelId: string): Promise<ChannelEventRecord[]> {
+    return [...this.channelEvents.values()]
+      .filter((e) => e.channelId === channelId)
+      .sort((a, b) => a.at.localeCompare(b.at));
   }
 
   // Events

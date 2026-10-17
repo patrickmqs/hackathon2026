@@ -1,16 +1,22 @@
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "./client.js";
 import type {
   ApprovalRecord,
   AnalysisRecord,
+  ChannelEventRecord,
   CreateApprovalInput,
   CreateAnalysisInput,
+  CreateChannelEventInput,
+  CreateChannelInput,
+  CreateDeliveryInput,
   CreateEventInput,
   CreateMeetingInput,
   CreatePdfInput,
   CreateProjectInput,
   CreateProposalInput,
   CreateVersionInput,
+  DeliveryChannelRecord,
+  DeliveryRecord,
   EventRecord,
   MeetingRecord,
   Page,
@@ -113,6 +119,68 @@ function mapVersion(v: {
     status: v.status,
     createdBy: v.createdBy,
     createdAt: iso(v.createdAt),
+  };
+}
+
+function mapDelivery(d: {
+  id: string;
+  approvalId: string;
+  idempotencyKey: string;
+  authorizedBy: string;
+  status: string;
+  authorizedAt: Date;
+}): DeliveryRecord {
+  return {
+    id: d.id,
+    approvalId: d.approvalId,
+    idempotencyKey: d.idempotencyKey,
+    authorizedBy: d.authorizedBy,
+    status: d.status,
+    authorizedAt: iso(d.authorizedAt),
+  };
+}
+
+function mapChannel(c: {
+  id: string;
+  deliveryId: string;
+  channel: string;
+  recipient: Prisma.JsonValue;
+  status: string;
+  providerMessageId: string | null;
+  error: Prisma.JsonValue | null;
+  attempts: number;
+  sentAt: Date | null;
+  deliveredAt: Date | null;
+  lastAttemptAt: Date | null;
+}): DeliveryChannelRecord {
+  return {
+    id: c.id,
+    deliveryId: c.deliveryId,
+    channel: c.channel,
+    recipient: json(c.recipient),
+    status: c.status,
+    providerMessageId: c.providerMessageId,
+    error: c.error ? json(c.error) : null,
+    attempts: c.attempts,
+    sentAt: c.sentAt ? iso(c.sentAt) : null,
+    deliveredAt: c.deliveredAt ? iso(c.deliveredAt) : null,
+    lastAttemptAt: c.lastAttemptAt ? iso(c.lastAttemptAt) : null,
+  };
+}
+
+function mapChannelEvent(e: {
+  id: string;
+  channelId: string;
+  type: string;
+  payload: Prisma.JsonValue | null;
+  at: Date;
+}): ChannelEventRecord {
+  return {
+    id: e.id,
+    channelId: e.channelId,
+    type: e.type,
+    payload: e.payload ? json(e.payload) : null,
+    at: iso(e.at),
   };
 }
 
@@ -354,6 +422,11 @@ export class PrismaRepository implements Repository {
     return v ? mapVersion(v) : null;
   }
 
+  async getVersionById(id: string): Promise<ProposalVersionRecord | null> {
+    const v = await prisma.proposalVersion.findUnique({ where: { id } });
+    return v ? mapVersion(v) : null;
+  }
+
   async listVersions(proposalId: string): Promise<ProposalVersionRecord[]> {
     const rows = await prisma.proposalVersion.findMany({ where: { proposalId }, orderBy: { number: "asc" } });
     return rows.map(mapVersion);
@@ -399,6 +472,19 @@ export class PrismaRepository implements Repository {
     };
   }
 
+  async getApprovalById(id: string): Promise<ApprovalRecord | null> {
+    const a = await prisma.approval.findUnique({ where: { id } });
+    if (!a) return null;
+    return {
+      id: a.id,
+      proposalVersionId: a.proposalVersionId,
+      approvedBy: a.approvedBy,
+      contentHash: a.contentHash,
+      note: a.note,
+      approvedAt: iso(a.approvedAt),
+    };
+  }
+
   async createPdf(input: CreatePdfInput): Promise<PdfArtifactRecord> {
     const pdf = await prisma.pdfArtifact.create({
       data: {
@@ -426,6 +512,104 @@ export class PrismaRepository implements Repository {
       sizeBytes: pdf.sizeBytes,
       generatedAt: iso(pdf.generatedAt),
     };
+  }
+
+  // Deliveries
+  async createDelivery(input: CreateDeliveryInput): Promise<DeliveryRecord> {
+    const d = await prisma.delivery.create({
+      data: {
+        approvalId: input.approvalId,
+        idempotencyKey: input.idempotencyKey,
+        authorizedBy: input.authorizedBy,
+      },
+    });
+    return mapDelivery(d);
+  }
+
+  async getDelivery(id: string): Promise<DeliveryRecord | null> {
+    const d = await prisma.delivery.findUnique({ where: { id } });
+    return d ? mapDelivery(d) : null;
+  }
+
+  async getDeliveryByIdempotencyKey(idempotencyKey: string): Promise<DeliveryRecord | null> {
+    const d = await prisma.delivery.findUnique({ where: { idempotencyKey } });
+    return d ? mapDelivery(d) : null;
+  }
+
+  async listDeliveriesByProposal(proposalId: string): Promise<DeliveryRecord[]> {
+    const rows = await prisma.delivery.findMany({
+      where: { approval: { proposalVersion: { proposalId } } },
+      orderBy: { authorizedAt: "desc" },
+    });
+    return rows.map(mapDelivery);
+  }
+
+  async updateDelivery(id: string, patch: Patch<DeliveryRecord>): Promise<DeliveryRecord | null> {
+    const d = await prisma.delivery.update({
+      where: { id },
+      data: { status: patch.status },
+    });
+    return mapDelivery(d);
+  }
+
+  // Delivery channels
+  async createChannel(input: CreateChannelInput): Promise<DeliveryChannelRecord> {
+    const c = await prisma.deliveryChannel.create({
+      data: {
+        deliveryId: input.deliveryId,
+        channel: input.channel,
+        recipient: input.recipient as Prisma.InputJsonValue,
+      },
+    });
+    return mapChannel(c);
+  }
+
+  async getChannel(id: string): Promise<DeliveryChannelRecord | null> {
+    const c = await prisma.deliveryChannel.findUnique({ where: { id } });
+    return c ? mapChannel(c) : null;
+  }
+
+  async listChannels(deliveryId: string): Promise<DeliveryChannelRecord[]> {
+    const rows = await prisma.deliveryChannel.findMany({ where: { deliveryId }, orderBy: { channel: "asc" } });
+    return rows.map(mapChannel);
+  }
+
+  async updateChannel(id: string, patch: Patch<DeliveryChannelRecord>): Promise<DeliveryChannelRecord | null> {
+    const c = await prisma.deliveryChannel.update({
+      where: { id },
+      data: {
+        status: patch.status,
+        providerMessageId: patch.providerMessageId,
+        error: patch.error as Prisma.InputJsonValue | undefined,
+        attempts: patch.attempts,
+        sentAt: patch.sentAt ? new Date(patch.sentAt) : undefined,
+        deliveredAt: patch.deliveredAt ? new Date(patch.deliveredAt) : undefined,
+        lastAttemptAt: patch.lastAttemptAt ? new Date(patch.lastAttemptAt) : undefined,
+      },
+    });
+    return mapChannel(c);
+  }
+
+  async findChannelByProviderMessageId(providerMessageId: string): Promise<DeliveryChannelRecord | null> {
+    const c = await prisma.deliveryChannel.findFirst({ where: { providerMessageId } });
+    return c ? mapChannel(c) : null;
+  }
+
+  // Channel events
+  async createChannelEvent(input: CreateChannelEventInput): Promise<ChannelEventRecord> {
+    const e = await prisma.channelEvent.create({
+      data: {
+        channelId: input.channelId,
+        type: input.type,
+        payload: input.payload === null ? Prisma.JsonNull : (input.payload as Prisma.InputJsonValue),
+      },
+    });
+    return mapChannelEvent(e);
+  }
+
+  async listChannelEvents(channelId: string): Promise<ChannelEventRecord[]> {
+    const rows = await prisma.channelEvent.findMany({ where: { channelId }, orderBy: { at: "asc" } });
+    return rows.map(mapChannelEvent);
   }
 
   async createEvent(input: CreateEventInput): Promise<EventRecord> {

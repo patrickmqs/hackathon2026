@@ -56,3 +56,16 @@
 .project-menu-pop button { display: block; width: auto; padding: 8px 10px; border: 0; border-radius: 6px; background: transparent; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
 .project-menu-pop button:hover { background: var(--line); }
 .project-menu-pop button.danger { color: var(--red); }
+
+/* Conexão WhatsApp (QR code / pairing code) */
+.whatsapp-modal { width: min(400px, calc(100% - 40px)); }
+.wa-modal-body { display: grid; justify-items: center; gap: 12px; padding: 12px 0 4px; }
+.wa-qr { width: 240px; height: 240px; image-rendering: pixelated; border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 8px; }
+.wa-status { margin: 0; color: var(--muted); font-size: 12px; text-align: center; }
+.wa-pairing-code { font-family: monospace; font-size: 24px; letter-spacing: 4px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 14px 20px; }
+.wa-state { font-size: 13px; font-weight: 700; color: var(--ink); }
+.wa-state.success { color: var(--green); }
+.wa-test-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+.wa-test-row input { flex: 1; min-width: 0; }
+.wa-actions { display: flex; gap: 6px; flex: none; }
+[data-theme="dark"] .wa-qr { background: #fff; }
