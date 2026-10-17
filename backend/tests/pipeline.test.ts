@@ -143,12 +143,9 @@ describe("analyzeMeeting", () => {
     expect(passed.decisions.find((d) => d.id === "dec_01")!.status).toBe("pending_validation");
   });
 
-  it("falha do resumo não bloqueia: meeting_summary null e nota em limitations", async () => {
+  it("falha do resumo bloqueia a conclusão da análise", async () => {
     script({});
     vi.mocked(summarizeDetailed).mockRejectedValue(new AiOutputInvalidError("Resumo inválido após 3 tentativas"));
-    const a = await analyzeMeeting(transcript, MEETING);
-    expect(a.meeting_summary).toBeNull();
-    expect(a.limitations.some((l) => l.startsWith("Resumo da reunião não gerado:"))).toBe(true);
-    expect(MeetingAnalysis.safeParse(a).success).toBe(true);
+    await expect(analyzeMeeting(transcript, MEETING)).rejects.toThrow("Resumo inválido após 3 tentativas");
   });
 });

@@ -1,11 +1,19 @@
 import { z } from "zod";
+import { existsSync } from "node:fs";
+import path from "node:path";
 
-// Carrega `.env` se existir (Node 21.7+). Sem dependência extra; em produção as
-// variáveis vêm do ambiente do container.
-try {
-  process.loadEnvFile?.();
-} catch {
-  // `.env` é opcional — variáveis podem já estar no ambiente.
+// Em desenvolvimento, as workspaces podem iniciar no diretório `backend`, mas
+// o `.env` local do projeto fica na raiz do monorepo.
+if (process.loadEnvFile) {
+  const workingDirectory = process.cwd();
+  const isBackendDirectory = path.basename(workingDirectory) === "backend";
+  const envFiles = isBackendDirectory
+    ? [path.resolve(workingDirectory, "..", ".env"), path.resolve(workingDirectory, ".env")]
+    : [path.resolve(workingDirectory, ".env"), path.resolve(workingDirectory, "backend", ".env")];
+
+  for (const envFile of envFiles) {
+    if (existsSync(envFile)) process.loadEnvFile(envFile);
+  }
 }
 
 const EnvSchema = z.object({

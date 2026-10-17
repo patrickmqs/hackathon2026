@@ -8,12 +8,12 @@ import { FileStorage } from "../../../src/core/storage.js";
 import { MemoryRepository } from "../../../src/repositories/memory.js";
 import { PLACEHOLDER_COMPANY, PLACEHOLDER_PROJECT_NAME } from "../../../src/schemas/project.js";
 import type { ProjectInfo } from "../../../src/services/aiAnalysis/projectInfo.js";
-import { StubAiPipeline } from "../../../src/services/ai/stub.js";
+import { SuccessfulStubPipeline } from "../../helpers/successful-stub-pipeline.js";
 import { JobRunner } from "../../../src/services/jobs/runner.js";
 
 const makeStorage = () => new FileStorage(mkdtempSync(join(tmpdir(), "proposal-ai-")));
 
-class InfoPipeline extends StubAiPipeline {
+class InfoPipeline extends SuccessfulStubPipeline {
   constructor(private readonly result: ProjectInfo | null | Error) {
     super();
   }
@@ -24,7 +24,7 @@ class InfoPipeline extends StubAiPipeline {
 }
 
 async function runWith(
-  pipeline: StubAiPipeline,
+  pipeline: SuccessfulStubPipeline,
   project: { name: string; client: Record<string, unknown> },
 ) {
   const repo = new MemoryRepository();

@@ -53,7 +53,17 @@ function getClient(): OpenAI {
   return client;
 }
 
+// Conexão derrubada no meio da resposta: o undici lança TypeError("terminated") / "fetch failed",
+// ou um erro de socket (ECONNRESET etc.), que não vira APIConnectionError do SDK.
+function isNetworkDrop(e: unknown): boolean {
+  if (!(e instanceof Error)) return false;
+  const code = (e as { code?: string; cause?: { code?: string } }).code ?? (e as { cause?: { code?: string } }).cause?.code ?? "";
+  return /^(terminated|fetch failed)$/i.test(e.message)
+    || /^(ECONNRESET|ETIMEDOUT|EPIPE|UND_ERR_SOCKET|UND_ERR_CONNECT_TIMEOUT)$/.test(code);
+}
+
 function isRetryable(e: unknown): boolean {
+  if (isNetworkDrop(e)) return true;
   if (e instanceof OpenAI.APIConnectionError) return true; // inclui timeout
   if (e instanceof OpenAI.APIError) {
     // 429 por falta de crédito/cota não é transitório: repetir só gasta tempo e atrasa o erro.

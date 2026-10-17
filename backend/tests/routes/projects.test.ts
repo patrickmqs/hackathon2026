@@ -63,3 +63,13 @@ describe("GET /projects/:id", () => {
     expect(res.body.error.code).toBe("NOT_FOUND");
   });
 });
+
+describe("DELETE /projects/:id", () => {
+  it("remove o projeto (204) e depois retorna 404", async () => {
+    const app = makeApp();
+    const { body } = await request(app).post("/projects").send(validProject);
+    expect((await request(app).delete(`/projects/${body.id}`)).status).toBe(204);
+    expect((await request(app).get(`/projects/${body.id}`)).status).toBe(404);
+    expect((await request(app).delete(`/projects/${body.id}`)).status).toBe(404);
+  });
+});

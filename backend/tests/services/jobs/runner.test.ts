@@ -6,11 +6,12 @@ import { FileStorage } from "../../../src/core/storage.js";
 import { MemoryRepository } from "../../../src/repositories/memory.js";
 import { StubAiPipeline } from "../../../src/services/ai/stub.js";
 import { isMeetingStale, JobRunner } from "../../../src/services/jobs/runner.js";
+import { SuccessfulStubPipeline } from "../../helpers/successful-stub-pipeline.js";
 
 function makeRunner(staleMinutes = 0) {
   const repo = new MemoryRepository();
   const storage = new FileStorage(mkdtempSync(join(tmpdir(), "proposal-ai-")));
-  const jobs = new JobRunner({ repo, storage, pipeline: new StubAiPipeline(), staleMinutes });
+  const jobs = new JobRunner({ repo, storage, pipeline: new SuccessfulStubPipeline(), staleMinutes });
   return { repo, storage, jobs };
 }
 
@@ -50,7 +51,33 @@ describe("JobRunner (texto)", () => {
     await jobs.run(meeting.id);
 
     expect((await repo.getMeeting(meeting.id))?.status).toBe("analysis_ready");
-    expect(await repo.getAnalysis(meeting.id)).not.toBeNull();
+    expect((await repo.getAnalysis(meeting.id))?.content.meeting_summary).not.toBeNull();
+  });
+
+  it("não marca a análise como pronta quando o resumo não foi gerado", async () => {
+    const repo = new MemoryRepository();
+    const storage = new FileStorage(mkdtempSync(join(tmpdir(), "proposal-ai-")));
+    class MissingSummaryPipeline extends StubAiPipeline {
+      override async analyze(...args: Parameters<StubAiPipeline["analyze"]>) {
+        return { ...await super.analyze(...args), meeting_summary: null };
+      }
+    }
+    const jobs = new JobRunner({ repo, storage, pipeline: new MissingSummaryPipeline() });
+    const project = await createProject(repo);
+    const meeting = await repo.createMeeting({
+      projectId: project.id,
+      sourceType: "text",
+      status: "analyzing",
+      title: null,
+      audioPath: null,
+    });
+    await repo.createTranscript({ meetingId: meeting.id, text: "transcrição", segments: [], metadata: {} });
+
+    await jobs.run(meeting.id);
+
+    expect((await repo.getMeeting(meeting.id))?.status).toBe("failed");
+    expect((await repo.getMeeting(meeting.id))?.error?.message).toContain("Resumo da reunião não foi gerado");
+    expect(await repo.getAnalysis(meeting.id)).toBeNull();
   });
 
   it("é idempotente quando a reunião já está terminal", async () => {
@@ -86,6 +113,6 @@ describe("JobRunner (áudio)", () => {
 
     expect((await repo.getMeeting(meeting.id))?.status).toBe("analysis_ready");
     expect(await repo.getTranscript(meeting.id)).not.toBeNull();
-    expect(await repo.getAnalysis(meeting.id)).not.toBeNull();
+    expect((await repo.getAnalysis(meeting.id))?.content.meeting_summary).not.toBeNull();
   });
 });

@@ -1,11 +1,11 @@
 // Orquestrador da análise (docs/AI_PIPELINE.md §2, §3, §6): extração -> validação -> auditoria ->
-// validação -> rebaixamentos -> resumo (não bloqueante) -> MeetingAnalysis.
+// validação -> rebaixamentos -> resumo obrigatório -> MeetingAnalysis.
 import {
   ExtractionOutput,
   type GapAuditOutput,
   type MeetingAnalysis,
 } from "../../../../shared/src/schemas/analysis.js";
-import { AiOutputInvalidError, AiProviderError } from "../../core/errors.js";
+import { AiOutputInvalidError } from "../../core/errors.js";
 import { structuredCompletion } from "../../integrations/openai/client.js";
 import type { Transcript } from "../transcription/types.js";
 import { buildExtractInput } from "./extract.js";
@@ -168,18 +168,13 @@ export async function analyzeMeeting(
     },
   };
 
-  // 4. Resumo — não bloqueante (§2, §6)
+  // 4. Resumo obrigatório para concluir a análise.
   opts.onProgress?.("summarizing");
-  try {
-    const s = await summarizeDetailed(transcript, analysis, "analysis", { model: opts.model });
-    analysis.meeting_summary = {
-      ...s.summary,
-      meta: { prompt_version: s.promptVersion, model, generated_at: new Date().toISOString(), basis: "analysis" },
-    };
-    analysis.limitations.push(...s.limitations);
-  } catch (e) {
-    if (!(e instanceof AiOutputInvalidError || e instanceof AiProviderError)) throw e;
-    analysis.limitations.push(`Resumo da reunião não gerado: ${e.message}`);
-  }
+  const s = await summarizeDetailed(transcript, analysis, "analysis", { model: opts.model });
+  analysis.meeting_summary = {
+    ...s.summary,
+    meta: { prompt_version: s.promptVersion, model, generated_at: new Date().toISOString(), basis: "analysis" },
+  };
+  analysis.limitations.push(...s.limitations);
   return analysis;
 }

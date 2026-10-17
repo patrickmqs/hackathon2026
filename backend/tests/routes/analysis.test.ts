@@ -6,13 +6,13 @@ import { describe, expect, it } from "vitest";
 import { createApp } from "../../src/app.js";
 import { FileStorage } from "../../src/core/storage.js";
 import { MemoryRepository } from "../../src/repositories/memory.js";
-import { StubAiPipeline } from "../../src/services/ai/stub.js";
+import { SuccessfulStubPipeline } from "../helpers/successful-stub-pipeline.js";
 import { JobRunner } from "../../src/services/jobs/runner.js";
 
 function makeApp() {
   const repo = new MemoryRepository();
   const storage = new FileStorage(mkdtempSync(join(tmpdir(), "proposal-ai-")));
-  const jobs = new JobRunner({ repo, storage, pipeline: new StubAiPipeline(), staleMinutes: 0 });
+  const jobs = new JobRunner({ repo, storage, pipeline: new SuccessfulStubPipeline(), staleMinutes: 0 });
   const app = createApp({ repo, storage, jobs });
   return { app, repo, jobs };
 }

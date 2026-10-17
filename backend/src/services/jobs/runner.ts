@@ -105,6 +105,12 @@ export class JobRunner {
         language: null,
         sourceType: meeting.sourceType as "text" | "audio",
       });
+      if (!analysis.meeting_summary) {
+        throw new DomainError(
+          "AI_PROVIDER_ERROR",
+          "Resumo da reunião não foi gerado. Verifique a configuração da IA e tente novamente.",
+        );
+      }
       await this.repo.createAnalysis({
         meetingId,
         content: analysis,

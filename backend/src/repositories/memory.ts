@@ -75,6 +75,25 @@ export class MemoryRepository implements Repository {
     return updated;
   }
 
+  async deleteProject(id: string): Promise<boolean> {
+    if (!this.projects.delete(id)) return false;
+    const meetingIds = new Set([...this.meetings.values()].filter((m) => m.projectId === id).map((m) => m.id));
+    const proposalIds = new Set([...this.proposals.values()].filter((p) => p.projectId === id).map((p) => p.id));
+    const versionIds = new Set([...this.versions.values()].filter((v) => proposalIds.has(v.proposalId)).map((v) => v.id));
+    const dropWhere = <T>(map: Map<string, T>, pred: (v: T) => boolean) => {
+      for (const [k, v] of [...map.entries()]) if (pred(v)) map.delete(k);
+    };
+    dropWhere(this.transcripts, (t) => meetingIds.has(t.meetingId));
+    dropWhere(this.analyses, (a) => meetingIds.has(a.meetingId));
+    dropWhere(this.approvals, (a) => versionIds.has(a.proposalVersionId));
+    dropWhere(this.pdfs, (p) => versionIds.has(p.proposalVersionId));
+    dropWhere(this.versions, (v) => proposalIds.has(v.proposalId));
+    dropWhere(this.proposals, (p) => p.projectId === id);
+    dropWhere(this.meetings, (m) => m.projectId === id);
+    dropWhere(this.events, (e) => e.projectId === id);
+    return true;
+  }
+
   async listMeetings(projectId: string): Promise<MeetingRecord[]> {
     return [...this.meetings.values()]
       .filter((m) => m.projectId === projectId)

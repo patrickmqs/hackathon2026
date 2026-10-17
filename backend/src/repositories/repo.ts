@@ -160,6 +160,8 @@ export interface Repository {
   getProject(id: string): Promise<ProjectRecord | null>;
   listProjects(limit: number, offset: number): Promise<Page<ProjectRecord>>;
   updateProject(id: string, patch: Patch<ProjectRecord>): Promise<ProjectRecord | null>;
+  /** Remove o projeto e tudo que depende dele (reuniões, análises, propostas, eventos). */
+  deleteProject(id: string): Promise<boolean>;
   listMeetings(projectId: string): Promise<MeetingRecord[]>;
   listProposals(projectId: string): Promise<ProposalRecord[]>;
 

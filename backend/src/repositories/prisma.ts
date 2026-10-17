@@ -154,6 +154,28 @@ export class PrismaRepository implements Repository {
     return mapProject(p);
   }
 
+  async deleteProject(id: string): Promise<boolean> {
+    const exists = await prisma.project.findUnique({ where: { id }, select: { id: true } });
+    if (!exists) return false;
+    // O schema não tem onDelete: Cascade — apaga os dependentes de baixo para cima.
+    const versionWhere = { proposalVersion: { proposal: { projectId: id } } };
+    await prisma.$transaction([
+      prisma.channelEvent.deleteMany({ where: { channel: { delivery: { approval: versionWhere } } } }),
+      prisma.deliveryChannel.deleteMany({ where: { delivery: { approval: versionWhere } } }),
+      prisma.delivery.deleteMany({ where: { approval: versionWhere } }),
+      prisma.approval.deleteMany({ where: versionWhere }),
+      prisma.pdfArtifact.deleteMany({ where: versionWhere }),
+      prisma.proposalVersion.deleteMany({ where: { proposal: { projectId: id } } }),
+      prisma.proposal.deleteMany({ where: { projectId: id } }),
+      prisma.transcript.deleteMany({ where: { meeting: { projectId: id } } }),
+      prisma.analysis.deleteMany({ where: { meeting: { projectId: id } } }),
+      prisma.meeting.deleteMany({ where: { projectId: id } }),
+      prisma.event.deleteMany({ where: { projectId: id } }),
+      prisma.project.delete({ where: { id } }),
+    ]);
+    return true;
+  }
+
   async listMeetings(projectId: string): Promise<MeetingRecord[]> {
     const rows = await prisma.meeting.findMany({ where: { projectId }, orderBy: { createdAt: "desc" } });
     return rows.map(mapMeeting);

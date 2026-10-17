@@ -86,6 +86,12 @@ export function projectsRouter(deps: AppDeps): Router {
     res.json(toProjectDto(updated ?? project, meetings, proposals));
   });
 
+  router.delete("/:projectId", async (req, res) => {
+    const removed = await repo.deleteProject(req.params.projectId as string);
+    if (!removed) throw new DomainError("NOT_FOUND", "Projeto não encontrado.");
+    res.status(204).end();
+  });
+
   router.get("/:projectId/events", async (req, res) => {
     const project = await repo.getProject(req.params.projectId as string);
     if (!project) throw new DomainError("NOT_FOUND", "Projeto não encontrado.");
