@@ -1,0 +1,47 @@
+{
+  "_note": "Envelope único para todas as respostas de erro da API (API_SPEC §2).",
+  "_409_immutable": {
+    "error": {
+      "code": "PROPOSAL_VERSION_IMMUTABLE",
+      "message": "A versão 2 já foi aprovada e não pode ser editada. Crie uma nova versão a partir dela.",
+      "details": { "proposal_id": "8a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d", "version": 2, "status": "approved" },
+      "request_id": "req_01JA8ZK3Q4R5S6T7V8W9X0Y1Z2"
+    }
+  },
+  "_400_validation": {
+    "error": {
+      "code": "VALIDATION_ERROR",
+      "message": "Corpo da requisição inválido.",
+      "details": {
+        "errors": [
+          { "loc": ["body", "client", "contact_email"], "msg": "value is not a valid email address", "type": "value_error" }
+        ]
+      },
+      "request_id": "req_01JA8ZK9ABCDEFGHJKMNPQRSTV"
+    }
+  },
+  "_401_demo_user": {
+    "error": {
+      "code": "DEMO_USER_REQUIRED",
+      "message": "Informe o header X-Demo-User para registrar quem está executando esta ação (modo demonstração).",
+      "details": null,
+      "request_id": "req_01JA8ZKF0123456789ABCDEFGH"
+    }
+  },
+  "_409_approval_required": {
+    "error": {
+      "code": "APPROVAL_REQUIRED",
+      "message": "O envio exige uma versão aprovada. A versão 3 está em rascunho.",
+      "details": { "proposal_id": "8a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d", "approved_version": 2, "requested_version": 3 },
+      "request_id": "req_01JA8ZKM…"
+    }
+  },
+  "_422_recipient": {
+    "error": {
+      "code": "RECIPIENT_INVALID",
+      "message": "Telefone inválido para WhatsApp. Use o formato E.164, ex.: +5511999990000.",
+      "details": { "channel": "whatsapp", "field": "recipient.phone", "value": "11 99999-0000" },
+      "request_id": "req_01JA8ZKS…"
+    }
+  }
+}

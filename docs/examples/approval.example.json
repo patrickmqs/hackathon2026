@@ -1,0 +1,20 @@
+{
+  "_request": {
+    "method": "POST",
+    "path": "/api/v1/proposals/8a2b…/versions/2/approve",
+    "headers": { "X-Demo-User": "Rafael" },
+    "body": {
+      "content_hash": "sha256:9f2c1e0b7a6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c4b3a",
+      "note": "Revisado com o cliente por telefone; ok para envio."
+    }
+  },
+  "_response_201": {
+    "id": "c3d4e5f6-7a8b-4c9d-8e0f-1a2b3c4d5e6f",
+    "proposal_id": "8a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+    "version": 2,
+    "content_hash": "sha256:9f2c1e0b7a6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c4b3a",
+    "approved_by": "Rafael",
+    "approved_at": "2026-10-17T16:02:17Z",
+    "note": "Revisado com o cliente por telefone; ok para envio."
+  }
+}

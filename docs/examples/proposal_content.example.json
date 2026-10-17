@@ -1,0 +1,157 @@
+{
+  "schema_version": "1.0",
+  "title": "Portal de Pedidos B2B — Proposta Técnica e Comercial",
+  "client": {
+    "company": "Distribuidora Horizonte Ltda (fictícia)",
+    "contact_name": "Ana Souza",
+    "contact_email": "ana@example.com",
+    "contact_phone": "+5511999990000"
+  },
+  "vendor": {
+    "company": "Nimbus Software House (fictícia)",
+    "contact_name": "Marina Lopes",
+    "contact_email": "marina@example.com",
+    "website": "https://example.com",
+    "is_demo_profile": true
+  },
+  "executive_summary": "A Distribuidora Horizonte recebe pedidos por WhatsApp e planilhas, o que gera erros de digitação e atraso no faturamento. Propomos um portal web B2B em que os clientes consultam o catálogo com sua tabela de preço, montam e enviam pedidos, com integração ao ERP para estoque e faturamento. A primeira fase é web; o aplicativo mobile fica para uma fase posterior, conforme acordado em reunião.",
+  "business_context": "Hoje o processo depende de digitação manual a partir de mensagens e planilhas. O objetivo declarado é faturar no mesmo dia do pedido. O ERP utilizado ainda não foi identificado, o que é a principal incerteza desta proposta.",
+  "objectives": [
+    "Eliminar a redigitação de pedidos.",
+    "Permitir que o cliente veja preços corretos conforme sua tabela.",
+    "Encaminhar pedidos ao ERP para faturamento no mesmo dia."
+  ],
+  "scope": {
+    "in_scope": [
+      "Portal web responsivo para clientes e administradores.",
+      "Catálogo com tabelas de preço por cliente.",
+      "Carrinho, envio e acompanhamento de pedidos.",
+      "Integração com o ERP para estoque e pedidos aprovados (sujeita à confirmação de API)."
+    ],
+    "out_of_scope": [
+      "Aplicativo mobile nativo (fase posterior, conforme decisão da reunião).",
+      "Aprovação de crédito no portal (pendente de validação com o financeiro do cliente)."
+    ]
+  },
+  "modules": [
+    { "id": "mod_01", "name": "Catálogo e tabelas de preço", "description": "Produtos, categorias e precificação por cliente.", "features": ["Cadastro de produtos", "Tabelas de preço por cliente", "Busca e filtros"], "complexity": "M", "source_requirement_ids": ["req_01"] },
+    { "id": "mod_02", "name": "Pedidos", "description": "Montagem, envio, histórico e status.", "features": ["Carrinho", "Envio de pedido", "Histórico e status"], "complexity": "M", "source_requirement_ids": ["req_02"] },
+    { "id": "mod_03", "name": "Integração ERP", "description": "Sincronização de estoque e envio de pedidos aprovados.", "features": ["Consulta de estoque", "Envio de pedidos", "Reprocessamento de falhas"], "complexity": "L", "source_requirement_ids": ["req_03"] }
+  ],
+  "requirements_and_integrations": [
+    { "title": "Integração com ERP", "description": "Consulta de estoque e envio de pedidos. ERP e disponibilidade de API a confirmar.", "type": "integration" },
+    { "title": "Desempenho", "description": "Requisito de rapidez mencionado sem métrica; premissa: páginas em até 2 s com 50 usuários simultâneos — a validar.", "type": "non_functional" }
+  ],
+  "architecture": {
+    "overview": "Aplicação web com frontend SPA, API REST e banco relacional. A integração com o ERP fica isolada em uma camada própria com fila de reprocessamento, dado que o ERP ainda não foi identificado.",
+    "components": [
+      { "name": "Frontend web", "responsibility": "Catálogo, carrinho, pedidos, administração." },
+      { "name": "API", "responsibility": "Regras de negócio, autenticação, precificação." },
+      { "name": "Camada de integração ERP", "responsibility": "Adaptadores, fila, reprocessamento." },
+      { "name": "Banco de dados", "responsibility": "Clientes, produtos, tabelas de preço, pedidos." }
+    ],
+    "technologies": [
+      { "layer": "Frontend", "choice": "React/Next.js", "rationale": "Produtividade e responsividade." },
+      { "layer": "Backend", "choice": "Python/FastAPI", "rationale": "Stack da equipe; integrações rápidas." },
+      { "layer": "Dados", "choice": "PostgreSQL", "rationale": "Relacional, maduro." }
+    ],
+    "diagram_mermaid": "flowchart LR\n  FE[Portal web] --> API[API]\n  API --> DB[(PostgreSQL)]\n  API --> INT[Camada de integração]\n  INT --> ERP[ERP do cliente]",
+    "is_ai_suggestion": true
+  },
+  "assumptions": [
+    "Autenticação por e-mail e senha com perfis Cliente e Administrador (não discutido em reunião).",
+    "O ERP possui alguma forma de integração (API ou exportação de arquivos); caso contrário, o módulo 3 será reestimado.",
+    "Planilha de produtos e tabelas de preço será fornecida pelo cliente para carga inicial.",
+    "Base de estimativa demonstrativa: regras rules_v1 + projetos históricos fictícios."
+  ],
+  "dependencies": [
+    "Envio da planilha de produtos pelo cliente (compromisso: até sexta).",
+    "Confirmação de API do ERP pelo fornecedor (compromisso condicional de Carlos)."
+  ],
+  "exclusions": [
+    "Aplicativo mobile.",
+    "Aprovação de crédito automatizada.",
+    "Migração de histórico de pedidos anteriores."
+  ],
+  "estimates": {
+    "method": "rules_v1 + historical_demo",
+    "basis_label": "Base demonstrativa — regras explícitas e projetos históricos fictícios",
+    "lines": [
+      { "module_id": "mod_01", "profile": "backend_dev", "hours_min": 24, "hours_max": 48, "rationale": null },
+      { "module_id": "mod_01", "profile": "frontend_dev", "hours_min": 18, "hours_max": 36, "rationale": null },
+      { "module_id": "mod_01", "profile": "qa", "hours_min": 9, "hours_max": 18, "rationale": null },
+      { "module_id": "mod_01", "profile": "ux", "hours_min": 3, "hours_max": 6, "rationale": null },
+      { "module_id": "mod_01", "profile": "pm", "hours_min": 6, "hours_max": 12, "rationale": null },
+      { "module_id": "mod_02", "profile": "backend_dev", "hours_min": 24, "hours_max": 48, "rationale": null },
+      { "module_id": "mod_02", "profile": "frontend_dev", "hours_min": 18, "hours_max": 36, "rationale": null },
+      { "module_id": "mod_02", "profile": "qa", "hours_min": 9, "hours_max": 18, "rationale": null },
+      { "module_id": "mod_02", "profile": "ux", "hours_min": 3, "hours_max": 6, "rationale": null },
+      { "module_id": "mod_02", "profile": "pm", "hours_min": 6, "hours_max": 12, "rationale": null },
+      { "module_id": "mod_03", "profile": "backend_dev", "hours_min": 62, "hours_max": 132, "rationale": null },
+      { "module_id": "mod_03", "profile": "frontend_dev", "hours_min": 47, "hours_max": 99, "rationale": null },
+      { "module_id": "mod_03", "profile": "qa", "hours_min": 23, "hours_max": 50, "rationale": null },
+      { "module_id": "mod_03", "profile": "ux", "hours_min": 8, "hours_max": 17, "rationale": null },
+      { "module_id": "mod_03", "profile": "pm", "hours_min": 16, "hours_max": 33, "rationale": null },
+      { "module_id": "cross_cutting", "profile": "devops", "hours_min": 56, "hours_max": 96, "rationale": null }
+    ],
+    "totals_by_profile": {
+      "backend_dev": { "hours_min": 110, "hours_max": 228 },
+      "frontend_dev": { "hours_min": 83, "hours_max": 171 },
+      "qa": { "hours_min": 41, "hours_max": 86 },
+      "ux": { "hours_min": 14, "hours_max": 29 },
+      "pm": { "hours_min": 28, "hours_max": 57 },
+      "devops": { "hours_min": 56, "hours_max": 96 }
+    },
+    "total_hours_min": 332,
+    "total_hours_max": 667,
+    "confidence": "medium",
+    "assumptions": [
+      "Módulo 3 recebeu sobretaxa de integração (16–40 h) e ampliação de 10% no máximo por 2 pendências de impacto em esforço/arquitetura.",
+      "Horas cross-cutting: setup/devops, refinamento e implantação."
+    ]
+  },
+  "team": [
+    { "phase": "Descoberta", "duration_weeks": 1, "roles": [ { "profile": "pm", "allocation_pct": 50, "count": 1 }, { "profile": "ux", "allocation_pct": 50, "count": 1 }, { "profile": "backend_dev", "allocation_pct": 50, "count": 1 } ] },
+    { "phase": "Construção", "duration_weeks": 6, "roles": [ { "profile": "backend_dev", "allocation_pct": 100, "count": 1 }, { "profile": "frontend_dev", "allocation_pct": 100, "count": 1 }, { "profile": "qa", "allocation_pct": 50, "count": 1 }, { "profile": "pm", "allocation_pct": 25, "count": 1 } ] },
+    { "phase": "Estabilização e implantação", "duration_weeks": 2, "roles": [ { "profile": "backend_dev", "allocation_pct": 50, "count": 1 }, { "profile": "qa", "allocation_pct": 100, "count": 1 }, { "profile": "devops", "allocation_pct": 50, "count": 1 } ] }
+  ],
+  "schedule": [
+    { "name": "Descoberta", "duration_weeks": 1, "depends_on": [], "deliverables": ["Backlog refinado", "Confirmação do ERP e API", "Protótipo navegável"] },
+    { "name": "Construção — Catálogo e Pedidos", "duration_weeks": 3, "depends_on": ["Descoberta"], "deliverables": ["Módulos 1 e 2 em homologação"] },
+    { "name": "Construção — Integração ERP", "duration_weeks": 3, "depends_on": ["Construção — Catálogo e Pedidos"], "deliverables": ["Módulo 3 em homologação"] },
+    { "name": "Estabilização e implantação", "duration_weeks": 2, "depends_on": ["Construção — Integração ERP"], "deliverables": ["Go-live", "Treinamento", "Documentação"] }
+  ],
+  "total_weeks": 9,
+  "risks": [
+    { "description": "ERP sem API ou com API limitada.", "mitigation": "Confirmar na descoberta; alternativa por exportação de arquivos; reestimar módulo 3." },
+    { "description": "Requisito de desempenho não quantificado.", "mitigation": "Definir métrica na próxima reunião; premissa atual de 2 s / 50 usuários." }
+  ],
+  "open_points": [
+    { "description": "Regra de aprovação de crédito: todos os pedidos ou apenas clientes novos?", "question": "Quais clientes passam por análise de crédito e quais têm liberação automática?" },
+    { "description": "Volume de clientes e pedidos mensais não informado.", "question": "Quantos clientes ativos e pedidos por mês?" },
+    { "description": "Métrica de desempenho.", "question": "Qual tempo de resposta é aceitável e quantos usuários simultâneos?" }
+  ],
+  "commercial": {
+    "status": "demo_rates",
+    "currency": "BRL",
+    "hourly_rates": { "backend_dev": 180, "frontend_dev": 170, "qa": 130, "ux": 150, "pm": 190, "devops": 190 },
+    "total_min": 57300,
+    "total_max": 114710,
+    "payment_terms": "A definir com o cliente.",
+    "validity_days": 15,
+    "disclaimer": "Valores demonstrativos calculados com tabela fictícia de referência. Não constituem oferta comercial."
+  },
+  "next_steps": [
+    "Receber a planilha de produtos (cliente, até sexta).",
+    "Confirmar ERP e disponibilidade de API (Carlos).",
+    "Reunião de validação da proposta e dos pontos pendentes."
+  ],
+  "meta": {
+    "version": 1,
+    "revision_label": "rascunho",
+    "created_at": "2026-10-17T15:10:42Z",
+    "language": "pt-BR",
+    "source_meeting_id": "5f1c2a3e-9b7d-4c21-8e3a-1d2f3a4b5c6d",
+    "source_analysis_prompt_version": "extract@1.0+gap_audit@1.0"
+  }
+}

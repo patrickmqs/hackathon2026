@@ -1,0 +1,68 @@
+{
+  "_note": "Resposta de GET /api/v1/deliveries/{id} após o processamento: Gmail aceito, WhatsApp sem credenciais. Estado agregado 'completed' porque nenhum canal falhou; o canal pulado é exibido explicitamente.",
+  "id": "d7e8f9a0-b1c2-4d3e-8f4a-5b6c7d8e9f0a",
+  "approval_id": "c3d4e5f6-7a8b-4c9d-8e0f-1a2b3c4d5e6f",
+  "proposal_id": "8a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+  "proposal_version": 2,
+  "idempotency_key": "7b1f4e2a-3c5d-4e6f-9a8b-0c1d2e3f4a5b",
+  "authorized_by": "Rafael",
+  "authorized_at": "2026-10-17T16:05:40Z",
+  "status": "completed",
+  "channels": [
+    {
+      "id": "e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b",
+      "channel": "gmail",
+      "recipient": { "email": "ana@example.com", "name": "Ana Souza" },
+      "status": "sent",
+      "attempts": 1,
+      "provider_message_id": "18f3a2b1c0d9e8f7",
+      "error": null,
+      "last_attempt_at": "2026-10-17T16:05:42Z",
+      "sent_at": "2026-10-17T16:05:43Z",
+      "delivered_at": null,
+      "alternative": null,
+      "events": [
+        { "type": "queued", "at": "2026-10-17T16:05:40Z", "payload": {} },
+        { "type": "sending", "at": "2026-10-17T16:05:42Z", "payload": { "attempt": 1 } },
+        { "type": "sent", "at": "2026-10-17T16:05:43Z", "payload": { "provider_message_id": "18f3a2b1c0d9e8f7" } }
+      ]
+    },
+    {
+      "id": "f2a3b4c5-d6e7-4f8a-9b0c-1d2e3f4a5b6c",
+      "channel": "whatsapp",
+      "recipient": { "phone": "+5511999990000", "name": "Ana Souza" },
+      "status": "skipped_no_credentials",
+      "attempts": 0,
+      "provider_message_id": null,
+      "error": {
+        "code": "CHANNEL_NOT_CONFIGURED",
+        "message": "WhatsApp Cloud API não configurada neste ambiente (WHATSAPP_TOKEN / WHATSAPP_PHONE_NUMBER_ID ausentes).",
+        "retryable": false
+      },
+      "last_attempt_at": null,
+      "sent_at": null,
+      "delivered_at": null,
+      "alternative": {
+        "type": "wa_me_link",
+        "url": "https://wa.me/5511999990000?text=Ol%C3%A1%20Ana%2C%20segue%20a%20proposta%20do%20Portal%20de%20Pedidos%20B2B.",
+        "pdf_download_url": "/api/v1/proposals/8a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d/versions/2/pdf?download=1"
+      },
+      "events": [
+        { "type": "skipped", "at": "2026-10-17T16:05:40Z", "payload": { "reason": "CHANNEL_NOT_CONFIGURED" } }
+      ]
+    }
+  ],
+  "created_at": "2026-10-17T16:05:40Z",
+  "updated_at": "2026-10-17T16:05:43Z",
+
+  "_variant_failed_channel": {
+    "_note": "Mesmo delivery com GMAIL_FORCE_FAIL=true: status agregado 'failed' pois o único canal tentado falhou; WhatsApp permanece pulado, proposta permanece aprovada.",
+    "status": "failed",
+    "channels[0]": {
+      "status": "failed",
+      "attempts": 1,
+      "error": { "code": "GMAIL_UNAVAILABLE", "message": "Gmail indisponível no momento (falha forçada para demonstração).", "retryable": true },
+      "alternative": { "type": "mailto_link", "url": "mailto:ana@example.com?subject=Proposta%20%E2%80%94%20Portal%20de%20Pedidos%20B2B", "pdf_download_url": "/api/v1/proposals/8a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d/versions/2/pdf?download=1" }
+    }
+  }
+}
