@@ -1,0 +1,412 @@
+{
+  "summary": "A Distribuidora Horizonte (distribuidora de alimentos e bebidas) quer um portal em que mercados e restaurantes montem pedidos com a tabela de preço de cada cliente, para eliminar a digitação manual e faturar no mesmo dia. A primeira fase será web e o faturamento continua no ERP; crédito, relatórios e demais integrações seguem pendentes.",
+  "participants": [
+    {
+      "name": "Ana Souza",
+      "role": "Diretora comercial",
+      "side": "client"
+    },
+    {
+      "name": "Carlos Lima",
+      "role": "Responsável por TI",
+      "side": "client"
+    },
+    {
+      "name": "Marina Alves",
+      "role": "Tech lead",
+      "side": "vendor"
+    },
+    {
+      "name": "Rafael Costa",
+      "role": "Gerente de contas",
+      "side": "vendor"
+    }
+  ],
+  "client_needs": [
+    {
+      "id": "need_01",
+      "confidence": "high",
+      "source_refs": [
+        {
+          "quote": "Hoje os pedidos chegam por WhatsApp e planilha, e a gente erra muito na digitação.",
+          "segment_id": null,
+          "speaker": "Ana Souza",
+          "start_ms": null,
+          "end_ms": null
+        }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null,
+      "category": "problem",
+      "description": "Pedidos chegam por WhatsApp e planilha e são digitados à mão, gerando erros, entregas com produto trocado e notas emitidas erradas."
+    },
+    {
+      "id": "need_02",
+      "confidence": "high",
+      "source_refs": [
+        {
+          "quote": "O que a gente quer é faturar no mesmo dia.",
+          "segment_id": null,
+          "speaker": "Ana Souza",
+          "start_ms": null,
+          "end_ms": null
+        }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null,
+      "category": "business_goal",
+      "description": "Faturar os pedidos no mesmo dia, sem atraso por digitação manual."
+    },
+    {
+      "id": "need_03",
+      "confidence": "medium",
+      "source_refs": [
+        {
+          "quote": "os nossos clientes reclamam que não sabem o que está disponível",
+          "segment_id": null,
+          "speaker": "Ana Souza",
+          "start_ms": null,
+          "end_ms": null
+        }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null,
+      "category": "problem",
+      "description": "Clientes não sabem o que há disponível em estoque e ligam para o vendedor perguntar."
+    },
+    {
+      "id": "need_04",
+      "confidence": "high",
+      "source_refs": [
+        {
+          "quote": "atendemos mercados e restaurantes da região",
+          "segment_id": null,
+          "speaker": "Ana Souza",
+          "start_ms": null,
+          "end_ms": null
+        }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null,
+      "category": "target_audience",
+      "description": "Mercados e restaurantes da região atendidos pela distribuidora."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "req_01",
+      "confidence": "high",
+      "source_refs": [
+        {
+          "quote": "cada cliente tem uma tabela de preço diferente, isso tem que aparecer certo",
+          "segment_id": null,
+          "speaker": "Ana Souza",
+          "start_ms": null,
+          "end_ms": null
+        }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null,
+      "title": "Catálogo com tabela de preço por cliente",
+      "description": "O portal exibe o catálogo de produtos com a tabela de preço correta de cada cliente.",
+      "type": "functional",
+      "priority": "must",
+      "module_id": "mod_01",
+      "depends_on": []
+    },
+    {
+      "id": "req_02",
+      "confidence": "high",
+      "source_refs": [
+        {
+          "quote": "O cliente monta o pedido ali e manda.",
+          "segment_id": null,
+          "speaker": "Ana Souza",
+          "start_ms": null,
+          "end_ms": null
+        }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null,
+      "title": "Montagem e envio de pedido",
+      "description": "O cliente monta o pedido no portal (carrinho) e o envia; o vendedor da conta confere.",
+      "type": "functional",
+      "priority": "unknown",
+      "module_id": "mod_02",
+      "depends_on": [
+        "req_01"
+      ]
+    },
+    {
+      "id": "req_03",
+      "confidence": "high",
+      "source_refs": [
+        {
+          "quote": "Precisa falar com o nosso ERP, senão não adianta.",
+          "segment_id": null,
+          "speaker": "Carlos Lima",
+          "start_ms": null,
+          "end_ms": null
+        }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null,
+      "title": "Integração com o ERP",
+      "description": "Consultar estoque real e enviar o pedido aprovado ao ERP, que continua faturando.",
+      "type": "integration",
+      "priority": "must",
+      "module_id": "mod_03",
+      "depends_on": []
+    },
+    {
+      "id": "req_04",
+      "confidence": "medium",
+      "source_refs": [
+        {
+          "quote": "pode ser e-mail e senha mesmo",
+          "segment_id": null,
+          "speaker": "Carlos Lima",
+          "start_ms": null,
+          "end_ms": null
+        }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null,
+      "title": "Login por e-mail e senha",
+      "description": "Autenticação de cada cliente por e-mail e senha, sem SSO.",
+      "type": "functional",
+      "priority": "unknown",
+      "module_id": "mod_04",
+      "depends_on": []
+    }
+  ],
+  "modules": [
+    {
+      "id": "mod_01",
+      "name": "Catálogo e preços",
+      "description": "Catálogo de produtos com tabelas de preço por cliente.",
+      "requirement_ids": [
+        "req_01"
+      ],
+      "complexity": "M",
+      "complexity_rationale": "Regra de qual cliente usa qual tabela ainda precisa ser mapeada."
+    },
+    {
+      "id": "mod_02",
+      "name": "Pedidos",
+      "description": "Carrinho e envio de pedidos.",
+      "requirement_ids": [
+        "req_02"
+      ],
+      "complexity": "M",
+      "complexity_rationale": null
+    },
+    {
+      "id": "mod_03",
+      "name": "Integração ERP",
+      "description": "Estoque e envio de pedidos ao ERP.",
+      "requirement_ids": [
+        "req_03"
+      ],
+      "complexity": "unknown",
+      "complexity_rationale": "Depende de o ERP ter API documentada."
+    },
+    {
+      "id": "mod_04",
+      "name": "Acesso e autenticação",
+      "description": "Login por e-mail e senha.",
+      "requirement_ids": [
+        "req_04"
+      ],
+      "complexity": "S",
+      "complexity_rationale": null
+    }
+  ],
+  "decisions": [
+    {
+      "id": "dec_01",
+      "confidence": "high",
+      "source_refs": [
+        {
+          "quote": "Ótimo, então fechamos que o faturamento continua saindo pelo ERP e o portal só envia o pedido.",
+          "segment_id": null,
+          "speaker": "Rafael Costa",
+          "start_ms": null,
+          "end_ms": null
+        },
+        {
+          "quote": "Está. Fechado, não quero mudar o fluxo de nota de jeito nenhum.",
+          "segment_id": null,
+          "speaker": "Carlos Lima",
+          "start_ms": null,
+          "end_ms": null
+        }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null,
+      "description": "O faturamento continua saindo pelo ERP e o portal só envia o pedido.",
+      "status": "confirmed",
+      "agreed_by": [
+        "Rafael Costa",
+        "Carlos Lima",
+        "Ana Souza"
+      ],
+      "scope_effect": "constraint"
+    },
+    {
+      "id": "dec_02",
+      "confidence": "high",
+      "source_refs": [
+        {
+          "quote": "Então, para registrar: primeiro web, app depois.",
+          "segment_id": null,
+          "speaker": "Marina Alves",
+          "start_ms": null,
+          "end_ms": null
+        },
+        {
+          "quote": "Isso, pode ser. Primeiro web, app depois.",
+          "segment_id": null,
+          "speaker": "Ana Souza",
+          "start_ms": null,
+          "end_ms": null
+        }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null,
+      "description": "Primeira fase como site responsivo (web); aplicativo nativo fica para uma fase posterior.",
+      "status": "confirmed",
+      "agreed_by": [
+        "Marina Alves",
+        "Ana Souza",
+        "Rafael Costa"
+      ],
+      "scope_effect": "in_scope"
+    },
+    {
+      "id": "dec_03",
+      "confidence": "medium",
+      "source_refs": [
+        {
+          "quote": "A aprovação de crédito talvez entre no portal, preciso ver com o financeiro como eles querem trabalhar.",
+          "segment_id": null,
+          "speaker": "Ana Souza",
+          "start_ms": null,
+          "end_ms": null
+        }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null,
+      "description": "Aprovação de crédito dentro do portal: depende de validação com o financeiro do cliente.",
+      "status": "pending_validation",
+      "agreed_by": [],
+      "scope_effect": "other"
+    },
+    {
+      "id": "dec_04",
+      "confidence": "medium",
+      "source_refs": [
+        {
+          "quote": "Mas acho que isso pode ficar para depois, não sei se na primeira fase.",
+          "segment_id": null,
+          "speaker": "Ana Souza",
+          "start_ms": null,
+          "end_ms": null
+        }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null,
+      "description": "Relatório de pedidos por cliente: possível, sem compromisso de entrar na primeira fase.",
+      "status": "pending_validation",
+      "agreed_by": [],
+      "scope_effect": "other"
+    }
+  ],
+  "commitments": [
+    {
+      "id": "com_01",
+      "confidence": "high",
+      "source_refs": [
+        {
+          "quote": "Eu te mando a planilha de produtos até sexta, com as tabelas de preço que a gente usa hoje.",
+          "segment_id": null,
+          "speaker": "Ana Souza",
+          "start_ms": null,
+          "end_ms": null
+        }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null,
+      "owner": "Ana Souza",
+      "owner_side": "client",
+      "description": "Enviar a planilha de produtos com as tabelas de preço.",
+      "due_text": "até sexta",
+      "status": "confirmed",
+      "caveats": null
+    },
+    {
+      "id": "com_02",
+      "confidence": "high",
+      "source_refs": [
+        {
+          "quote": "Do nosso lado, a gente volta com a proposta em uma semana.",
+          "segment_id": null,
+          "speaker": "Marina Alves",
+          "start_ms": null,
+          "end_ms": null
+        }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null,
+      "owner": "Marina Alves",
+      "owner_side": "vendor",
+      "description": "Enviar a proposta ao cliente.",
+      "due_text": "em uma semana",
+      "status": "confirmed",
+      "caveats": null
+    },
+    {
+      "id": "com_03",
+      "confidence": "medium",
+      "source_refs": [
+        {
+          "quote": "Se o pessoal do ERP responder, eu vejo se tem API.",
+          "segment_id": null,
+          "speaker": "Carlos Lima",
+          "start_ms": null,
+          "end_ms": null
+        }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null,
+      "owner": "Carlos Lima",
+      "owner_side": "client",
+      "description": "Verificar se o ERP tem API, caso o fornecedor do ERP responda.",
+      "due_text": null,
+      "status": "conditional",
+      "caveats": "Depende da resposta do fornecedor do ERP."
+    }
+  ],
+  "tech_suggestions": [
+    {
+      "id": "tech_01",
+      "confidence": "medium",
+      "source_refs": [
+        {
+          "quote": "A gente poderia pensar em um aplicativo para os representantes com modo offline, que sincroniza quando voltar a ter internet.",
+          "segment_id": null,
+          "speaker": "Marina Alves",
+          "start_ms": null,
+          "end_ms": null
+        }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null,
+      "category": "module",
+      "description": "Aplicativo para representantes de vendas com modo offline.",
+      "rationale": "Representantes visitam clientes em campo, muitas vezes sem sinal.",
+      "risks": "O cliente não acolheu a ideia; fica como possibilidade para fase futura."
+    }
+  ],
+  "limitations": []
+}
