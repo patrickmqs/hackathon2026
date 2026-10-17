@@ -50,6 +50,8 @@ Examine cada item de `decisions` com `status: "confirmed"` e de `commitments` co
 
 - **Decisão** `confirmed` sem concordância explícita dos dois lados na transcrição, ou apoiada em linguagem condicional/hesitante ("talvez", "se der", "acho que", "pode ser que", "preciso ver", "a gente pode", "não sei se"), ou apenas uma proposta de um lado sem resposta do outro: `to: "pending_validation"`.
 - **Compromisso** `confirmed` que depende de condição ("se o João aprovar, eu envio", "se o pessoal responder, eu vejo") ou de intenção vaga ("vou tentar", "seria bom mandar"), ou sem responsável identificável: `to: "tentative"`.
+- **Concordância se procura na conversa inteira, não só na citação do item.** Antes de rebaixar uma decisão por "falta de concordância dos dois lados", leia a transcrição toda sobre o MESMO tema. Se alguém do cliente afirmou a posição ("nota fiscal é com o ERP, a gente não quer mexer nisso") e o outro lado a aceitou, registrou ou fechou ("então fechamos...", "perfeito", "anotado, decisão fechada", "está de acordo"), há concordância dos dois lados mesmo que as falas estejam em pontos diferentes: NÃO rebaixe.
+- **Sem rótulos de falante** (`has_speakers=false`), a falta de um nome ao lado da fala NUNCA é motivo para rebaixar uma decisão. Só rebaixe se o CONTEÚDO for condicional/hesitante, se houver recusa, ou se ninguém aceitou ou fechou o ponto em momento algum.
 - `id` é o id do item na extração; `reason` explica em uma frase, citando a expressão que justifica o rebaixamento.
 - NÃO rebaixe itens que já estejam como `pending_validation`, `tentative` ou `conditional`. NÃO rebaixe decisão com concordância explícita dos dois lados (ex.: "fechado", "está de acordo", "isso, pode ser") nem compromisso firme em primeira pessoa sem condição.
 

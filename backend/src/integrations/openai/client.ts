@@ -55,7 +55,11 @@ function getClient(): OpenAI {
 
 function isRetryable(e: unknown): boolean {
   if (e instanceof OpenAI.APIConnectionError) return true; // inclui timeout
-  if (e instanceof OpenAI.APIError) return e.status === 429 || (e.status !== undefined && e.status >= 500);
+  if (e instanceof OpenAI.APIError) {
+    // 429 por falta de crédito/cota não é transitório: repetir só gasta tempo e atrasa o erro.
+    if (e.status === 429 && (e.code === "insufficient_quota" || /no credits|exceeded your current quota/i.test(e.message))) return false;
+    return e.status === 429 || (e.status !== undefined && e.status >= 500);
+  }
   return false;
 }
 
