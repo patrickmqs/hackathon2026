@@ -10,7 +10,7 @@ Documentos relacionados: [ARCHITECTURE.md](ARCHITECTURE.md) · [API_SPEC.md](API
 
 **Proposal AI** transforma a gravação (ou transcrição) de uma reunião comercial em uma proposta técnica e comercial estruturada, revisada por humanos e pronta para envio — mantendo rastreabilidade entre cada afirmação da proposta e o trecho da reunião que a originou.
 
-Não é um resumidor de reuniões nem um chatbot. É um fluxo de trabalho com etapas explícitas: **reunião → análise → revisão humana → proposta → PDF → aprovação → autorização de envio → envio por canal → acompanhamento**.
+Não é um resumidor de reuniões nem um chatbot — o resumo da reunião existe como **artefato de apoio** (leitura rápida e demonstração), não como o produto. É um fluxo de trabalho com etapas explícitas: **reunião → análise → revisão humana → proposta → PDF → aprovação → autorização de envio → envio por canal → acompanhamento**.
 
 ## 2. Problema e público-alvo
 
@@ -57,7 +57,9 @@ Recebe o PDF por e-mail e/ou WhatsApp. Precisa que a proposta reflita a conversa
 | UC02 | Registrar reunião enviando transcrição textual | P1 | P0 |
 | UC03 | Registrar reunião enviando áudio para transcrição automática | P1 | P0 |
 | UC04 | Acompanhar processamento (transcrevendo → analisando → pronto) | P1 | P0 |
+| UC04b | Ler o resumo da reunião (manchete, resumo executivo, tópicos, decisões, próximos passos) sem ouvir o áudio nem ler a transcrição completa | P1 | P0 |
 | UC05 | Revisar análise: confirmar, editar, rejeitar ou marcar item como "precisa esclarecimento" | P1 | P0 |
+| UC05b | Atualizar o resumo depois da revisão, sem os itens rejeitados, e copiá-lo | P1 | P1 |
 | UC06 | Gerar proposta a partir da análise revisada | P1 | P0 |
 | UC07 | Editar campos da proposta (gera nova versão) | P1 | P0 |
 | UC08 | Gerar e visualizar PDF de uma versão | P1, P2 | P0 |
@@ -79,7 +81,8 @@ flowchart LR
     C -- sim --> D[Transcrição automática]
     C -- não --> E
     D --> E[Análise estruturada pela IA]
-    E --> F[Revisão humana da análise]
+    E --> E2[Resumo da reunião]
+    E2 --> F[Revisão humana da análise]
     F --> G[Gerar proposta]
     G --> H[Editar / revisar proposta]
     H --> I[Gerar PDF]
@@ -102,6 +105,7 @@ Detalhe tela a tela em [UX_FLOW.md](UX_FLOW.md).
 - Reunião por transcrição textual (colar texto ou `.txt`).
 - Reunião por áudio (`.mp3`, `.m4a`, `.wav`, `.webm`; ≤ 25 MB) com transcrição automática.
 - Extração estruturada: necessidades, requisitos, módulos, decisões, compromissos, pendências, sugestões técnicas — com referências à transcrição quando disponíveis.
+- **Resumo da reunião** gerado pela IA (manchete, resumo executivo, tópicos com citação, decisões confirmadas × pendentes, próximos passos, pontos em aberto), exibido no topo da revisão e no card da reunião.
 - Tela de revisão da análise com ações por item: confirmar, editar, rejeitar, marcar "precisa esclarecimento".
 - Geração da proposta (texto via IA + estimativas/cronograma por motor de regras).
 - Edição de campos da proposta → nova versão.
@@ -151,6 +155,10 @@ Detalhe tela a tela em [UX_FLOW.md](UX_FLOW.md).
 | RF21 | Quando credenciais de um canal não existem, o canal termina em `skipped_no_credentials` com mensagem explicativa e alternativa (link de download do PDF; link `wa.me`). | P0 |
 | RF22 | O usuário pode ver o histórico de versões, aprovações e envios do projeto. | P1 |
 | RF23 | O usuário pode reenviar manualmente um canal em `failed`, gerando nova tentativa registrada. | P1 |
+| RF24 | Para cada reunião analisada, gerar um resumo (`meeting_summary`, AI_PIPELINE §3) com manchete (≤ 140 caracteres), resumo executivo (≤ 700 caracteres) e 3–8 tópicos cronológicos, cada um com citação literal da transcrição. | P0 |
+| RF25 | O resumo referencia decisões, compromissos e pendências **por id**; decisões pendentes nunca aparecem como confirmadas, e ideias não acolhidas ou sugestões da IA nunca aparecem como decisão. O texto não contém números ausentes da transcrição. | P0 |
+| RF26 | A falha na geração do resumo não impede a reunião de chegar a `analysis_ready`; o usuário pode gerá-lo depois. | P0 |
+| RF27 | O usuário pode regenerar o resumo com base apenas nos itens revisados (`confirmed`/`edited`) e copiá-lo como texto. | P1 |
 
 ## 9. Requisitos não funcionais
 
@@ -176,6 +184,7 @@ Detalhe tela a tela em [UX_FLOW.md](UX_FLOW.md).
 | Reunião (texto) | Colar transcrição de `sample_data/sample_transcript_pt.txt` → status `analyzing` → `analysis_ready` em < 90 s. |
 | Reunião (áudio) | Upload de `sample_data/sample_meeting.mp3` → `transcribing` → `analyzing` → `analysis_ready`; transcrição visível. |
 | Análise | Para a transcrição de exemplo: ≥ 3 requisitos, ≥ 1 decisão confirmada, ≥ 1 decisão pendente, ≥ 1 compromisso com dono, ≥ 2 pendências e ≥ 1 sugestão rotulada como da IA. Nenhuma sugestão aparece como decisão. Cada item tem ao menos um `source_ref.quote` que existe literalmente na transcrição. |
+| Resumo | Para a transcrição de exemplo: `meeting_summary` presente; `executive_summary` ≤ 700 caracteres; 3–8 tópicos com citação existente na transcrição; as 2 decisões confirmadas em `key_decisions` e as 2 pendentes em `pending_decisions`; a contradição plantada em `open_points`. A leitura do resumo leva ≲ 1 minuto. |
 | Revisão | Rejeitar um item e editar outro; marcar revisão concluída; recarregar a página e ver as alterações persistidas. |
 | Proposta | Gerar proposta; 16 seções presentes; item rejeitado ausente; item "precisa esclarecimento" listado em pendências; estimativas com faixa e premissas. |
 | PDF | Abrir PDF da v1; rodapé com "v1 · data · rascunho". Editar um campo → v2 → PDF v2 difere apenas no campo e no rodapé. |

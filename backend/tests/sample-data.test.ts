@@ -37,6 +37,23 @@ describe("sample_data: transcrição + gabarito", () => {
     expect(missing).toEqual([]);
   });
 
+  it("o gabarito do resumo só referencia chaves que existem no gabarito", () => {
+    const s = e.summary;
+    const keys = (xs: { key: string }[]) => new Set(xs.map((x) => x.key));
+    const decisions = keys(e.decisions);
+    const issues = keys(e.contradictions);
+    const suggestions = keys(e.vendor_suggestions_not_accepted);
+    for (const k of s.key_decisions_must_include) expect(decisions.has(k), k).toBe(true);
+    for (const k of s.pending_decisions_must_include) expect(decisions.has(k), k).toBe(true);
+    for (const k of s.open_points_must_include) expect(issues.has(k), k).toBe(true);
+    for (const k of s.must_not_appear_as_decision_or_next_step) expect(suggestions.has(k), k).toBe(true);
+    // decisões confirmadas × pendentes do gabarito batem com as listas do resumo
+    for (const d of e.decisions as { key: string; status: string }[]) {
+      const list = d.status === "confirmed" ? s.key_decisions_must_include : s.pending_decisions_must_include;
+      expect(list, d.key).toContain(d.key);
+    }
+  });
+
   it("não menciona o que deve virar pendência (volume, orçamento, prazo, nome do ERP)", () => {
     const t = transcript.toLowerCase();
     for (const word of ["orçamento", "quantos pedidos", "por mês", "totvs", "sap", "protheus"]) {

@@ -67,7 +67,7 @@ stateDiagram-v2
 ### T3 — Projeto
 - `FlowStepper`: 5 etapas; a atual destacada; etapas concluídas com check; etapas bloqueadas com cadeado e tooltip do porquê ("Conclua a revisão da análise para gerar a proposta").
 - Cards por etapa:
-  - **Reunião:** status, duração, fonte (áudio/texto), botão "Ver transcrição" (drawer) / "Reprocessar".
+  - **Reunião:** status, duração, fonte (áudio/texto), **manchete e resumo executivo** (`meeting_summary`; se `null`, mostra `summary` ou "Resumo indisponível" com botão "Gerar resumo"), botão "Ver transcrição" (drawer) / "Reprocessar".
   - **Análise:** contadores por categoria (ex.: 7 requisitos · 2 decisões · 3 compromissos · 4 pendências · 2 sugestões) e % revisado; botão "Revisar".
   - **Proposta:** versão atual, versão aprovada, botão "Abrir".
   - **Envio:** último delivery com mini-badges por canal; botão "Ver".
@@ -76,16 +76,24 @@ stateDiagram-v2
 ### T4 — Nova reunião
 - Abas: **Colar transcrição** (textarea grande, contador de palavras, campo idioma) · **Enviar áudio** (dropzone; formatos e limite exibidos; nome e tamanho do arquivo).
 - Ao enviar → `ProcessingPanel`:
-  - Etapas verticais: *Enviando arquivo → Transcrevendo → Analisando → Auditando lacunas → Pronto*; a atual com spinner; `progress.message` do backend abaixo.
+  - Etapas verticais: *Enviando arquivo → Transcrevendo → Analisando → Auditando lacunas → Resumindo a reunião → Pronto*; a atual com spinner; `progress.message` do backend abaixo.
   - Polling 2–3 s em `GET /meetings/{id}`; para ao atingir `analysis_ready`/`failed`.
   - Em `failed`: `ErrorBanner` com `error.message` legível e botão "Reprocessar" (`POST /reprocess`).
   - Ao ficar pronto: CTA "Revisar análise" (T5).
 - Se o usuário sair da página, o card da reunião em T3 continua mostrando o progresso.
 
 ### T5 — Revisão da análise
+No topo, acima das duas colunas, o **`SummaryPanel`** (recolhível; aberto por padrão):
+- Manchete (`headline`) e resumo executivo (`executive_summary`).
+- **Tópicos** em ordem cronológica: título + resumo curto; cada um mostra `mm:ss` (se há timestamp) e, ao clicar, o `TranscriptPane` rola até o trecho citado.
+- Faixa de **chips por id** que resolvem o texto na própria análise: *Decisões confirmadas* · *Decisões pendentes* · *Próximos passos* (com status do compromisso e prazo dito) · *Pontos em aberto*. Clicar num chip rola até o `ReviewableItemCard` correspondente.
+- Rodapé: "Resumo gerado por IA às {hora} · base: análise completa | itens revisados". Se `review_completed` e `basis = "analysis"`, badge "Gerado antes da revisão — pode incluir itens rejeitados" + botão **Atualizar resumo** (`POST …/summary` com `basis: "reviewed"`, com confirmação). Botão **Copiar resumo** (texto puro) para colar em e-mail/chat.
+- Estado vazio (`meeting_summary = null`): "Não foi possível resumir esta reunião" + botão **Gerar resumo**. A revisão da análise não depende dele.
+- Rótulo fixo: "Resumo gerado por IA a partir da transcrição. A fonte de verdade são os itens abaixo."
+
 Layout em duas colunas (desktop) / abas (mobile):
 - **Esquerda — `AnalysisSections`** (acordeões com contador e barra de progresso de revisão):
-  1. Resumo (somente leitura, editável como texto).
+  1. Resumo curto de contexto (`summary` da extração; somente leitura, editável como texto) — o resumo completo está no `SummaryPanel`.
   2. Participantes.
   3. Necessidades do cliente.
   4. Requisitos e módulos (requisitos agrupados por módulo; chip de complexidade S/M/L/XL editável; "sem módulo" ao final).
