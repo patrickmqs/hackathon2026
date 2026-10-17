@@ -93,6 +93,14 @@ npm run bench:transcribe -- <audio>    # compara 5 modelos de transcrição
 - **Composer ligado à API (feito):** `services/proposal/compose-step.ts` roda DEPOIS do `buildProposalContent` e troca só os campos de texto (nunca estimativas, equipe, cronograma, valores, cliente, fornecedor, meta). `AppDeps.composer` é opcional; `createComposer()` devolve o real com `OPENAI_API_KEY` e sem `AI_PIPELINE=stub`. **Não bloqueante:** se a IA falha, a proposta é criada com o texto determinístico e o aviso vai para `console.warn`. O resultado valida em `ProposalContentSchema`. Testes com composer falso (unitário e rota).
 - O fornecedor passado ao composer é `content.vendor` do builder ("Proposal AI (demo)"), não `sample_data/vendor_profile.json`.
 
+## 7a. Frontend integrado à API (branch `ia/frontend-integracao`)
+
+- `frontend/src/lib/api.ts` (cliente tipado, `NEXT_PUBLIC_API_URL`, header `X-Demo-User` via `localStorage["demoUser"]`), `components/Api.tsx` (`useLoad`, `ErrorBanner`) e `components/integration.css` (CSS próprio; `globals.css` do time não foi tocado).
+- Telas ligadas, mantendo o desenho e as classes do time: Home (lista real; sem API cai nos mocks com aviso), Novo projeto, Nova reunião (texto/áudio + polling), Revisão (resumo da reunião no topo, confirmar/editar/rejeitar/esclarecer com `PUT /analysis`, transcrição real com a citação destacada, concluir revisão e gerar proposta), Proposta (versões, edição de texto, PDF, aprovação com hash, imutabilidade) e Projeto (etapas e timeline reais).
+- Teste de UI (Playwright headless, 18 verificações) contra um backend com pipeline falso: todas passaram. **Nunca rodou contra a IA real** (sem crédito) nem em navegador de pessoa.
+- Next 16 com `cacheComponents`: páginas com `useParams()` precisam de `<Suspense>` (já aplicado nas quatro dinâmicas).
+- **Pendências:** `proposals/[id]/deliveries/new/entrega.tsx` foi renomeado pelo time e a rota **não existe** (o botão "Preparar envio" leva a 404); `deliveries/[id]` e `settings` seguem com dados fixos; os gráficos da Home ainda usam mocks; a revisão não tem campo de nota do revisor nem toggle de decisão confirmada/pendente.
+
 ## 7b. Atenção com o time (ainda não comunicado ao P1/P2/P3)
 
 - Alterei `backend/tsconfig.json` (`rootDir: ".."`, `include` de `../shared/src`) e o script `start` do `backend/package.json` (agora `node dist/backend/src/index.js`). Um Dockerfile precisa seguir esse caminho.
