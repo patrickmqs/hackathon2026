@@ -39,8 +39,8 @@ describe("sample_data: transcrição + gabarito", () => {
 
   it("não menciona o que deve virar pendência (volume, orçamento, prazo, nome do ERP)", () => {
     const t = transcript.toLowerCase();
-    for (const word of ["orçamento de", "quantos pedidos", "por mês", "totvs", "sap", "protheus"]) {
-      expect(t.includes(word), word).toBe(false);
+    for (const word of ["orçamento", "quantos pedidos", "por mês", "totvs", "sap", "protheus"]) {
+      expect(new RegExp(`\\b${word}\\b`).test(t), word).toBe(false);
     }
   });
 });
