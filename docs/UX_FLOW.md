@@ -58,6 +58,8 @@ stateDiagram-v2
 - `ProjectCard`: nome, cliente, badge de status do projeto (`no_meeting`, `processing`, `analysis_ready`, `reviewed`, `proposal_draft`, `proposal_approved`, `sent`, `failed`), última atualização.
 - `ChannelHealthBar` (de `GET /health`): "Gmail: conectado como x@…" / "WhatsApp: não configurado" com link para T9.
 - `DemoUserBadge` (canto superior): nome do usuário demo; clique → T9.
+- Entrada rápida "Comece por uma reunião": permite selecionar um projeto existente ou criar um com nome e empresa, depois enviar um áudio ou transcrição. O fluxo atual aceita um arquivo por reunião; MP3, M4A e WAV usam multipart, TXT é lido no navegador e enviado como transcrição. O limite local é 25 MB para áudio e 400 KB para TXT (o backend mantém o limite configurável por `MAX_UPLOAD_MB`).
+- PDF e DOCX são reconhecidos pela interface, mas a API atual não os processa; a tela informa essa limitação e orienta usar áudio, TXT ou colar a transcrição.
 - Vazio: ilustração + "Crie seu primeiro projeto".
 
 ### T2 — Novo projeto
