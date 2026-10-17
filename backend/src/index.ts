@@ -1,5 +1,5 @@
 import { config } from "./core/config.js";
-import { createPipeline, createRepository } from "./core/container.js";
+import { createComposer, createPipeline, createRepository } from "./core/container.js";
 import { FileStorage } from "./core/storage.js";
 import { JobRunner } from "./services/jobs/runner.js";
 import { createApp } from "./app.js";
@@ -17,6 +17,7 @@ const app = createApp({
   repo,
   storage,
   jobs,
+  composer: createComposer(),
   maxUploadMb: config.maxUploadMb,
   corsOrigins: config.corsOrigins,
 });

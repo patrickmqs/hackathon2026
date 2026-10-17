@@ -2,7 +2,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import request from "supertest";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createApp } from "../../src/app.js";
 import { FileStorage } from "../../src/core/storage.js";
 import { MemoryRepository } from "../../src/repositories/memory.js";
@@ -124,5 +124,46 @@ describe("propostas e aprovação", () => {
     expect(res.status).toBe(201);
     expect(res.body.number).toBe(2);
     expect(res.body.status).toBe("draft");
+  });
+});
+
+describe("composição de texto pela IA na criação da proposta", () => {
+  function appWithComposer(composer: NonNullable<Parameters<typeof createApp>[0]["composer"]>) {
+    const repo = new MemoryRepository();
+    const storage = new FileStorage(mkdtempSync(join(tmpdir(), "proposal-ai-")));
+    const jobs = new JobRunner({ repo, storage, pipeline: new StubAiPipeline(), staleMinutes: 0 });
+    return { app: createApp({ repo, storage, jobs, composer }), jobs };
+  }
+  const create = (app: ReturnType<typeof makeApp>["app"], projectId: string, meetingId: string) =>
+    request(app).post(`/projects/${projectId}/proposals`).set("X-Demo-User", "Marina").send({ meeting_id: meetingId });
+
+  it("usa o texto redigido e preserva as estimativas", async () => {
+    const composer = vi.fn(async () => ({
+      title: "Título IA", executive_summary: "Resumo IA", business_context: "Contexto IA", objectives: [],
+      scope: { in_scope: [], out_of_scope: [] }, modules: [], requirements_and_integrations: [],
+      architecture: { overview: "Arq IA", components: [], technologies: [], diagram_mermaid: null },
+      assumptions: [], dependencies: [], exclusions: [], risks: [], open_points: [], next_steps: [],
+    }));
+    const { app, jobs } = appWithComposer(composer);
+    const { projectId, meetingId } = await createReviewedMeeting(app, jobs);
+    const res = await create(app, projectId, meetingId);
+    expect(res.status).toBe(201);
+    expect(composer).toHaveBeenCalledTimes(1);
+    const v = await request(app).get(`/proposals/${res.body.id}/versions/1`);
+    expect(v.body.content.executive_summary).toBe("Resumo IA");
+    expect(v.body.content.estimates.method).toBe("deterministic_rules");
+  });
+
+  it("se a IA falha, a proposta ainda é criada (201) com o texto determinístico", async () => {
+    const composer = vi.fn(async () => {
+      throw new Error("sem crédito");
+    });
+    const { app, jobs } = appWithComposer(composer);
+    const { projectId, meetingId } = await createReviewedMeeting(app, jobs);
+    const res = await create(app, projectId, meetingId);
+    expect(res.status).toBe(201);
+    const v = await request(app).get(`/proposals/${res.body.id}/versions/1`);
+    expect(v.body.content.executive_summary).not.toBe("Resumo IA");
+    expect(v.body.content.estimates.total_hours_max).toBeGreaterThan(0);
   });
 });

@@ -17,6 +17,7 @@ export interface AnalyzeOptions {
 }
 
 export interface AiPipeline {
-  transcribe(audio: Buffer, options: { language: string | null }): Promise<TranscriptResult>;
+  // `filename` (opcional) preserva a extensão do áudio, usada para validar o formato.
+  transcribe(audio: Buffer, options: { language: string | null; filename?: string }): Promise<TranscriptResult>;
   analyze(transcriptText: string, options: AnalyzeOptions): Promise<MeetingAnalysis>;
 }
