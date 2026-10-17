@@ -1,0 +1,24 @@
+{
+  "_request": {
+    "method": "POST",
+    "path": "/api/v1/deliveries",
+    "headers": { "X-Demo-User": "Rafael", "Content-Type": "application/json" }
+  },
+  "approval_id": "c3d4e5f6-7a8b-4c9d-8e0f-1a2b3c4d5e6f",
+  "idempotency_key": "7b1f4e2a-3c5d-4e6f-9a8b-0c1d2e3f4a5b",
+  "channels": [
+    {
+      "channel": "gmail",
+      "recipient": { "email": "ana@example.com", "name": "Ana Souza" },
+      "options": {
+        "subject": "Proposta — Portal de Pedidos B2B",
+        "body_text": "Olá Ana,\n\nSegue em anexo a proposta técnica e comercial do Portal de Pedidos B2B, conforme nossa reunião.\n\nOs pontos pendentes estão listados na seção 13 do documento.\n\nAbraço,\nMarina"
+      }
+    },
+    {
+      "channel": "whatsapp",
+      "recipient": { "phone": "+5511999990000", "name": "Ana Souza" },
+      "options": { "caption": "Proposta Portal de Pedidos B2B — v2 (PDF)" }
+    }
+  ]
+}

@@ -1,0 +1,279 @@
+{
+  "meeting_id": "5f1c2a3e-9b7d-4c21-8e3a-1d2f3a4b5c6d",
+  "summary": "Reunião de descoberta entre a Distribuidora Horizonte (cliente, fictícia) e a software house para um portal de pedidos B2B. O cliente descreveu o processo atual por WhatsApp e planilhas, pediu catálogo, carrinho, aprovação de crédito e integração com o ERP. Ficou decidido que a primeira fase será web; a integração com o ERP depende de confirmação do fornecedor do ERP. O cliente ficou de enviar a planilha de produtos; a software house ficou de enviar a proposta em uma semana.",
+  "participants": [
+    { "name": "Ana Souza", "role": "Diretora comercial", "side": "client" },
+    { "name": "Carlos", "role": "TI do cliente", "side": "client" },
+    { "name": "Marina", "role": "Tech lead", "side": "vendor" }
+  ],
+  "client_needs": [
+    {
+      "id": "need_01",
+      "category": "problem",
+      "description": "Pedidos chegam por WhatsApp e planilha, gerando erros de digitação e atraso no faturamento.",
+      "confidence": "high",
+      "source_refs": [
+        { "quote": "hoje os pedidos chegam por WhatsApp e planilha, e a gente erra muito na digitação", "segment_id": "s004", "speaker": "Ana Souza", "start_ms": 41200, "end_ms": 48900 }
+      ],
+      "review_status": "confirmed",
+      "reviewer_note": null
+    },
+    {
+      "id": "need_02",
+      "category": "business_goal",
+      "description": "Reduzir o tempo entre o pedido e o faturamento.",
+      "confidence": "medium",
+      "source_refs": [
+        { "quote": "o que a gente quer é faturar no mesmo dia", "segment_id": "s006", "speaker": "Ana Souza", "start_ms": 61000, "end_ms": 63500 }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null
+    }
+  ],
+  "requirements": [
+    {
+      "id": "req_01",
+      "title": "Catálogo de produtos com preço por cliente",
+      "description": "Catálogo navegável com preços diferenciados por tabela do cliente.",
+      "type": "functional",
+      "priority": "must",
+      "module_id": "mod_01",
+      "depends_on": [],
+      "confidence": "high",
+      "source_refs": [
+        { "quote": "cada cliente tem uma tabela de preço diferente, isso tem que aparecer certo", "segment_id": "s011", "speaker": "Ana Souza", "start_ms": 120400, "end_ms": 125000 }
+      ],
+      "review_status": "confirmed",
+      "reviewer_note": null
+    },
+    {
+      "id": "req_02",
+      "title": "Carrinho e envio de pedido",
+      "description": "Montagem do pedido com múltiplos itens e envio para aprovação.",
+      "type": "functional",
+      "priority": "must",
+      "module_id": "mod_02",
+      "depends_on": ["req_01"],
+      "confidence": "high",
+      "source_refs": [
+        { "quote": "o cliente monta o pedido ali e manda", "segment_id": "s013", "speaker": "Ana Souza", "start_ms": 140000, "end_ms": 142800 }
+      ],
+      "review_status": "confirmed",
+      "reviewer_note": null
+    },
+    {
+      "id": "req_03",
+      "title": "Integração com ERP para estoque e faturamento",
+      "description": "Consultar estoque e enviar pedidos aprovados ao ERP atual.",
+      "type": "integration",
+      "priority": "must",
+      "module_id": "mod_03",
+      "depends_on": ["req_02"],
+      "confidence": "medium",
+      "source_refs": [
+        { "quote": "precisa falar com o nosso ERP, senão não adianta", "segment_id": "s018", "speaker": "Carlos", "start_ms": 201000, "end_ms": 204300 }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null
+    },
+    {
+      "id": "req_04",
+      "title": "Sistema rápido",
+      "description": "O cliente mencionou que o sistema precisa ser rápido, sem definir métrica.",
+      "type": "non_functional",
+      "priority": "unknown",
+      "module_id": null,
+      "depends_on": [],
+      "confidence": "low",
+      "source_refs": [
+        { "quote": "e tem que ser rápido, o pessoal não tem paciência", "segment_id": "s022", "speaker": "Ana Souza", "start_ms": 250100, "end_ms": 253000 }
+      ],
+      "review_status": "needs_clarification",
+      "reviewer_note": "Perguntar métrica: tempo de resposta? volume simultâneo?"
+    }
+  ],
+  "modules": [
+    { "id": "mod_01", "name": "Catálogo e tabelas de preço", "description": "Produtos, categorias, tabelas de preço por cliente.", "requirement_ids": ["req_01"], "complexity": "M", "complexity_rationale": "CRUD com regra de precificação por cliente; sem variações complexas mencionadas." },
+    { "id": "mod_02", "name": "Pedidos", "description": "Carrinho, envio, histórico e status do pedido.", "requirement_ids": ["req_02"], "complexity": "M", "complexity_rationale": "Fluxo padrão de pedido com estados." },
+    { "id": "mod_03", "name": "Integração ERP", "description": "Sincronização de estoque e envio de pedidos aprovados.", "requirement_ids": ["req_03"], "complexity": "L", "complexity_rationale": "ERP não identificado; API desconhecida; risco alto." }
+  ],
+  "decisions": [
+    {
+      "id": "dec_01",
+      "description": "A primeira fase será uma aplicação web; aplicativo mobile fica para fase posterior.",
+      "status": "confirmed",
+      "agreed_by": ["Ana Souza", "Marina"],
+      "scope_effect": "in_scope",
+      "confidence": "high",
+      "source_refs": [
+        { "quote": "então fechamos: primeiro web, app depois", "segment_id": "s027", "speaker": "Marina", "start_ms": 310000, "end_ms": 312900 },
+        { "quote": "isso, pode ser", "segment_id": "s028", "speaker": "Ana Souza", "start_ms": 313000, "end_ms": 313800 }
+      ],
+      "review_status": "confirmed",
+      "reviewer_note": null
+    },
+    {
+      "id": "dec_02",
+      "description": "Aprovação de crédito dentro do portal — depende de validação com o financeiro do cliente.",
+      "status": "pending_validation",
+      "agreed_by": [],
+      "scope_effect": "in_scope",
+      "confidence": "medium",
+      "source_refs": [
+        { "quote": "a aprovação de crédito talvez entre, preciso ver com o financeiro", "segment_id": "s031", "speaker": "Ana Souza", "start_ms": 340200, "end_ms": 344900 }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null
+    }
+  ],
+  "commitments": [
+    {
+      "id": "com_01",
+      "owner": "Ana Souza",
+      "owner_side": "client",
+      "description": "Enviar a planilha atual de produtos e tabelas de preço.",
+      "due_text": "até sexta",
+      "status": "confirmed",
+      "caveats": null,
+      "confidence": "high",
+      "source_refs": [
+        { "quote": "eu te mando a planilha de produtos até sexta", "segment_id": "s035", "speaker": "Ana Souza", "start_ms": 380000, "end_ms": 382600 }
+      ],
+      "review_status": "confirmed",
+      "reviewer_note": null
+    },
+    {
+      "id": "com_02",
+      "owner": "Marina",
+      "owner_side": "vendor",
+      "description": "Enviar a proposta comercial.",
+      "due_text": "em uma semana",
+      "status": "confirmed",
+      "caveats": null,
+      "confidence": "high",
+      "source_refs": [
+        { "quote": "a gente volta com a proposta em uma semana", "segment_id": "s040", "speaker": "Marina", "start_ms": 420300, "end_ms": 422700 }
+      ],
+      "review_status": "confirmed",
+      "reviewer_note": null
+    },
+    {
+      "id": "com_03",
+      "owner": "Carlos",
+      "owner_side": "client",
+      "description": "Verificar com o fornecedor do ERP se existe API disponível.",
+      "due_text": null,
+      "status": "conditional",
+      "caveats": "Depende de o fornecedor do ERP responder.",
+      "confidence": "medium",
+      "source_refs": [
+        { "quote": "se o pessoal do ERP responder, eu vejo se tem API", "segment_id": "s019", "speaker": "Carlos", "start_ms": 205000, "end_ms": 208400 }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null
+    }
+  ],
+  "open_issues": [
+    {
+      "id": "iss_01",
+      "type": "missing_info",
+      "description": "O ERP do cliente não foi identificado; não se sabe se há API.",
+      "impact": ["effort", "architecture", "timeline"],
+      "suggested_question": "Qual é o ERP utilizado e ele possui API documentada ou exportação de dados?",
+      "related_ids": ["req_03", "mod_03", "com_03"],
+      "confidence": "high",
+      "source_refs": [
+        { "quote": "precisa falar com o nosso ERP, senão não adianta", "segment_id": "s018", "speaker": "Carlos", "start_ms": 201000, "end_ms": 204300 }
+      ],
+      "review_status": "confirmed",
+      "reviewer_note": null
+    },
+    {
+      "id": "iss_02",
+      "type": "vague_requirement",
+      "description": "\"Rápido\" não foi quantificado.",
+      "impact": ["effort", "architecture"],
+      "suggested_question": "Qual tempo de resposta é aceitável e quantos usuários simultâneos são esperados?",
+      "related_ids": ["req_04"],
+      "confidence": "high",
+      "source_refs": [
+        { "quote": "e tem que ser rápido, o pessoal não tem paciência", "segment_id": "s022", "speaker": "Ana Souza", "start_ms": 250100, "end_ms": 253000 }
+      ],
+      "review_status": "confirmed",
+      "reviewer_note": null
+    },
+    {
+      "id": "iss_03",
+      "type": "contradiction",
+      "description": "Ana disse que todos os pedidos passam por aprovação de crédito; mais tarde disse que clientes antigos compram direto.",
+      "impact": ["scope", "effort"],
+      "suggested_question": "Quais clientes passam por aprovação de crédito e quais têm liberação automática?",
+      "related_ids": ["dec_02", "req_02"],
+      "confidence": "medium",
+      "source_refs": [
+        { "quote": "todo pedido passa pelo crédito antes", "segment_id": "s030", "speaker": "Ana Souza", "start_ms": 335000, "end_ms": 337100 },
+        { "quote": "os clientes antigos compram direto, sem análise", "segment_id": "s044", "speaker": "Ana Souza", "start_ms": 460000, "end_ms": 462900 }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null
+    },
+    {
+      "id": "iss_04",
+      "type": "missing_info",
+      "description": "Volume de clientes e pedidos por mês não foi informado.",
+      "impact": ["architecture", "cost"],
+      "suggested_question": "Quantos clientes ativos e quantos pedidos por mês a distribuidora processa hoje?",
+      "related_ids": [],
+      "confidence": "high",
+      "source_refs": [],
+      "review_status": "pending",
+      "reviewer_note": null
+    }
+  ],
+  "tech_suggestions": [
+    {
+      "id": "sug_01",
+      "category": "architecture",
+      "description": "Camada de integração isolada (anti-corruption layer) entre o portal e o ERP, com fila para reprocessamento.",
+      "rationale": "O ERP é desconhecido e pode não ter API estável; isolar reduz o impacto de mudanças.",
+      "risks": "Adiciona complexidade inicial; pode ser excessivo se o ERP tiver API simples.",
+      "confidence": "medium",
+      "source_refs": [
+        { "quote": "precisa falar com o nosso ERP, senão não adianta", "segment_id": "s018", "speaker": "Carlos", "start_ms": 201000, "end_ms": 204300 }
+      ],
+      "review_status": "pending",
+      "reviewer_note": null
+    },
+    {
+      "id": "sug_02",
+      "category": "assumption",
+      "description": "Assumir autenticação por e-mail e senha com perfis Cliente e Administrador.",
+      "rationale": "Autenticação não foi discutida; é necessária para preços por cliente.",
+      "risks": "O cliente pode exigir SSO ou integração com cadastro do ERP.",
+      "confidence": "medium",
+      "source_refs": [],
+      "review_status": "pending",
+      "reviewer_note": null
+    }
+  ],
+  "transcript_metadata": {
+    "language": "pt-BR",
+    "duration_ms": 486000,
+    "has_speakers": true,
+    "has_timestamps": true,
+    "source_type": "audio"
+  },
+  "limitations": [
+    "Identificação de falantes fornecida pela transcrição; nomes inferidos a partir das apresentações no início da reunião.",
+    "iss_04 e sug_02 não têm trecho de origem: são ausências detectadas pela auditoria, não afirmações da reunião."
+  ],
+  "review_completed": false,
+  "meta": {
+    "schema_version": "1.0",
+    "prompt_version": "extract@1.0+gap_audit@1.0",
+    "model": "<OPENAI_MODEL>",
+    "generated_at": "2026-10-17T14:03:11Z",
+    "reviewed_by": null,
+    "reviewed_at": null
+  }
+}
