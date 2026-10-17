@@ -209,3 +209,76 @@ describe("validateSummary", () => {
     expect(locateRef({ ...ref("primeiro web, app depois"), segment_id: "x", speaker: "y" }, transcript)).toMatchObject({ segment_id: null, speaker: null });
   });
 });
+
+describe("revisão B: números", () => {
+  const sumWith = (headline: string): MeetingSummaryOutput => ({ ...good(), headline });
+  const nf = (headline: string, transcriptText: string, a: SummaryAnalysis = analysis) => numbersNotFound(sumWith(headline), transcriptText, a);
+
+  it("número colado a unidade não é partido ('10h' != '1', '30min' != '3', '500mb' != '50')", () => {
+    expect(nf("Reunião de 10h", "começamos às 10 da manhã")).toEqual([]);
+    expect(nf("Chamada de 30min", "foram 30 minutos")).toEqual([]);
+    expect(nf("Limite de 500mb", "upload de 500 megas")).toEqual([]);
+    // número inventado com unidade continua sendo pego
+    expect(nf("Reunião de 99h", "começamos às 10 da manhã")).toEqual(["99"]);
+  });
+
+  it("milhar: '20.000' é um número só", () => {
+    expect(nf("Cerca de 20000 pedidos", "são uns 20.000 pedidos por mês")).toEqual([]);
+    expect(nf("Cerca de 20.000 pedidos", "são uns 20.000 pedidos por mês")).toEqual([]);
+    expect(nf("Cerca de 20 pedidos", "são uns 20.000 pedidos por mês")).toEqual(["20"]);
+    expect(nf("Cerca de 20.000 pedidos", "são uns 20 pedidos por mês")).toEqual(["20.000"]);
+  });
+
+  it("basis=reviewed: número que só existe em item rejeitado não vale", () => {
+    const a: SummaryAnalysis = {
+      ...analysis,
+      decisions: analysis.decisions.map((d, i) => (i === 0 ? { ...d, description: "Prazo de 777 dias.", review_status: "rejected" } : { ...d, review_status: "confirmed" })),
+      commitments: analysis.commitments.map((c) => ({ ...c, review_status: "confirmed" })),
+      open_issues: analysis.open_issues.map((i) => ({ ...i, review_status: "confirmed" })),
+    };
+    const s = good();
+    s.executive_summary += " Prazo de 777 dias.";
+    expect(run(s, "analysis", a).violations.join(" ")).not.toMatch(/777/);
+    const v = run(s, "reviewed", a);
+    expect(v.ok).toBe(false);
+    expect(v.violations.join(" ")).toMatch(/777/);
+  });
+});
+
+describe("revisão B: quotes", () => {
+  const segs: Transcript = {
+    ...transcript,
+    text: "Rafael: Pessoal, bom dia.\nAna: Isso, pode ser. Primeiro web,\nAna: app depois.",
+    segments: [
+      { id: "s001", start_ms: 0, end_ms: 1000, speaker: "Rafael", text: "Pessoal, bom dia." },
+      { id: "s002", start_ms: 1000, end_ms: 3000, speaker: "Ana", text: "Isso, pode ser. Primeiro web," },
+      { id: "s003", start_ms: 3000, end_ms: 5000, speaker: "Ana", text: "app depois." },
+    ],
+  };
+
+  it("locateRef localiza quote que atravessa segmentos", () => {
+    expect(locateRef(ref("primeiro web, app depois"), segs)).toEqual({
+      quote: "primeiro web, app depois", segment_id: "s002", speaker: "Ana", start_ms: 1000, end_ms: 5000,
+    });
+  });
+
+  it("validateSummary aceita tópico cuja quote atravessa segmentos", () => {
+    const s = good();
+    s.topics[0] = topic("Fases", "primeiro web, app depois");
+    const v = validateSummary(s, { transcript: { ...segs, text: segs.text + "\n" + text }, analysis, basis: "analysis" });
+    expect(v.summary.topics[0]!.source_refs[0]!.segment_id).toBe("s002");
+    expect(v.limitations.join(" ")).not.toMatch(/Fases/);
+  });
+
+  it("quote curta demais é rejeitada (mínimo 12 caracteres ou 3 palavras)", () => {
+    expect(quoteInTranscript("web", text)).toBe(false);
+    expect(quoteInTranscript("o portal", text)).toBe(false);
+    expect(quoteInTranscript("primeiro web, app depois", text)).toBe(true);
+  });
+
+  it("quote precisa começar e terminar em fronteira de palavra", () => {
+    expect(quoteInTranscript("rimeiro web, app depois", text)).toBe(false);
+    expect(quoteInTranscript("primeiro web, app depo", text)).toBe(false);
+    expect(quoteInTranscript("primeiro web, app depois", text)).toBe(true);
+  });
+});

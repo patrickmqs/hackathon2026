@@ -1,6 +1,6 @@
 // Validações do resumo da reunião (docs/AI_PIPELINE.md §6.2). Funções puras, sem rede.
 // A normalização de quotes é própria deste módulo (mesma regra do §6.1: espaços, caixa e
-// pontuação final) para não depender de validators.ts.
+// pontuação final); a busca em segmentos unidos espelha a de validators.ts, com fronteira de palavra.
 import type {
   ExtractionOutput,
   MeetingSummaryOutput,
@@ -55,32 +55,111 @@ export function normalizeQuote(s: string): string {
     .replace(/[\s.,;:!?"'()\-–—…]+$/, "");
 }
 
-export function quoteInTranscript(quote: string, transcriptText: string): boolean {
-  const q = normalizeQuote(quote);
-  if (!q) return false;
-  return normalizeQuote(transcriptText).includes(q);
+/** Quote curta demais prova pouco: exige >= 12 caracteres ou >= 3 palavras (após normalizar). */
+export const MIN_QUOTE_CHARS = 12;
+export const MIN_QUOTE_WORDS = 3;
+
+const isLongEnough = (q: string) => q.length >= MIN_QUOTE_CHARS || q.split(" ").filter(Boolean).length >= MIN_QUOTE_WORDS;
+const isWordChar = (c: string | undefined) => !!c && /[\p{L}\d]/u.test(c);
+
+/** Normaliza sem tirar pontuação das pontas (usado nos segmentos, que são unidos antes da busca). */
+function fold(s: string): string {
+  return normalizeQuote(`|${s}|`).slice(1, -1).trim();
 }
 
-/** Preenche segment_id/speaker/start_ms/end_ms a partir dos segmentos; sem segmentos, tudo null. */
+/** Posição da 1ª ocorrência de `needle` em `hay` que começa e termina em fronteira de palavra; -1 se não há. */
+function indexAtBoundary(hay: string, needle: string): number {
+  if (!needle) return -1;
+  for (let from = 0; ; ) {
+    const i = hay.indexOf(needle, from);
+    if (i < 0) return -1;
+    const startOk = !isWordChar(needle[0]) || !isWordChar(hay[i - 1]);
+    const endOk = !isWordChar(needle[needle.length - 1]) || !isWordChar(hay[i + needle.length]);
+    if (startOk && endOk) return i;
+    from = i + 1;
+  }
+}
+
+/** Segmentos normalizados unidos por " ", com o intervalo de cada um (permite quote que atravessa segmentos). */
+function segmentIndex(transcript: Pick<Transcript, "segments">) {
+  const spans: { start: number; end: number; seg: Transcript["segments"][number] }[] = [];
+  let acc = "";
+  for (const seg of transcript.segments) {
+    const n = fold(seg.text);
+    if (acc) acc += " ";
+    spans.push({ start: acc.length, end: acc.length + n.length, seg });
+    acc += n;
+  }
+  return { text: acc, spans };
+}
+
+/**
+ * A quote ocorre na transcrição (texto inteiro ou segmentos unidos), em fronteira de palavra e com
+ * tamanho mínimo (12 caracteres ou 3 palavras).
+ */
+export function quoteInTranscript(quote: string, transcriptText: string, segments: Transcript["segments"] = []): boolean {
+  const q = normalizeQuote(quote);
+  if (!q || !isLongEnough(q)) return false;
+  if (indexAtBoundary(fold(transcriptText), q) >= 0) return true;
+  return segments.length > 0 && indexAtBoundary(segmentIndex({ segments }).text, q) >= 0;
+}
+
+/**
+ * Preenche segment_id/speaker/start_ms/end_ms a partir dos segmentos; sem segmentos, tudo null.
+ * Quote que atravessa segmentos fica no primeiro (start_ms do 1º, end_ms do último), como em validators.ts.
+ */
 export function locateRef(ref: SourceRef, transcript: Transcript): SourceRef {
   const base: SourceRef = { quote: ref.quote, segment_id: null, speaker: null, start_ms: null, end_ms: null };
   const q = normalizeQuote(ref.quote);
   if (!q) return base;
-  const seg = transcript.segments.find((s) => normalizeQuote(s.text).includes(q));
-  if (!seg) return base;
-  return { ...base, segment_id: seg.id, speaker: seg.speaker, start_ms: seg.start_ms, end_ms: seg.end_ms };
+  const idx = segmentIndex(transcript);
+  const at = indexAtBoundary(idx.text, q);
+  if (at < 0) return base;
+  const last = at + q.length - 1;
+  const first = idx.spans.find((s) => at >= s.start && at <= s.end) ?? idx.spans.find((s) => s.start > at);
+  const lastSpan = [...idx.spans].reverse().find((s) => s.start <= last) ?? first;
+  if (!first || !lastSpan) return base;
+  return { ...base, segment_id: first.seg.id, speaker: first.seg.speaker, start_ms: first.seg.start_ms, end_ms: lastSpan.seg.end_ms };
 }
 
 // ---------------------------------------------------------------------------
 // Números
 // ---------------------------------------------------------------------------
 
-/** Sequência de dígitos fora de palavras: "B2B" e "MP3" não contam como número. */
-const STANDALONE_NUMBER = /(?<![\p{L}\d])\d+(?![\p{L}])/gu;
+const isEligible = (status: string) => status === "confirmed" || status === "edited";
+
+/** Com basis=reviewed, só itens confirmed/edited; com basis=analysis, todos. */
+export function itemsForBasis<T extends { review_status: string }>(xs: T[], basis: SummaryBasis): T[] {
+  return basis === "reviewed" ? xs.filter((x) => isEligible(x.review_status)) : xs;
+}
+
+/**
+ * Número isolado (milhar "20.000" e decimal "12,5" são um token só). "B2B"/"MP3" não contam; "10h",
+ * "30min", "500mb" contam como 10, 30 e 500 (unidade colada conhecida), nunca como "1", "3", "50".
+ */
+const NUMBER_TOKEN =
+  /(?<![\p{L}\d])(\d{1,3}(?:\.\d{3})+(?:,\d+)?|\d+(?:[.,]\d+)?)(?!\d)(?=(?:h|hs|min|mb|gb|kb|tb|ms|k|x|s|m)(?![\p{L}\d])|(?![\p{L}]))/giu;
 const ID_PATTERN = /\b[a-z]+_\d+\b/gi;
 
+/** Forma canônica: sem separador de milhar, decimal com ponto, sem ".0" final ("20.000" -> "20000"). */
+function canon(raw: string): string {
+  const n = /^\d{1,3}(?:\.\d{3})+(?:,\d+)?$/.test(raw) ? raw.replace(/\./g, "").replace(",", ".") : raw.replace(",", ".");
+  return n.replace(/\.0+$/, "");
+}
+
+function numberTokens(text: string): string[] {
+  return [...text.matchAll(NUMBER_TOKEN)].map((m) => canon(m[1]!));
+}
+
+/** Números conhecidos: tokens canônicos; decimais também liberam parte inteira e fracionária. */
 function digitTokens(text: string): Set<string> {
-  return new Set(text.match(/\d+/g) ?? []);
+  const out = new Set<string>();
+  for (const t of numberTokens(text)) {
+    out.add(t);
+    if (t.includes(".")) for (const p of t.split(".")) out.add(p);
+  }
+  for (const m of text.matchAll(/(?<=\p{L})\d+|\d+(?=\p{L})/gu)) out.add(m[0]); // "B2B", "MP3", "10h"
+  return out;
 }
 
 /** Textos do resumo em que números são conferidos (ids ficam de fora). */
@@ -88,13 +167,31 @@ function summaryTexts(s: MeetingSummaryOutput): string[] {
   return [s.headline, s.executive_summary, ...s.topics.flatMap((t) => [t.title, t.summary])];
 }
 
-/** Números do resumo que não aparecem na transcrição nem nos itens da análise. */
-export function numbersNotFound(summary: MeetingSummaryOutput, transcriptText: string, analysis: SummaryAnalysis): string[] {
-  const analysisText = JSON.stringify(analysis).replace(ID_PATTERN, " ");
+/** Visão da análise usada como evidência de números: com basis=reviewed, só itens revisados (sem o resumo bruto). */
+function evidenceAnalysis(analysis: SummaryAnalysis, basis: SummaryBasis) {
+  if (basis === "analysis") return analysis;
+  return {
+    decisions: itemsForBasis(analysis.decisions, basis),
+    commitments: itemsForBasis(analysis.commitments, basis),
+    requirements: itemsForBasis(analysis.requirements, basis),
+    client_needs: itemsForBasis(analysis.client_needs, basis),
+    tech_suggestions: itemsForBasis(analysis.tech_suggestions, basis),
+    open_issues: itemsForBasis(analysis.open_issues, basis),
+  };
+}
+
+/** Números do resumo que não aparecem na transcrição nem nos itens da análise (revisados, se basis=reviewed). */
+export function numbersNotFound(
+  summary: MeetingSummaryOutput,
+  transcriptText: string,
+  analysis: SummaryAnalysis,
+  basis: SummaryBasis = "analysis",
+): string[] {
+  const analysisText = JSON.stringify(evidenceAnalysis(analysis, basis)).replace(ID_PATTERN, " ");
   const known = new Set([...digitTokens(transcriptText), ...digitTokens(analysisText)]);
   const missing = new Set<string>();
   for (const text of summaryTexts(summary)) {
-    for (const n of text.match(STANDALONE_NUMBER) ?? []) if (!known.has(n)) missing.add(n);
+    for (const m of text.matchAll(NUMBER_TOKEN)) if (!known.has(canon(m[1]!))) missing.add(m[1]!);
   }
   return [...missing];
 }
@@ -102,8 +199,6 @@ export function numbersNotFound(summary: MeetingSummaryOutput, transcriptText: s
 // ---------------------------------------------------------------------------
 // validateSummary
 // ---------------------------------------------------------------------------
-
-const isEligible = (status: string) => status === "confirmed" || status === "edited";
 
 export function validateSummary(
   input: MeetingSummaryOutput,
@@ -189,7 +284,7 @@ export function validateSummary(
   const dropped: string[] = [];
   const kept = [];
   for (const t of s.topics) {
-    const valid = t.source_refs.filter((r) => quoteInTranscript(r.quote, transcript.text)).map((r) => locateRef(r, transcript));
+    const valid = t.source_refs.filter((r) => quoteInTranscript(r.quote, transcript.text, transcript.segments)).map((r) => locateRef(r, transcript));
     const removed = t.source_refs.length - valid.length;
     if (removed > 0) limitations.push(`Resumo: ${removed} citação(ões) do tópico "${t.title}" não encontrada(s) na transcrição e removida(s).`);
     if (valid.length === 0) {
@@ -204,7 +299,7 @@ export function validateSummary(
     violations.push(`topics deve ter de ${SUMMARY_LIMITS.min_topics} a ${SUMMARY_LIMITS.max_topics} itens com citação literal válida (restaram ${s.topics.length})`);
 
   // 6. Números inventados -> repair com a lista.
-  const nums = numbersNotFound(s, transcript.text, analysis);
+  const nums = numbersNotFound(s, transcript.text, analysis, basis);
   if (nums.length) violations.push(`números no texto que não aparecem na transcrição nem na análise: ${nums.join(", ")}. Remova-os ou escreva por extenso`);
 
   return { summary: s, limitations, violations, ok: violations.length === 0 };

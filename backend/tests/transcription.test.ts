@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../src/integrations/openai/client.js", () => ({ transcribe: vi.fn() }));
 import { transcribe } from "../src/integrations/openai/client.js";
-import { fromText, transcribeAudio } from "../src/services/transcription/service.js";
+import { fromText, splitSentences, transcribeAudio } from "../src/services/transcription/service.js";
 
 const mocked = vi.mocked(transcribe);
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "tr-"));
@@ -64,5 +64,72 @@ describe("fromText", () => {
 
   it("texto vazio não quebra", () => {
     expect(fromText("").segments).toEqual([]);
+  });
+});
+
+describe("revisão C: splitSentences", () => {
+  it("não quebra em valores, abreviações nem URLs", () => {
+    expect(splitSentences("O valor é R$ 1.500,00 por mês. Falei com o Sr. Silva ontem. Veja www.site.com.br para detalhes.")).toEqual([
+      "O valor é R$ 1.500,00 por mês.",
+      "Falei com o Sr. Silva ontem.",
+      "Veja www.site.com.br para detalhes.",
+    ]);
+    expect(splitSentences("A Dra. Ana e o Prof. Lima, J. Souza e outros. Fim!")).toEqual(["A Dra. Ana e o Prof. Lima, J. Souza e outros.", "Fim!"]);
+  });
+
+  it("ponto sem espaço depois (decimal, domínio, e-mail) não separa", () => {
+    expect(splitSentences("São 3.5 horas, escreva para ana@empresa.com.br. Certo?")).toEqual(["São 3.5 horas, escreva para ana@empresa.com.br.", "Certo?"]);
+  });
+
+  it("mantém o comportamento básico", () => {
+    expect(splitSentences("Olá, pessoal. Vamos começar? Sim!")).toEqual(["Olá, pessoal.", "Vamos começar?", "Sim!"]);
+    expect(splitSentences("sem pontuação final")).toEqual(["sem pontuação final"]);
+  });
+});
+
+describe("revisão C: rótulos de falante", () => {
+  const speakers = (t: string) => fromText(t).segments.map((s) => s.speaker);
+
+  it("aceita Participante 1, Speaker 1, 'Nome (papel)' e timestamp", () => {
+    expect(speakers("Participante 1: Bom dia.\nParticipante 2: Oi.\nParticipante 1: Vamos.\nParticipante 2: Ok.")).toEqual(["Participante 1", "Participante 2", "Participante 1", "Participante 2"]);
+    expect(speakers("Speaker 1: Hello.\nSpeaker 2: Hi.\nSpeaker 1: Go.\nSpeaker 2: Ok.")).toEqual(["Speaker 1", "Speaker 2", "Speaker 1", "Speaker 2"]);
+    expect(speakers("Ana (cliente): Bom dia.\nBruno: Oi.\nAna (cliente): Vamos.\nBruno: Ok.")).toEqual(["Ana", "Bruno", "Ana", "Bruno"]);
+    const t = fromText("[00:12] Ana: Bom dia.\n[00:20] Bruno: Oi.\n[00:31] Ana: Vamos.\n[00:40] Bruno: Ok.");
+    expect(t.segments.map((s) => s.speaker)).toEqual(["Ana", "Bruno", "Ana", "Bruno"]);
+    expect(t.segments[0]!.text).toBe("Bom dia.");
+  });
+
+  it("'Importante:', 'Obs:' e rótulos que aparecem uma vez não viram falante", () => {
+    const t = fromText("Importante: o cliente quer um portal.\nObs: prazo curto.\nResumo: foi uma boa reunião.");
+    expect(t.metadata.has_speakers).toBe(false);
+    expect(t.segments.every((s) => s.speaker === null)).toBe(true);
+    // mistura: só o rótulo repetido é falante
+    const m = fromText("Ana: Oi.\nImportante: pagar até sexta.\nAna: Certo.\nBruno: Ok.\nBruno: Fechado.");
+    expect(m.segments.map((s) => s.speaker)).toEqual(["Ana", "Ana", "Ana", "Bruno", "Bruno"]);
+    expect(m.segments[1]!.text).toBe("Importante: pagar até sexta.");
+  });
+
+  it("rótulo com mais de 4 palavras não é falante", () => {
+    expect(fromText("Esta frase tem muitas palavras: x\nEsta frase tem muitas palavras: y").metadata.has_speakers).toBe(false);
+  });
+});
+
+describe("revisão C: MAX_UPLOAD_MB", () => {
+  it("valor acima de 25 é limitado a 25 MB (limite real da OpenAI)", async () => {
+    process.env.MAX_UPLOAD_MB = "100";
+    await expect(transcribeAudio(file("grande.mp3", 26 * 1024 * 1024))).rejects.toMatchObject({ code: "UPLOAD_INVALID" });
+    expect(mocked).not.toHaveBeenCalled();
+  });
+
+  it.each(["abc", "0", "-5", "NaN"])("valor inválido %s falha com erro claro", async (v) => {
+    process.env.MAX_UPLOAD_MB = v;
+    await expect(transcribeAudio(file("a.mp3"))).rejects.toThrow(/MAX_UPLOAD_MB/);
+    expect(mocked).not.toHaveBeenCalled();
+  });
+
+  it("vazio/ausente usa 25 MB", async () => {
+    process.env.MAX_UPLOAD_MB = "";
+    mocked.mockResolvedValue({ text: "oi", language: "pt", duration_ms: 1, segments: [], model: "m" });
+    await expect(transcribeAudio(file("a.mp3"))).resolves.toBeDefined();
   });
 });

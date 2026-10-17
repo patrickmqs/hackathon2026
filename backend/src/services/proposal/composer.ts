@@ -94,14 +94,52 @@ export function filterReviewed(a: MeetingAnalysis): MeetingAnalysis {
 }
 
 // --- Validador puro de números ---
+//
+// Cobre: horas (h/hs/hr/hrs/horas), semanas, dias, meses e dinheiro (R$, US$, "reais", "dólares",
+// com sufixo k/mil/mi/milhões). Faixas de horas ("332 a 667 h") precisam ser um par existente nas
+// estimativas (total, por perfil ou por linha), não apenas dois números conhecidos.
+//
+// NÃO cobre (limitações conhecidas):
+// - números por extenso ("cinquenta horas", "três meses") e algarismos romanos;
+// - horas citadas isoladas não são ligadas ao módulo/perfil: basta existir em qualquer lugar de `estimates`;
+// - dias/meses só são conferidos contra `total_weeks`/`duration_weeks` convertidos (7 ou 5 dias/semana,
+//   4 ou 4,345 semanas/mês); prazos que o motor não calcula serão rejeitados;
+// - valores sem unidade nem moeda ("50 usuários", "2 s") são livres, assim como "R$" sem número;
+// - números com contexto de SLA/suporte/reunião/garantia/pagamento (heurística por palavra-chave
+//   na mesma oração) são tratados como não-esforço e ignorados, o que também deixa passar um
+//   número de esforço escrito nesse contexto;
+// - a moeda não é distinguida (US$ e R$ comparam com os mesmos totais).
 
-const UNIT = String.raw`(?:h|hs|horas?|hours?|semanas?|weeks?)\b`;
-const NUM = String.raw`\d{1,3}(?:\.\d{3})+(?:,\d+)?|\d+(?:,\d+)?`;
-const NUM_RE = new RegExp(String.raw`(R\$\s*)?(${NUM})`, "g");
-const UNIT_AFTER = new RegExp(String.raw`^\s*(?:(?:–|—|-|a|até|e)\s*(?:${NUM})\s*)?${UNIT}`, "i");
+const UNITS = String.raw`h|hs|hr|hrs|horas?|hours?|semanas?|weeks?|dias?|days?|m[eê]s(?:es)?|months?|reais|real|d[óo]lares?|usd|brl`;
+const NUM = String.raw`\d{1,3}(?:\.\d{3})+(?:,\d+)?|\d+(?:[.,]\d+)?`;
+const NUM_RE = new RegExp(String.raw`(?<![\p{L}\d])((?:R\$|US\$)\s*)?(${NUM})`, "giu");
+const MULT_AFTER = /^\s?(k|mil|milh[ãõ]es?|mi)\b/i;
+const UNIT_AFTER = new RegExp(String.raw`^\s*(${UNITS})\b`, "i");
+const RANGE_AFTER = new RegExp(String.raw`^\s*(?:–|—|-|a|até|e)\s*(${NUM})`, "i");
+const LABEL_BEFORE = /(?:fase|etapa|sprint|m[óo]dulo|passo|item|itera[çc][ãa]o|ciclo|marco|parte|entrega|release|milestone)\s*$/i;
+const NON_EFFORT =
+  /disponibilidade|resposta|respond|\bsla\b|suporte|atendimento|reuni|workshop|sess(?:ão|ões|ao|oes)|treinamento|plant[aã]o|validade|garantia|backup|reten[cç][aã]o|uptime|janela|vencimento|pagamento|aceite|a cada|\bcada\b|por dia|por semana|por m[eê]s|24x7|24\/7/i;
+const EFFORT_CUE = /estim|esfor[çc]o|total de|somam|desenvolvimento|implementa|constru[çc][ãa]o/i;
 
-function parsePt(s: string): number {
-  return Number(s.replace(/\./g, "").replace(",", "."));
+type Kind = "hours" | "weeks" | "days" | "months" | "money";
+
+function parseNum(s: string): number {
+  return /^\d{1,3}(?:\.\d{3})+(?:,\d+)?$/.test(s) ? Number(s.replace(/\./g, "").replace(",", ".")) : Number(s.replace(",", "."));
+}
+
+function multiplier(w: string | undefined): number {
+  if (!w) return 1;
+  const l = w.toLowerCase();
+  return l === "k" || l === "mil" ? 1000 : 1_000_000;
+}
+
+function kindOfUnit(u: string): Kind {
+  const l = u.toLowerCase();
+  if (/^(?:h|hs|hr|hrs|horas?|hours?)$/.test(l)) return "hours";
+  if (/^(?:semanas?|weeks?)$/.test(l)) return "weeks";
+  if (/^(?:dias?|days?)$/.test(l)) return "days";
+  if (/^(?:m[eê]s(?:es)?|months?)$/.test(l)) return "months";
+  return "money";
 }
 
 function collectNumbers(v: unknown, out: Set<number>): void {
@@ -116,23 +154,52 @@ function collectStrings(v: unknown, out: string[]): void {
   else if (v && typeof v === "object") Object.values(v).forEach((x) => collectStrings(x, out));
 }
 
+const near = (set: Set<number>, v: number) => [...set].some((x) => Math.abs(x - v) < 1e-6);
+
+/** Contexto da oração em volta do número sugere que não é esforço de projeto (SLA, reunião, garantia...). */
+function isNonEffortContext(s: string, start: number, end: number): boolean {
+  const before = s.slice(Math.max(0, start - 60), start);
+  const clauseBefore = before.slice(before.search(/[^.;!?\n]*$/));
+  const after = s.slice(end, end + 30);
+  const clauseAfter = after.split(/[.;!?\n]/)[0]!;
+  const win = clauseBefore + " " + clauseAfter;
+  return NON_EFFORT.test(win) && !EFFORT_CUE.test(win);
+}
+
 /**
- * Números "de esforço" citados no texto (horas, semanas, valores em R$) que não existem em `estimates`.
- * Só inspeciona números com unidade (h/horas/semanas) ou prefixo R$; outros (ex.: "2 s", "50 usuários")
- * são livres. `diagram_mermaid` é ignorado.
+ * Números "de esforço" citados no texto (horas, semanas, dias, meses, valores) que não existem em
+ * `estimates`. Só inspeciona números com unidade ou moeda; outros (ex.: "2 s", "50 usuários")
+ * são livres. `diagram_mermaid` é ignorado. Ver limitações no cabeçalho desta seção.
  */
 export function findNumberViolations(text: ProposalTextOutput, est: ComposerEstimates): string[] {
   const hours = new Set<number>();
   collectNumbers(est.estimates, hours);
+  const pairs = new Set<string>();
+  const addPair = (a: unknown, b: unknown) => {
+    if (typeof a === "number" && typeof b === "number") pairs.add(`${a}|${b}`);
+  };
+  addPair(est.estimates.total_hours_min, est.estimates.total_hours_max);
+  for (const t of Object.values(est.estimates.totals_by_profile ?? {})) addPair(t.hours_min, t.hours_max);
+  for (const l of est.estimates.lines ?? []) addPair(l.hours_min, l.hours_max);
+
   const weeks = new Set<number>();
   if (typeof est.total_weeks === "number") weeks.add(est.total_weeks);
   for (const p of [...(est.team ?? []), ...(est.schedule ?? [])]) {
     const w = (p as { duration_weeks?: unknown }).duration_weeks;
     if (typeof w === "number") weeks.add(w);
   }
+  const days = new Set<number>();
+  const months = new Set<number>();
+  for (const w of weeks) {
+    days.add(w * 7);
+    days.add(w * 5);
+    months.add(Math.round(w / 4.345));
+    months.add(Math.round(w / 4));
+  }
   const money = new Set<number>();
   const c = (est.commercial ?? {}) as { total_min?: unknown; total_max?: unknown; hourly_rates?: unknown };
   collectNumbers([c.total_min, c.total_max, c.hourly_rates], money);
+  const allowedFor: Record<Kind, Set<number>> = { hours, weeks, days, months, money };
 
   const strings: string[] = [];
   const { architecture, ...rest } = text;
@@ -142,16 +209,37 @@ export function findNumberViolations(text: ProposalTextOutput, est: ComposerEsti
   const bad = new Set<string>();
   for (const s of strings) {
     for (const m of s.matchAll(NUM_RE)) {
-      const value = parsePt(m[2]!);
-      const after = s.slice(m.index! + m[0].length);
-      let allowed: Set<number>;
-      if (m[1]) allowed = money;
-      else {
-        const u = UNIT_AFTER.exec(after);
-        if (!u) continue;
-        allowed = /sem|week/i.test(u[0]) ? weeks : hours;
+      const start = m.index!;
+      let end = start + m[0].length;
+      if (LABEL_BEFORE.test(s.slice(0, start))) continue; // "Fase 1", "Sprint 2": rótulo, não esforço
+      let value = parseNum(m[2]!);
+      const mult = MULT_AFTER.exec(s.slice(end));
+      if (mult) {
+        value *= multiplier(mult[1]);
+        end += mult[0].length;
       }
-      if (!allowed.has(value)) bad.add(m[0].trim());
+      const tail = s.slice(end);
+      const u = UNIT_AFTER.exec(tail);
+      let kind: Kind;
+      let secondValue: number | null = null;
+      if (m[1]) kind = "money";
+      else if (u) kind = kindOfUnit(u[1]!);
+      else {
+        // faixa "X a Y unidade": X herda a unidade de Y
+        const r = RANGE_AFTER.exec(tail);
+        const u2 = r ? UNIT_AFTER.exec(tail.slice(r[0].length)) : null;
+        if (!r || !u2) continue;
+        kind = kindOfUnit(u2[1]!);
+        secondValue = parseNum(r[1]!);
+      }
+      if (kind !== "money" && isNonEffortContext(s, start, end + (u ? u[0].length : 0))) continue;
+      if (!near(allowedFor[kind], value)) {
+        bad.add(m[0].trim());
+        continue;
+      }
+      if (kind === "hours" && secondValue !== null && near(hours, secondValue) && !pairs.has(`${value}|${secondValue}`)) {
+        bad.add(`${value}–${secondValue}`);
+      }
     }
   }
   return [...bad];
@@ -203,9 +291,11 @@ function buildInput(analysis: MeetingAnalysis, est: ComposerEstimates, vendor: V
   return feedback ? `${base}\n\nCORREÇÃO NECESSÁRIA: ${feedback}` : base;
 }
 
+export const COMPOSE_MAX_ATTEMPTS = 3;
+
 /**
  * Redige os textos da proposta. Só usa itens confirmed/edited (filtra de novo por segurança),
- * valida módulos e números e refaz uma vez se o texto violar as regras.
+ * valida módulos e números e refaz até 3 tentativas (§6) se o texto violar as regras.
  */
 export async function compose(
   analysisFiltered: MeetingAnalysis,
@@ -216,22 +306,27 @@ export async function compose(
   const prompt = loadPrompt("compose_proposal");
   let feedback: string | undefined;
   let lastError: unknown;
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    const { data } = await structuredCompletion({
-      prompt,
-      input: buildInput(analysis, estimates, vendorProfile, feedback),
-      schema: ProposalTextOutput,
-      schemaName: "proposal_text",
-      attempt,
-    });
+  for (let attempt = 1; attempt <= COMPOSE_MAX_ATTEMPTS; attempt++) {
     try {
+      const { data } = await structuredCompletion({
+        prompt,
+        input: buildInput(analysis, estimates, vendorProfile, feedback),
+        schema: ProposalTextOutput,
+        schemaName: "proposal_text",
+        attempt,
+      });
       assertModulesMatch(data, analysis);
       assertNumbersUnchanged(data, estimates);
       return data;
     } catch (e) {
-      if (!(e instanceof AiOutputInvalidError)) throw e;
+      // Saída inválida do modelo (recusa, JSON/schema inválido) também vira repair (§6);
+      // erros de provedor/configuração propagam.
+      if (!(e instanceof AiOutputInvalidError || e instanceof z.ZodError || e instanceof SyntaxError)) throw e;
       lastError = e;
-      feedback = `${e.message}. Reescreva sem citar números de horas, semanas ou valores que não estejam em "estimates", e com exatamente os módulos de "analysis.modules".`;
+      feedback =
+        e instanceof AiOutputInvalidError
+          ? `${e.message}. Reescreva sem citar números de horas, semanas ou valores que não estejam em "estimates", e com exatamente os módulos de "analysis.modules".`
+          : `A resposta anterior não seguiu o schema (${(e as Error).message}). Responda apenas com o JSON válido do schema pedido.`;
     }
   }
   throw lastError;

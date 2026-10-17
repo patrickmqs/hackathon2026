@@ -131,12 +131,94 @@ describe("compose", () => {
     expect(input).not.toContain("dec_02");
   });
 
-  it("falha depois de 2 tentativas inválidas", async () => {
+  it("falha depois das tentativas inválidas", async () => {
     const bad = { ...textFromExample(), executive_summary: "999 horas" };
     const parse = vi.fn().mockResolvedValue(res(bad));
     __setTestHooks({ client: fake(parse) });
     await expect(compose(analysis, est, { company: "x" })).rejects.toThrow();
-    expect(parse).toHaveBeenCalledTimes(2);
+    expect(parse).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe("findNumberViolations: precisão (revisão A)", () => {
+  const v = (s: string, e: ComposerEstimates = { ...est, total_weeks: 9 }) => {
+    const t = textFromExample();
+    t.executive_summary = s;
+    return findNumberViolations(t, e);
+  };
+
+  it("não derruba números que não são esforço", () => {
+    expect(v("Suporte com disponibilidade 24h.")).toEqual([]);
+    expect(v("Tempo de resposta em 48 horas.")).toEqual([]);
+    expect(v("Teremos reuniões de 2 horas a cada sprint.")).toEqual([]);
+  });
+
+  it("rótulo de fase não é lido como semanas", () => {
+    expect(v("Fase 1 - 4 semanas de construção.", { ...est, total_weeks: 4 })).toEqual([]);
+    expect(v("Etapa 2 – 9 semanas.", { ...est, total_weeks: 9 })).toEqual([]);
+  });
+
+  it("valores monetários abreviados são conferidos", () => {
+    const e = { ...est, commercial: { total_min: 50000, total_max: 90000, hourly_rates: {} } } as ComposerEstimates;
+    expect(v("Investimento de R$ 50k.", e)).toEqual([]);
+    expect(v("Investimento de R$ 70k.", e)).not.toEqual([]);
+  });
+
+  it("detecta variações de unidade que antes escapavam", () => {
+    expect(v("Serão 40hrs de trabalho.")).not.toEqual([]);
+    expect(v("O projeto leva 3 meses.")).not.toEqual([]);
+    expect(v("Entrega em 20 dias.")).not.toEqual([]);
+    expect(v("Valor de US$ 5.000.")).not.toEqual([]);
+    expect(v("Custo de 50 mil reais.")).not.toEqual([]);
+    expect(v("Esforço de 12.5h.")).not.toEqual([]);
+  });
+
+  it("faixa precisa ser um par conhecido (não só números soltos)", () => {
+    expect(v("Esforço de 24 a 667 horas.")).not.toEqual([]);
+    expect(v("Esforço de 332 a 667 horas.")).toEqual([]);
+  });
+});
+
+describe("compose: tentativas e erros do modelo (revisão A)", () => {
+  beforeEach(() => {
+    process.env.AI_RUNS_LOG = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "airuns-")), "ai_runs.jsonl");
+    __setTestHooks({ sleep: async () => {} });
+  });
+  const fake = (parse: ReturnType<typeof vi.fn>) => ({ responses: { parse } }) as unknown as OpenAI;
+  const res = (o: unknown) => ({ output_parsed: o, usage: { input_tokens: 1, output_tokens: 1 }, output_text: "" });
+  const good = () => ({ ...textFromExample(), modules: textFromExample().modules.slice(0, 2) });
+
+  it("faz 3 tentativas quando o texto segue inválido", async () => {
+    const bad = { ...good(), executive_summary: "999 horas" };
+    const parse = vi.fn().mockResolvedValue(res(bad));
+    __setTestHooks({ client: fake(parse) });
+    await expect(compose(analysis, est, { company: "x" })).rejects.toThrow();
+    expect(parse).toHaveBeenCalledTimes(3);
+  });
+
+  it("recusa/saída nula na 1ª tentativa vira repair, não erro", async () => {
+    const parse = vi.fn().mockResolvedValueOnce(res(null)).mockResolvedValueOnce(res(good()));
+    __setTestHooks({ client: fake(parse) });
+    const out = await compose(analysis, est, { company: "x" });
+    expect(out).toEqual(good());
+    expect(parse.mock.calls[1]![0].input).toContain("CORREÇÃO NECESSÁRIA");
+  });
+
+  it("erro de provedor continua propagando sem repair", async () => {
+    const parse = vi.fn().mockRejectedValue(new Error("boom"));
+    __setTestHooks({ client: fake(parse) });
+    await expect(compose(analysis, est, { company: "x" })).rejects.toThrow("boom");
+    expect(parse).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("compose: exclusões só de decisões confirmed (revisão D)", () => {
+  it("prompt exige status=confirmed para exclusions e manda pendentes para open_points", () => {
+    const p = loadPrompt("compose_proposal").system;
+    const rule6 = p.split("\n").find((l) => l.startsWith("6."))!;
+    expect(rule6).toMatch(/confirmed/);
+    expect(rule6).toMatch(/pending_validation/);
+    expect(rule6).toMatch(/open_points/);
   });
 });
 
