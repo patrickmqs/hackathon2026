@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
-import type { z } from "zod";
+import { z, ZodError } from "zod";
 import { AiOutputInvalidError, AiProviderError, AiProviderNotConfiguredError } from "../../core/errors.js";
 
 export interface LoadedPrompt {
@@ -116,10 +116,19 @@ export async function structuredCompletion<T extends z.ZodTypeAny>(opts: {
     logRun({ ...base, latencyMs, ...usage, ok: true });
     return { data: res.output_parsed as z.infer<T>, usage, latencyMs };
   } catch (e) {
-    if (!(e instanceof AiOutputInvalidError)) {
-      logRun({ ...base, latencyMs: Date.now() - started, ok: false, error: (e as Error).message });
+    let out: unknown = e;
+    if (e instanceof ZodError) {
+      out = new AiOutputInvalidError("Saída da OpenAI não confere com o schema", z.prettifyError(e));
+    } else if (e instanceof SyntaxError) {
+      out = new AiOutputInvalidError(`Saída da OpenAI não é JSON válido: ${e.message}`, e.message);
+    } else if (e instanceof OpenAI.APIError) {
+      // Erros não retentáveis (400/401/413...): status preservado em `cause`.
+      out = new AiProviderError(`Erro da OpenAI (status ${e.status}): ${e.message}`, e);
     }
-    throw e;
+    if (!(e instanceof AiOutputInvalidError)) {
+      logRun({ ...base, latencyMs: Date.now() - started, ok: false, error: (out as Error).message });
+    }
+    throw out;
   }
 }
 

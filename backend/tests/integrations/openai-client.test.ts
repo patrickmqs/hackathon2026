@@ -57,7 +57,9 @@ describe("structuredCompletion", () => {
     const err = new OpenAI.BadRequestError(400, { message: "bad" }, "bad", new Headers());
     const parse = vi.fn().mockRejectedValue(err);
     __setTestHooks({ client: fake(parse) });
-    await expect(run()).rejects.toBe(err);
+    const e = await run().catch((x) => x);
+    expect(e).toBeInstanceOf(AiProviderError);
+    expect(e.cause).toBe(err);
     expect(parse).toHaveBeenCalledTimes(1);
   });
 

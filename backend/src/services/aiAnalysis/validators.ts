@@ -1,6 +1,6 @@
 // Validações pós-schema da extração (docs/AI_PIPELINE.md §6.1). Funções puras: nada de I/O.
 // Devolve a extração corrigida, os motivos para reprocessar (repair) e notas para `limitations[]`.
-import type { ExtractionOutput, SourceRef } from "../../../../shared/src/schemas/analysis.js";
+import type { ExtractionOutput, GapAuditOutput, SourceRef } from "../../../../shared/src/schemas/analysis.js";
 import type { Transcript } from "../transcription/types.js";
 
 export interface ValidationResult {
@@ -32,7 +32,11 @@ export function normalizeQuote(s: string): string {
     .replace(/[\s"'.,;:!?\-]+$/, "");
 }
 
+export const MIN_QUOTE_CHARS = 12;
+export const MIN_QUOTE_WORDS = 3;
+
 interface Index {
+  speakers: string[]; // nomes de falantes (normalizados) para rejeitar o prefixo "Nome:"
   fullText: string; // transcrição normalizada (sem trim)
   segText: string; // segmentos normalizados, unidos por " "
   spans: { start: number; end: number; seg: Transcript["segments"][number] }[];
@@ -47,14 +51,38 @@ function buildIndex(t: Transcript): Index {
     spans.push({ start: acc.length, end: acc.length + n.length, seg });
     acc += n;
   }
-  return { fullText: foldChars(t.text), segText: acc, spans };
+  const speakers = new Set<string>();
+  for (const seg of t.segments) if (seg.speaker) speakers.add(foldChars(seg.speaker).trim());
+  for (const m of t.text.matchAll(/^\s*([^\n:]{1,40}):\s/gm)) speakers.add(foldChars(m[1]!).trim());
+  return { speakers: [...speakers].filter(Boolean), fullText: foldChars(t.text), segText: acc, spans };
+}
+
+const isWordChar = (c: string | undefined) => c !== undefined && /[\p{L}\p{N}_]/u.test(c);
+
+/** Índice da primeira ocorrência de `q` em `hay` com fronteira de palavra nas duas pontas; -1 se não há. */
+function indexOfWord(hay: string, q: string): number {
+  for (let at = hay.indexOf(q); at >= 0; at = hay.indexOf(q, at + 1)) {
+    const before = hay[at - 1];
+    const after = hay[at + q.length];
+    const startsWord = isWordChar(q[0]);
+    const endsWord = isWordChar(q[q.length - 1]);
+    if ((startsWord && isWordChar(before)) || (endsWord && isWordChar(after))) continue;
+    return at;
+  }
+  return -1;
+}
+
+function quoteTooLoose(q: string, idx: Index): boolean {
+  const words = q.split(/\s+/).filter(Boolean).length;
+  if (q.length < MIN_QUOTE_CHARS && words < MIN_QUOTE_WORDS) return true;
+  return idx.speakers.some((sp) => q.startsWith(`${sp}:`));
 }
 
 /** Procura a quote e devolve a SourceRef completa, ou null se não ocorre na transcrição. */
 function locate(ref: SourceRef, idx: Index): SourceRef | null {
   const q = normalizeQuote(ref.quote);
-  if (!q) return null;
-  const at = idx.segText.indexOf(q);
+  if (!q || quoteTooLoose(q, idx)) return null;
+  const at = indexOfWord(idx.segText, q);
   if (at >= 0) {
     const last = at + q.length - 1;
     const first = idx.spans.find((s) => at <= s.end && at >= s.start) ?? idx.spans.find((s) => s.start > at);
@@ -69,7 +97,7 @@ function locate(ref: SourceRef, idx: Index): SourceRef | null {
       };
     }
   }
-  if (idx.fullText.includes(q)) {
+  if (indexOfWord(idx.fullText, q) >= 0) {
     return { quote: ref.quote, segment_id: null, speaker: null, start_ms: null, end_ms: null };
   }
   return null;
@@ -178,15 +206,28 @@ function checkIds(ex: ExtractionOutput, reprocess: string[]) {
 
 // --- Regras 3 e 4: rebaixamentos (sem reprocessar) ---
 
+const NO_OWNER = new Set([
+  "", "?", "??", "n/a", "na", "n.a.", "nd", "tbd", "-", "nenhum", "ninguem", "ninguém", "indefinido", "desconhecido",
+  "desconhecida", "a definir", "a ser definido", "não identificado", "nao identificado", "não informado", "nao informado",
+]);
+
+function isNoOwner(owner: string): boolean {
+  return NO_OWNER.has(foldChars(owner).trim().replace(/[.!]+$/, ""));
+}
+
 function applyDowngrades(ex: ExtractionOutput, limitations: string[]) {
   for (const d of ex.decisions) {
+    if (d.status === "confirmed" && d.agreed_by.every((a) => a.trim() === "")) {
+      d.status = "pending_validation";
+      limitations.push(`decisão ${d.id} rebaixada para pending_validation: ninguém registrado em agreed_by.`);
+    }
     if (d.status === "confirmed" && d.confidence === "low") {
       d.status = "pending_validation";
       limitations.push(`decisão ${d.id} rebaixada para pending_validation: confiança baixa.`);
     }
   }
   for (const c of ex.commitments) {
-    const noOwner = c.owner.trim() === "" || normalizeQuote(c.owner) === "não identificado";
+    const noOwner = isNoOwner(c.owner);
     if (c.status === "confirmed" && noOwner) {
       c.status = "tentative";
       limitations.push(`compromisso ${c.id} rebaixado para tentative: responsável não identificado.`);
@@ -220,4 +261,61 @@ export function validateExtraction(input: ExtractionOutput, transcript: Transcri
   checkSummaryAndCoverage(extraction, transcript, reprocess);
 
   return { extraction, reprocess, limitations };
+}
+
+// --- Auditoria de lacunas (§6.1 aplicado à etapa 5) ---
+
+export interface GapAuditValidation {
+  audit: GapAuditOutput;
+  reprocess: string[];
+  limitations: string[];
+}
+
+export function validateGapAudit(
+  input: GapAuditOutput,
+  transcript: Transcript,
+  extraction: ExtractionOutput,
+): GapAuditValidation {
+  const audit = structuredClone(input);
+  const limitations: string[] = [];
+  const reprocess: string[] = [];
+  const idx = buildIndex(transcript);
+
+  for (const issue of audit.open_issues) {
+    const { refs, invalid } = resolveWithIndex(issue.source_refs, idx);
+    issue.source_refs = refs;
+    if (invalid.length > 0) {
+      issue.confidence = "low";
+      limitations.push(`pendência ${issue.id}: ${invalid.length} citação(ões) não encontrada(s) na transcrição foram removidas.`);
+    }
+  }
+
+  const issueIds = audit.open_issues.map((i) => i.id);
+  const dup = issueIds.filter((id, n) => issueIds.indexOf(id) !== n);
+  if (dup.length > 0) reprocess.push(`IDs de pendências duplicados: ${[...new Set(dup)].join(", ")}. Cada id deve ser único.`);
+
+  const known = new Set<string>([
+    ...extraction.client_needs.map((x) => x.id),
+    ...extraction.requirements.map((x) => x.id),
+    ...extraction.modules.map((x) => x.id),
+    ...extraction.decisions.map((x) => x.id),
+    ...extraction.commitments.map((x) => x.id),
+    ...extraction.tech_suggestions.map((x) => x.id),
+    ...issueIds,
+  ]);
+  for (const issue of audit.open_issues) {
+    for (const rid of issue.related_ids) {
+      if (!known.has(rid)) reprocess.push(`Pendência ${issue.id} referencia related_ids inexistente "${rid}".`);
+    }
+  }
+
+  const decIds = new Set(extraction.decisions.map((d) => d.id));
+  const comIds = new Set(extraction.commitments.map((c) => c.id));
+  for (const d of audit.downgrades) {
+    if (!decIds.has(d.id) && !comIds.has(d.id)) {
+      reprocess.push(`Rebaixamento referencia id "${d.id}", que não é decisão nem compromisso da extração.`);
+    }
+  }
+
+  return { audit, reprocess, limitations };
 }
