@@ -2,3 +2,10 @@ node_modules/
 dist/
 .env
 *.log
+
+# SQLite local e arquivos gerados
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+storage/
