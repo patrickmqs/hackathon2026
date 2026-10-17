@@ -29,7 +29,7 @@
 .proc-orb-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 8px 12px; }
 .proc-orb-wrap h2 { margin: 22px 0 6px; font-size: 24px; color: var(--ink); }
 .proc-orb-wrap p { margin: 0 0 12px; max-width: 320px; color: var(--muted); line-height: 1.5; }
-.proc-orb { position: relative; width: 230px; height: 230px; display: grid; place-items: center; color: var(--blue); }
+.proc-orb { container-type: size; position: relative; width: 230px; height: 230px; display: grid; place-items: center; color: var(--blue); }
 .proc-orb .ring { position: absolute; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--blue) 35%, transparent); }
 .proc-orb .r1 { inset: 0; animation: proc-breathe 3.2s ease-in-out infinite; }
 .proc-orb .r2 { inset: 28px; border-color: color-mix(in srgb, var(--purple) 45%, transparent); animation: proc-breathe 3.2s ease-in-out .8s infinite; }
@@ -37,12 +37,12 @@
 .proc-orb .core { position: relative; width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--blue) 12%, transparent); border: 1px solid color-mix(in srgb, var(--blue) 40%, transparent); }
 .proc-orb .core svg { width: 40px; height: 40px; animation: proc-pulse 2s ease-in-out infinite; }
 .orbit-dot { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: var(--purple); top: 50%; left: 50%; margin: -3px; animation: proc-orbit 9s linear infinite; }
-.orbit-dot.o0 { --r: 110px; animation-delay: 0s; }
-.orbit-dot.o1 { --r: 96px; animation-delay: -1.5s; background: var(--blue); }
-.orbit-dot.o2 { --r: 108px; animation-delay: -3s; }
-.orbit-dot.o3 { --r: 90px; animation-delay: -4.5s; background: var(--blue); }
-.orbit-dot.o4 { --r: 112px; animation-delay: -6s; }
-.orbit-dot.o5 { --r: 100px; animation-delay: -7.5s; background: var(--blue); }
+.orbit-dot.o0 { --r: 47.8cqw; animation-delay: 0s; }
+.orbit-dot.o1 { --r: 41.7cqw; animation-delay: -1.5s; background: var(--blue); }
+.orbit-dot.o2 { --r: 47cqw; animation-delay: -3s; }
+.orbit-dot.o3 { --r: 39.1cqw; animation-delay: -4.5s; background: var(--blue); }
+.orbit-dot.o4 { --r: 48.7cqw; animation-delay: -6s; }
+.orbit-dot.o5 { --r: 43.5cqw; animation-delay: -7.5s; background: var(--blue); }
 .proc-orb.done { color: var(--green); }
 .proc-orb.done .spinner { border-color: var(--green); animation: none; }
 .proc-orb.done .core { background: color-mix(in srgb, var(--green) 14%, transparent); border-color: var(--green); }
@@ -79,7 +79,6 @@
 .proc-progress .track { margin-top: 8px; height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
 .proc-progress .track i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--blue), var(--purple)); transition: width .8s ease; }
 .proc-percent { flex: none; min-width: 48px; text-align: right; color: var(--ink); }
-.proc-actions { display: flex; justify-content: center; margin-top: 18px; }
 @media (max-width: 640px) { .proc-bar { flex-wrap: wrap; } .proc-head h1 { font-size: 24px; } }
 
 @keyframes proc-spin { to { transform: rotate(360deg); } }
@@ -89,3 +88,32 @@
 @keyframes proc-in { from { opacity: 0; transform: translateY(6px); } }
 @keyframes proc-orbit { from { transform: rotate(0deg) translateX(var(--r)) rotate(0deg); } to { transform: rotate(360deg) translateX(var(--r)) rotate(-360deg); } }
 @media (prefers-reduced-motion: reduce) { .proc *, .proc *::before { animation: none !important; } }
+
+/* Tela única (hero): ocupa a altura da janela, sem rolagem da página. */
+.main:has(.proc) { display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
+.content:has(> .proc) { flex: 1; min-height: 0; width: 100%; box-sizing: border-box; padding-top: 16px; padding-bottom: 20px; }
+.proc { height: 100%; display: flex; flex-direction: column; gap: 14px; }
+.proc-head { margin: 0 auto; flex: none; }
+.proc-head h1 { margin: 8px 0 4px; font-size: clamp(22px, 3.4vh, 30px); }
+.proc-head p { font-size: clamp(12px, 1.7vh, 15px); line-height: 1.45; }
+.proc-grid { flex: 1; min-height: 0; }
+.proc-grid > * { min-height: 0; }
+.proc-steps { overflow-y: auto; display: flex; align-items: center; }
+.proc-steps ol { width: 100%; }
+.proc-steps li { padding-bottom: clamp(12px, 3vh, 26px); }
+.proc-orb-wrap { min-height: 0; }
+.proc-orb { width: clamp(150px, 29vh, 230px); height: clamp(150px, 29vh, 230px); }
+.proc-orb .spinner { inset: 22%; }
+.proc-orb .r2 { inset: 12%; }
+.proc-orb .core { width: 37%; height: 37%; }
+.proc-orb-wrap h2 { margin: clamp(10px, 2.4vh, 22px) 0 6px; font-size: clamp(18px, 2.8vh, 24px); }
+.proc-log { min-height: 0; }
+.proc-log-body { max-height: none; min-height: 0; overflow-y: auto; }
+.proc-bar { flex: none; margin-top: 0; }
+.orbit-dot { animation-name: proc-orbit; }
+@media (max-width: 1000px) {
+  .main:has(.proc) { height: auto; overflow: visible; }
+  .proc { height: auto; }
+  .proc-grid { grid-template-columns: 1fr; }
+  .proc-log { min-height: 260px; }
+}

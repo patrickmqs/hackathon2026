@@ -301,11 +301,6 @@ function MeetingProcessingPageInner() {
             <b className="proc-percent">{percent}%</b>
           </Card>
 
-          <div className="proc-actions">
-            <button type="button" className="button secondary" onClick={() => router.push(`/projects/${meeting?.project_id ?? ""}`)} disabled={!meeting}>
-              Voltar ao projeto
-            </button>
-          </div>
         </div>
       )}
     </AppShell>
