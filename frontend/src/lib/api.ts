@@ -111,6 +111,7 @@ export const api = {
   getProject: (id: string) => request<Project>("GET", `/projects/${id}`),
   createProject: (body: { name?: string; description?: string | null; client?: Project["client"] }) => request<Project>("POST", "/projects", { body }),
   updateProject: (id: string, body: { name?: string; description?: string | null; client?: Project["client"] }) => request<Project>("PATCH", `/projects/${id}`, { body }),
+  deleteProject: (id: string) => request<null>("DELETE", `/projects/${id}`),
   projectEvents: (id: string) => request<{ items: ProjectEvent[]; total: number }>("GET", `/projects/${id}/events`),
   createMeetingText: (projectId: string, body: { title?: string; transcript_text: string; language?: string }) =>
     request<Meeting>("POST", `/projects/${projectId}/meetings`, { body }),

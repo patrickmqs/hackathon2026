@@ -33,16 +33,33 @@ export function MeetingIntake() {
   const [statusText, setStatusText] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => () => {
-    if (pollTimer.current) clearTimeout(pollTimer.current);
-  }, []);
-
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
     if (showTranscript && !dialog.open) dialog.showModal();
     if (!showTranscript && dialog.open) dialog.close();
   }, [showTranscript]);
+
+  useEffect(() => () => {
+    if (pollTimer.current) clearTimeout(pollTimer.current);
+  }, []);
+
+  // Com cacheComponents o Next mantém esta tela viva (oculta) ao navegar e a restaura com o estado
+  // antigo (arquivo enviado, "analisando…", botões travados). Os efeitos reativam toda vez que a tela
+  // volta a ser exibida, então é aqui que recomeçamos limpos para permitir uma nova reunião.
+  /* eslint-disable react-hooks/set-state-in-effect -- reset intencional ao reexibir a tela */
+  useEffect(() => {
+    setSource(null);
+    setSourceError(null);
+    setError(null);
+    setBusy(false);
+    setStatusText("");
+    setCreatedProjectId(null);
+    setShowTranscript(false);
+    setTranscriptDraft("");
+    if (inputRef.current) inputRef.current.value = "";
+  }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   function chooseFiles(files: FileList | File[]) {
     setError(null);
@@ -80,29 +97,6 @@ export function MeetingIntake() {
   function cancelTranscript() {
     setShowTranscript(false);
     setSourceError(null);
-  }
-
-  async function pollMeeting(meetingId: string) {
-    try {
-      const meeting: Meeting = await api.getMeeting(meetingId);
-      if (meeting.status === "analysis_ready" || meeting.status === "reviewed") {
-        setStatusText("Análise pronta. Abrindo sua reunião…");
-        router.push(`/meetings/${meetingId}/analysis`);
-        return;
-      }
-      if (meeting.status === "failed") {
-        setError(meeting.error?.message ?? "Não foi possível processar a reunião.");
-        setBusy(false);
-        setStatusText("");
-        return;
-      }
-      setStatusText(meeting.progress?.message || "Analisando a reunião…");
-      pollTimer.current = setTimeout(() => void pollMeeting(meetingId), 2500);
-    } catch (requestError) {
-      setError(errorMessage(requestError));
-      setBusy(false);
-      setStatusText("");
-    }
   }
 
   async function analyzeMeeting() {
@@ -160,7 +154,8 @@ export function MeetingIntake() {
         meeting = await api.createMeetingAudio(projectId, source.file);
       }
       setStatusText(meeting.progress?.message || "Reunião recebida. Iniciando análise…");
-      await pollMeeting(meeting.id);
+      router.push(`/meetings/${meeting.id}/processing`);
+      return;
     } catch (requestError) {
       setError(errorMessage(requestError));
       setBusy(false);

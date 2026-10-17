@@ -1,0 +1,91 @@
+.proc { max-width: 1280px; margin: 0 auto; }
+.proc-head { text-align: center; margin: 4px auto 26px; max-width: 720px; }
+.proc-head h1 { margin: 14px 0 8px; font-size: 30px; letter-spacing: -.5px; color: var(--ink); }
+.proc-head p { margin: 0; color: var(--muted); line-height: 1.55; }
+.proc-pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; background: color-mix(in srgb, var(--purple) 12%, transparent); color: var(--purple); font-size: 13px; font-weight: 600; }
+.proc-pill i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: proc-pulse 1.4s ease-in-out infinite; }
+.proc-pill.failed { color: var(--red); background: color-mix(in srgb, var(--red) 12%, transparent); }
+
+.proc-grid { display: grid; grid-template-columns: minmax(280px, 1fr) minmax(260px, 1.1fr) minmax(300px, 1.1fr); gap: 20px; align-items: stretch; }
+.proc-grid .card { margin-bottom: 0; }
+@media (max-width: 1000px) { .proc-grid { grid-template-columns: 1fr; } }
+
+/* etapas */
+.proc-steps ol { list-style: none; margin: 0; padding: 0; }
+.proc-steps li { position: relative; display: flex; gap: 14px; padding-bottom: 26px; opacity: .55; }
+.proc-steps li:last-child { padding-bottom: 0; }
+.proc-steps li::before { content: ""; position: absolute; left: 17px; top: 38px; bottom: 2px; width: 2px; background: var(--line); }
+.proc-steps li:last-child::before { display: none; }
+.proc-steps li.complete, .proc-steps li.active { opacity: 1; }
+.proc-steps li.complete::before { background: var(--green); }
+.proc-node { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--line); color: var(--muted); font-weight: 700; font-size: 14px; background: transparent; z-index: 1; }
+.proc-steps li.complete .proc-node { background: var(--green); border-color: var(--green); color: #fff; }
+.proc-steps li.active .proc-node { border-color: var(--blue); color: var(--blue); box-shadow: 0 0 0 5px color-mix(in srgb, var(--blue) 18%, transparent); animation: proc-pulse 1.6s ease-in-out infinite; }
+.proc-steps strong { display: block; color: var(--ink); font-size: 15px; margin-top: 2px; }
+.proc-steps small { display: block; margin-top: 4px; color: var(--muted); line-height: 1.45; }
+.proc-steps em { display: inline-block; margin-top: 8px; padding: 3px 10px; border-radius: 999px; font-style: normal; font-size: 12px; color: var(--blue); background: color-mix(in srgb, var(--blue) 14%, transparent); }
+
+/* orbe central */
+.proc-orb-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 8px 12px; }
+.proc-orb-wrap h2 { margin: 22px 0 6px; font-size: 24px; color: var(--ink); }
+.proc-orb-wrap p { margin: 0 0 12px; max-width: 320px; color: var(--muted); line-height: 1.5; }
+.proc-orb { position: relative; width: 230px; height: 230px; display: grid; place-items: center; color: var(--blue); }
+.proc-orb .ring { position: absolute; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--blue) 35%, transparent); }
+.proc-orb .r1 { inset: 0; animation: proc-breathe 3.2s ease-in-out infinite; }
+.proc-orb .r2 { inset: 28px; border-color: color-mix(in srgb, var(--purple) 45%, transparent); animation: proc-breathe 3.2s ease-in-out .8s infinite; }
+.proc-orb .spinner { position: absolute; inset: 50px; border-radius: 50%; border: 4px solid transparent; border-top-color: var(--blue); border-right-color: var(--purple); animation: proc-spin 1.6s linear infinite; }
+.proc-orb .core { position: relative; width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--blue) 12%, transparent); border: 1px solid color-mix(in srgb, var(--blue) 40%, transparent); }
+.proc-orb .core svg { width: 40px; height: 40px; animation: proc-pulse 2s ease-in-out infinite; }
+.orbit-dot { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: var(--purple); top: 50%; left: 50%; margin: -3px; animation: proc-orbit 9s linear infinite; }
+.orbit-dot.o0 { --r: 110px; animation-delay: 0s; }
+.orbit-dot.o1 { --r: 96px; animation-delay: -1.5s; background: var(--blue); }
+.orbit-dot.o2 { --r: 108px; animation-delay: -3s; }
+.orbit-dot.o3 { --r: 90px; animation-delay: -4.5s; background: var(--blue); }
+.orbit-dot.o4 { --r: 112px; animation-delay: -6s; }
+.orbit-dot.o5 { --r: 100px; animation-delay: -7.5s; background: var(--blue); }
+.proc-orb.done { color: var(--green); }
+.proc-orb.done .spinner { border-color: var(--green); animation: none; }
+.proc-orb.done .core { background: color-mix(in srgb, var(--green) 14%, transparent); border-color: var(--green); }
+.proc-orb.failed { color: var(--red); }
+.proc-orb.failed .spinner { border-color: var(--red); animation: none; }
+.proc-orb.failed .core { background: color-mix(in srgb, var(--red) 14%, transparent); border-color: var(--red); }
+
+/* log em tempo real */
+.proc-log { display: flex; flex-direction: column; min-height: 380px; }
+.proc-log-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.proc-log-head h2 { margin: 0; font-size: 17px; color: var(--ink); }
+.proc-log-head span { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.proc-log-head i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.proc-log-head .live { color: var(--green); }
+.proc-log-head .live i { background: var(--green); animation: proc-pulse 1.2s ease-in-out infinite; }
+.proc-log-body { position: relative; flex: 1; max-height: 340px; overflow-y: auto; padding-right: 6px; scrollbar-width: thin; }
+.proc-log-empty { color: var(--muted); font-size: 14px; }
+.proc-log-row { display: grid; grid-template-columns: 44px 14px 1fr; gap: 10px; align-items: start; position: relative; margin: 0; padding: 9px 0; font-size: 14px; color: var(--ink); animation: proc-in .4s ease both; }
+.proc-log-row time { color: var(--muted); font-size: 12px; padding-top: 2px; }
+.proc-log-row i { width: 9px; height: 9px; margin-top: 5px; border-radius: 50%; background: var(--green); z-index: 1; }
+.proc-log-row::before { content: ""; position: absolute; left: 53px; top: 22px; bottom: -9px; width: 2px; background: var(--line); }
+.proc-log-row:last-of-type::before { display: none; }
+.proc-log-row.current i { background: var(--blue); box-shadow: 0 0 0 4px color-mix(in srgb, var(--blue) 22%, transparent); animation: proc-pulse 1.2s ease-in-out infinite; }
+.proc-log-row.current span::after { content: "▍"; margin-left: 2px; color: var(--blue); animation: proc-blink 1s steps(2) infinite; }
+
+/* barra inferior */
+.proc-bar { margin-top: 20px; display: flex; align-items: center; gap: 18px; padding: 16px 22px; min-height: 0; }
+.proc-file { flex: none; width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; font-size: 20px; font-weight: 700; color: var(--purple); background: color-mix(in srgb, var(--purple) 16%, transparent); }
+.proc-file-info { min-width: 0; }
+.proc-file-info strong { display: block; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.proc-file-info small { color: var(--muted); }
+.proc-progress { flex: 1; min-width: 160px; font-size: 13px; color: var(--muted); }
+.proc-progress b { color: var(--blue); font-weight: 600; }
+.proc-progress .track { margin-top: 8px; height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.proc-progress .track i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--blue), var(--purple)); transition: width .8s ease; }
+.proc-percent { flex: none; min-width: 48px; text-align: right; color: var(--ink); }
+.proc-actions { display: flex; justify-content: center; margin-top: 18px; }
+@media (max-width: 640px) { .proc-bar { flex-wrap: wrap; } .proc-head h1 { font-size: 24px; } }
+
+@keyframes proc-spin { to { transform: rotate(360deg); } }
+@keyframes proc-pulse { 50% { opacity: .55; } }
+@keyframes proc-breathe { 50% { transform: scale(1.05); opacity: .6; } }
+@keyframes proc-blink { 50% { opacity: 0; } }
+@keyframes proc-in { from { opacity: 0; transform: translateY(6px); } }
+@keyframes proc-orbit { from { transform: rotate(0deg) translateX(var(--r)) rotate(0deg); } to { transform: rotate(360deg) translateX(var(--r)) rotate(-360deg); } }
+@media (prefers-reduced-motion: reduce) { .proc *, .proc *::before { animation: none !important; } }

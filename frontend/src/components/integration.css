@@ -43,3 +43,16 @@
 [data-theme="dark"] .review-item small, [data-theme="dark"] .detail-meta span { color: var(--muted); }
 [data-theme="dark"] .detail-meta span { background: #101823; border-color: var(--line); }
 [data-theme="dark"] .detail-meta span b { color: var(--ink); }
+
+/* Lista de projetos: menu "⋯" (renomear / excluir) */
+.project-item { display: flex; align-items: center; gap: 4px; border-top: 1px solid var(--line); }
+.project-item .project-row { flex: 1; min-width: 0; border-top: 0; }
+.project-rename { flex: 1; padding: 10px 0; }
+.project-rename input { width: 100%; max-width: 360px; padding: 8px 10px; border: 1px solid var(--blue); border-radius: 8px; background: transparent; color: var(--ink); font: inherit; }
+.project-menu { position: relative; }
+.project-menu-btn { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; }
+.project-menu-btn:hover, .project-menu-btn[aria-expanded="true"] { background: var(--bg); color: var(--ink); }
+.project-menu-pop { position: absolute; right: 0; top: 36px; z-index: 20; display: flex; flex-direction: row; gap: 2px; white-space: nowrap; padding: 4px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); box-shadow: 0 8px 24px rgba(0, 0, 0, .15); }
+.project-menu-pop button { display: block; width: auto; padding: 8px 10px; border: 0; border-radius: 6px; background: transparent; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.project-menu-pop button:hover { background: var(--line); }
+.project-menu-pop button.danger { color: var(--red); }
