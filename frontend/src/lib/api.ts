@@ -42,6 +42,9 @@ async function request<T>(method: string, path: string, opts: { body?: unknown; 
 }
 
 // ---------- tipos ----------
+/** Valores provisórios do backend (schemas/project.ts) enquanto nome e empresa não foram preenchidos. */
+export const PLACEHOLDER_PROJECT_NAME = "Projeto sem nome";
+export const PLACEHOLDER_COMPANY = "Cliente a definir";
 export type ProjectStatus = "no_meeting" | "processing" | "analysis_ready" | "reviewed" | "proposal_draft" | "proposal_approved" | "sent" | "failed";
 export interface Project {
   id: string; name: string; description: string | null;
@@ -106,7 +109,8 @@ export const api = {
   health: () => request<{ status: string; ai_configured: boolean }>("GET", "/health"),
   listProjects: () => request<{ items: Project[]; total: number }>("GET", "/projects"),
   getProject: (id: string) => request<Project>("GET", `/projects/${id}`),
-  createProject: (body: { name: string; description?: string | null; client: Project["client"] }) => request<Project>("POST", "/projects", { body }),
+  createProject: (body: { name?: string; description?: string | null; client?: Project["client"] }) => request<Project>("POST", "/projects", { body }),
+  updateProject: (id: string, body: { name?: string; description?: string | null; client?: Project["client"] }) => request<Project>("PATCH", `/projects/${id}`, { body }),
   projectEvents: (id: string) => request<{ items: ProjectEvent[]; total: number }>("GET", `/projects/${id}/events`),
   createMeetingText: (projectId: string, body: { title?: string; transcript_text: string; language?: string }) =>
     request<Meeting>("POST", `/projects/${projectId}/meetings`, { body }),

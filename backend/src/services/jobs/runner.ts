@@ -3,6 +3,7 @@ import { logger } from "../../core/logging.js";
 import type { FileStorage } from "../../core/storage.js";
 import { EVENT_TYPES } from "../../domain/events.js";
 import type { Repository } from "../../repositories/repo.js";
+import { PLACEHOLDER_COMPANY, PLACEHOLDER_PROJECT_NAME } from "../../schemas/project.js";
 import type { AiPipeline } from "../ai/pipeline.js";
 
 // Orquestrador de jobs em-processo — B5.
@@ -109,12 +110,50 @@ export class JobRunner {
         content: analysis,
         promptVersion: analysis.meta.prompt_version,
       });
+      await this.fillProjectFromMeeting(meeting.projectId, transcript.text);
       await this.repo.updateMeeting(meetingId, { status: "analysis_ready" });
       await this.repo.createEvent({
         projectId: meeting.projectId,
         type: EVENT_TYPES.ANALYSIS_READY,
         actor: null,
         payload: { meeting_id: meetingId },
+      });
+    }
+  }
+
+  // Best-effort: se o projeto ainda tem nome/empresa provisórios, preenche com o que a IA achou na
+  // conversa. Nunca sobrescreve o que o usuário já informou e nunca derruba o job.
+  private async fillProjectFromMeeting(projectId: string, transcriptText: string): Promise<void> {
+    try {
+      if (!this.pipeline.extractProjectInfo) return;
+      const project = await this.repo.getProject(projectId);
+      if (!project) return;
+      const client = project.client as Record<string, string | null | undefined>;
+      const needsName = project.name === PLACEHOLDER_PROJECT_NAME;
+      const needsCompany = !client.company || client.company === PLACEHOLDER_COMPANY;
+      const needsContact = !client.contact_name && !client.contact_email && !client.contact_phone;
+      if (!needsName && !needsCompany && !needsContact) return;
+
+      const info = await this.pipeline.extractProjectInfo(transcriptText);
+      if (!info) return;
+      const clean = (v: string | null | undefined) => v?.trim() || null;
+      const patch: { name?: string; client?: Record<string, unknown> } = {};
+      const name = clean(info.project_name);
+      if (needsName && name) patch.name = name;
+      const nextClient: Record<string, unknown> = { ...project.client };
+      const company = clean(info.client_company);
+      if (needsCompany && company) nextClient.company = company;
+      if (needsContact) {
+        nextClient.contact_name = clean(info.contact_name);
+        nextClient.contact_email = clean(info.contact_email);
+        nextClient.contact_phone = clean(info.contact_phone);
+      }
+      if (JSON.stringify(nextClient) !== JSON.stringify(project.client)) patch.client = nextClient;
+      if (patch.name || patch.client) await this.repo.updateProject(projectId, patch);
+    } catch (err) {
+      logger.warn("project info extraction failed", {
+        projectId,
+        error: err instanceof Error ? err.message : String(err),
       });
     }
   }

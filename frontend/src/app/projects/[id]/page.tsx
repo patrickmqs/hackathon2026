@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AppShell, Badge, Button, Card } from "@/components/AppShell";
 import { ErrorBanner, Loading, useLoad } from "@/components/Api";
+import { ProjectDetailsForm, isProjectIncomplete } from "@/components/ProjectDetailsForm";
 import { STATUS_LABEL, api, timeAgo, type Analysis, type Meeting, type Proposal } from "@/lib/api";
 
 const EVENT_LABEL: Record<string, [string, string]> = {
@@ -40,6 +41,7 @@ function ProjectPageInner() {
 
   return <AppShell title={project.name} eyebrow="PROJETOS / DETALHES" action={<Button href={nextMeeting} variant="secondary">+ Adicionar reunião</Button>}>
     <div className="project-meta">{project.client.company} <span>•</span> Atualizado {timeAgo(project.updated_at)} <Badge tone={st.tone}>{st.label}</Badge></div>
+    {isProjectIncomplete(project) && <ProjectDetailsForm key={project.updated_at} project={project} onSaved={reload} />}
     <div className="stepper">{["Reunião", "Análise", "Proposta", "Aprovação", "Envio"].map((label, i) => <div className={i < st.step ? "done" : i === st.step ? "current" : ""} key={label}><b>{i < st.step ? "✓" : i + 1}</b><span>{label}</span></div>)}</div>
     <div className="stage-grid">
       <Card><Badge tone={meeting ? (meeting.status === "failed" ? "red" : "green") : "neutral"}>{!meeting ? "Pendente" : meeting.status === "failed" ? "Falhou" : meeting.status === "analysis_ready" || meeting.status === "reviewed" ? "Concluída" : "Processando"}</Badge><h2>Reunião</h2>

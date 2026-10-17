@@ -14,17 +14,11 @@ import {
 } from "@/lib/meeting-upload";
 import { Card } from "@/components/AppShell";
 
-interface ProjectOption {
-  id: string;
-  name: string;
-  company: string;
-}
-
 type MeetingSource =
   | { kind: "file"; file: File }
   | { kind: "text"; text: string };
 
-export function MeetingIntake({ projects }: { projects: ProjectOption[] }) {
+export function MeetingIntake() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -34,10 +28,6 @@ export function MeetingIntake({ projects }: { projects: ProjectOption[] }) {
   const [sourceError, setSourceError] = useState<string | null>(null);
   const [showTranscript, setShowTranscript] = useState(false);
   const [transcriptDraft, setTranscriptDraft] = useState("");
-  const [projectMode, setProjectMode] = useState<"new" | "existing">("new");
-  const [projectName, setProjectName] = useState("");
-  const [company, setCompany] = useState("");
-  const [selectedProjectId, setSelectedProjectId] = useState("");
   const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [statusText, setStatusText] = useState("");
@@ -139,24 +129,14 @@ export function MeetingIntake({ projects }: { projects: ProjectOption[] }) {
       }
     }
 
-    if (projectMode === "existing" && !selectedProjectId) {
-      setError("Selecione o projeto que receberá esta reunião.");
-      return;
-    }
-    if (projectMode === "new" && (!projectName.trim() || !company.trim())) {
-      setError("Informe o nome do projeto e a empresa do cliente.");
-      return;
-    }
-
     setBusy(true);
-    setStatusText("Preparando o projeto…");
+    setStatusText("Preparando a análise…");
     try {
-      let projectId = projectMode === "existing" ? selectedProjectId : createdProjectId;
+      // O projeto nasce sem dados: a IA preenche nome e empresa a partir da reunião e o que
+      // faltar o usuário completa depois, na página do projeto.
+      let projectId = createdProjectId;
       if (!projectId) {
-        const project = await api.createProject({
-          name: projectName.trim(),
-          client: { company: company.trim() },
-        });
+        const project = await api.createProject({});
         projectId = project.id;
         setCreatedProjectId(project.id);
       }
@@ -259,35 +239,6 @@ export function MeetingIntake({ projects }: { projects: ProjectOption[] }) {
       <button className="button secondary paste-transcript" type="button" onClick={() => { setTranscriptDraft(""); setSourceError(null); setShowTranscript(true); }} disabled={busy}>
         Colar transcrição
       </button>
-
-      <div className="intake-project">
-        <label htmlFor="intake-project-mode">Vincular reunião a</label>
-        <select
-          id="intake-project-mode"
-          value={projectMode}
-          onChange={(event) => setProjectMode(event.target.value as "new" | "existing")}
-          disabled={busy}
-        >
-          <option value="new">Novo projeto</option>
-          <option value="existing" disabled={!projects.length}>Projeto existente</option>
-        </select>
-        {projectMode === "new" ? <div className="intake-project-fields">
-          <label>
-            Nome do projeto
-            <input value={projectName} onChange={(event) => setProjectName(event.target.value)} placeholder="Ex.: Portal de pedidos B2B" disabled={busy} />
-          </label>
-          <label>
-            Empresa do cliente
-            <input value={company} onChange={(event) => setCompany(event.target.value)} placeholder="Ex.: Distribuidora Horizonte" disabled={busy} />
-          </label>
-        </div> : <label className="existing-project">
-          Projeto
-          <select value={selectedProjectId} onChange={(event) => setSelectedProjectId(event.target.value)} disabled={busy}>
-            <option value="">Selecione um projeto</option>
-            {projects.map((project) => <option key={project.id} value={project.id}>{project.name} · {project.company}</option>)}
-          </select>
-        </label>}
-      </div>
 
       {error && <p className="intake-message error" role="alert">{error}</p>}
       {fileProcessingMessage && <p className="intake-message info">{fileProcessingMessage}</p>}

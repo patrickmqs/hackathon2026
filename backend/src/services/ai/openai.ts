@@ -4,6 +4,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type { MeetingAnalysis } from "../../schemas/analysis.js";
 import { analyzeMeeting } from "../aiAnalysis/pipeline.js";
+import { extractProjectInfo, type ProjectInfo } from "../aiAnalysis/projectInfo.js";
 import { fromText, transcribeAudio } from "../transcription/service.js";
 import type { AiPipeline, AnalyzeOptions, TranscriptResult } from "./pipeline.js";
 
@@ -27,5 +28,9 @@ export class OpenAiPipeline implements AiPipeline {
     // Sem rótulos de tempo/falante quando vem de áudio: fromText reconstrói os segmentos por frase.
     const analysis = await analyzeMeeting(fromText(transcriptText), options.meetingId);
     return analysis as MeetingAnalysis;
+  }
+
+  async extractProjectInfo(transcriptText: string): Promise<ProjectInfo | null> {
+    return extractProjectInfo(transcriptText);
   }
 }

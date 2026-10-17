@@ -17,7 +17,7 @@ export function AppShell({ children, title, eyebrow, action }: { children: React
   }, [darkMode]);
 
   return <div className="app-frame">
-    <aside className="sidebar">
+    <main className="main"><header className="topbar"><div className="topbar-heading">
       <Link href="/" className="brand" aria-label="Proposal AI">
         <span className="brand-mark" aria-hidden="true">
           <svg viewBox="0 0 32 32" role="img">
@@ -27,11 +27,8 @@ export function AppShell({ children, title, eyebrow, action }: { children: React
         </span>
         proposal<span>ai</span>
       </Link>
-      <small className="workspace-label">WORKSPACE</small>
-      <nav><Link href="/">▦ <span>Projetos</span></Link><Link href="/projects/demo">◈ <span>Projeto atual</span></Link><Link href="/settings">⚙ <span>Configurações</span></Link></nav>
-      <div className="sidebar-bottom"><p className="health"><i /> Todos os sistemas operacionais</p><Link href="/settings" className="demo-user"><b>MR</b><span><strong>Marina Rocha</strong><small>Modo demonstração</small></span>›</Link></div>
-    </aside>
-    <main className="main"><header className="topbar"><div>{eyebrow && <small className="eyebrow">{eyebrow}</small>}<h1>{title}</h1></div><div className="topbar-actions"><button className="theme-toggle" type="button" onClick={() => setDarkMode((current) => !current)} aria-label={darkMode ? "Ativar modo claro" : "Ativar modo escuro"}>{darkMode ? "☀" : "◐"} <span>{darkMode ? "Modo claro" : "Modo escuro"}</span></button>{action}</div></header><div className="content">{children}</div></main>
+      <div className="topbar-title">{eyebrow && <small className="eyebrow">{eyebrow}</small>}<h1>{title}</h1></div>
+    </div><div className="topbar-actions"><button className="theme-toggle" type="button" onClick={() => setDarkMode((current) => !current)} aria-label={darkMode ? "Ativar modo claro" : "Ativar modo escuro"}>{darkMode ? "☀" : "◐"} <span>{darkMode ? "Modo claro" : "Modo escuro"}</span></button>{action}</div></header><div className="content">{children}</div></main>
   </div>;
 }
 

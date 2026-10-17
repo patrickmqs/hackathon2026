@@ -5,7 +5,12 @@ import { DomainError } from "../core/errors.js";
 import { parseBody, parsePagination } from "../core/http.js";
 import { toEventDto, toMeetingDto, toProjectDto } from "../core/serializers.js";
 import { EVENT_TYPES } from "../domain/events.js";
-import { ProjectCreateSchema } from "../schemas/project.js";
+import {
+  PLACEHOLDER_COMPANY,
+  PLACEHOLDER_PROJECT_NAME,
+  ProjectCreateSchema,
+  ProjectUpdateSchema,
+} from "../schemas/project.js";
 import { ALLOWED_AUDIO_MIME, MeetingCreateTextSchema } from "../schemas/meeting.js";
 import {
   createMeetingFromAudio,
@@ -26,9 +31,9 @@ export function projectsRouter(deps: AppDeps): Router {
   router.post("/", async (req, res) => {
     const input = parseBody(ProjectCreateSchema, req.body);
     const project = await repo.createProject({
-      name: input.name,
+      name: input.name ?? PLACEHOLDER_PROJECT_NAME,
       description: input.description ?? null,
-      client: input.client as Record<string, unknown>,
+      client: { ...input.client, company: input.client?.company ?? PLACEHOLDER_COMPANY },
     });
     await repo.createEvent({
       projectId: project.id,
@@ -62,6 +67,23 @@ export function projectsRouter(deps: AppDeps): Router {
       repo.listProposals(project.id),
     ]);
     res.json(toProjectDto(project, meetings, proposals));
+  });
+
+  // Preenchimento posterior: o usuário completa nome, empresa e contato quando a IA não os achou.
+  router.patch("/:projectId", async (req, res) => {
+    const project = await repo.getProject(req.params.projectId as string);
+    if (!project) throw new DomainError("NOT_FOUND", "Projeto não encontrado.");
+    const input = parseBody(ProjectUpdateSchema, req.body);
+    const updated = await repo.updateProject(project.id, {
+      ...(input.name !== undefined ? { name: input.name } : {}),
+      ...(input.description !== undefined ? { description: input.description } : {}),
+      ...(input.client ? { client: { ...project.client, ...input.client } } : {}),
+    });
+    const [meetings, proposals] = await Promise.all([
+      repo.listMeetings(project.id),
+      repo.listProposals(project.id),
+    ]);
+    res.json(toProjectDto(updated ?? project, meetings, proposals));
   });
 
   router.get("/:projectId/events", async (req, res) => {

@@ -1,4 +1,5 @@
 import type { MeetingAnalysis } from "../../schemas/analysis.js";
+import type { ProjectInfo } from "../aiAnalysis/projectInfo.js";
 
 // Contrato do pipeline de IA — o ponto de extensão entre o orquestrador (B5) e a
 // implementação real da OpenAI (A5 transcrição, A9 extração). O stub (demo/testes)
@@ -20,4 +21,6 @@ export interface AiPipeline {
   // `filename` (opcional) preserva a extensão do áudio, usada para validar o formato.
   transcribe(audio: Buffer, options: { language: string | null; filename?: string }): Promise<TranscriptResult>;
   analyze(transcriptText: string, options: AnalyzeOptions): Promise<MeetingAnalysis>;
+  // Opcional e best-effort: nome do projeto, empresa e contato ditos na reunião (null = não achou).
+  extractProjectInfo?(transcriptText: string): Promise<ProjectInfo | null>;
 }
