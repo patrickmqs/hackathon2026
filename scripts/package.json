@@ -1,0 +1,17 @@
+{
+  "name": "@proposal-ai/scripts",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check:openai": "tsx --env-file=../.env check-openai.ts"
+  },
+  "dependencies": {
+    "openai": "^6.0.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0"
+  }
+}
