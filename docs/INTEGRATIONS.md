@@ -12,7 +12,7 @@ Responsável: Pessoa D (com Pessoa B no adapter de envio).
 
 ## 1. Princípios
 
-1. Adapters em `backend/src/integrations/{gmail,whatsapp}/` não conhecem "proposta"; recebem `ChannelSendRequest` e devolvem `ProviderResult`.
+1. Adapters em `backend/app/integrations/{gmail,whatsapp}/` não conhecem "proposta"; recebem `ChannelSendRequest` e devolvem `ProviderResult`.
 2. `is_configured()` decide, **antes** de qualquer tentativa, se o canal vira `skipped_no_credentials`. Sem exceção engolida, sem `return True` falso.
 3. Credenciais só no backend (`.env` / banco). Frontend só vê `configured: bool` e `connected: bool`.
 4. Nenhum envio sem `approval_id` válido (verificado em `services/delivery/service.ts`, não no adapter).
@@ -21,21 +21,30 @@ Responsável: Pessoa D (com Pessoa B no adapter de envio).
 ### Interface comum
 
 ```ts
-interface ChannelSendRequest {
-  recipient: Record<string, string>;   // {email, name} ou {phone, name}
+// backend/src/services/delivery/types.ts
+export interface ChannelSendRequest {
+  recipient: { email?: string; phone?: string; name?: string };
   subject: string | null;
-  body_text: string | null;
-  attachment_path: string;             // caminho do PDF no FileStorage
-  attachment_filename: string;         // "Proposta-Portal-B2B-v2.pdf"
-  public_pdf_url: string | null;       // URL alcançável externamente (necessária para WhatsApp por link)
-  metadata: Record<string, unknown>;   // delivery_id, channel_id, proposal_version — para logs
+  bodyText: string | null;
+  attachmentPath: string;          // caminho do PDF no FileStorage
+  attachmentFilename: string;      // "Proposta-Portal-B2B-v2.pdf"
+  publicPdfUrl: string | null;     // URL alcançável externamente (WhatsApp por link; opcional se usar upload de mídia)
+  metadata: { deliveryId: string; channelId: string; proposalVersion: number }; // para logs
 }
 
-interface ProviderResult {
+export interface ProviderError { code: string; message: string; retryable: boolean; raw?: unknown }
+
+export interface ProviderResult {
   ok: boolean;
-  provider_message_id: string | null;
-  error: ProviderError | null;         // {code, message, retryable: boolean, raw}
-  raw: Record<string, unknown>;
+  providerMessageId: string | null;
+  error: ProviderError | null;
+  raw?: unknown;
+}
+
+export interface ChannelAdapter {
+  readonly channel: "gmail" | "whatsapp";
+  isConfigured(): Promise<boolean>;
+  send(req: ChannelSendRequest): Promise<ProviderResult>;
 }
 ```
 
@@ -82,11 +91,11 @@ sequenceDiagram
 
 ### 2.4 Formato e envio do anexo
 
-- Monta MIME (via `nodemailer`/`mail-composer`): `From` (conta conectada), `To`, `Subject`, corpo texto (+ HTML simples opcional), anexo `application/pdf` via `attachment: { filename, content, contentType: 'application/pdf' }`.
-- Codifica em base64url → `gmail.users.messages.send({ userId: "me", requestBody: { raw } })`.
+- Monta MIME com `MailComposer` (`nodemailer/lib/mail-composer`): `from` (conta conectada), `to`, `subject`, `text` (+ `html` simples opcional), `attachments: [{ filename, path, contentType: "application/pdf" }]` → `await new MailComposer(opts).compile().build()` devolve o `Buffer` RFC 822.
+- Codifica em base64url (`buffer.toString("base64url")`) → `await gmail.users.messages.send({ userId: "me", requestBody: { raw } })` com `gmail = google.gmail({ version: "v1", auth: oauth2Client })`.
 - Resposta traz `id` (→ `provider_message_id`) e `threadId`.
 - Limite de anexo da API: 25 MB — nossos PDFs ficam em < 2 MB.
-- Assunto padrão: `Proposta — {title}`; corpo padrão em `templates/email/proposal_email.txt.njk` (editável na tela de envio).
+- Assunto padrão: `Proposta — {title}`; corpo padrão em `templates/email/proposal_email.txt.j2` (editável na tela de envio).
 
 ### 2.5 Erros do Gmail
 
@@ -162,12 +171,12 @@ Resposta de sucesso: `{"messages": [{"id": "wamid.…"}]}` → `provider_message
 
 ## 4. Variáveis de ambiente
 
-Arquivo `.env.example` na raiz (sem valores reais). Backend lê via `process.env` validado com Zod (`src/core/config.ts`); frontend só lê `NEXT_PUBLIC_*`.
+Arquivo `.env.example` na raiz (sem valores reais). Backend lê via `dotenv` e valida com um schema Zod em `config/env.ts` (falha no boot se faltar obrigatória); frontend só lê `NEXT_PUBLIC_*`.
 
 | Variável | Obrigatória | Padrão | Uso |
 |----------|-------------|--------|-----|
 | `APP_ENV` | não | `development` | `development` / `production` |
-| `DATABASE_URL` | não | `postgresql://proposal:proposal@localhost:5432/proposal` | Fallback: `file:./dev.db` (SQLite) |
+| `DATABASE_URL` | não | `postgresql://proposal:proposal@localhost:5432/proposal?schema=public` | Prisma; sem Docker, apontar para um Postgres hospedado |
 | `STORAGE_DIR` | não | `./storage` | Áudio e PDFs |
 | `MAX_UPLOAD_MB` | não | `25` | Limite de áudio |
 | `JOB_STALE_MINUTES` | não | `15` | Job preso → `failed` |

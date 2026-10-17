@@ -1,0 +1,70 @@
+{
+  "is_demo": true,
+  "description": "Gabarito manual da reunião fictícia em sample_transcript_pt.txt (Distribuidora Horizonte x software house). Cada item é localizado na saída da IA pela citação-âncora (substring literal da transcrição). Usado por tests/ai (AI_PIPELINE §11).",
+  "transcript_file": "sample_transcript_pt.txt",
+  "participants": [
+    { "name": "Ana Souza", "role": "Diretora comercial", "side": "client" },
+    { "name": "Carlos Lima", "role": "Responsável por TI", "side": "client" },
+    { "name": "Marina Alves", "role": "Tech lead", "side": "vendor" },
+    { "name": "Rafael Costa", "role": "Gerente de contas", "side": "vendor" }
+  ],
+  "expected": {
+    "decisions": [
+      { "key": "dec_web_first", "status": "confirmed", "anchor": "primeiro web, app depois" },
+      { "key": "dec_faturamento_erp", "status": "confirmed", "anchor": "o faturamento continua saindo pelo ERP e o portal só envia o pedido" },
+      { "key": "dec_credito_no_portal", "status": "pending_validation", "anchor": "A aprovação de crédito talvez entre no portal" },
+      { "key": "dec_relatorios_fase1", "status": "pending_validation", "anchor": "isso pode ficar para depois, não sei se na primeira fase" }
+    ],
+    "commitments": [
+      { "key": "com_ana_planilha", "owner": "Ana Souza", "owner_side": "client", "status": "confirmed", "anchor": "Eu te mando a planilha de produtos até sexta", "due_text_contains": "sexta" },
+      { "key": "com_marina_proposta", "owner": "Marina Alves", "owner_side": "vendor", "status": "confirmed", "anchor": "a gente volta com a proposta em uma semana", "due_text_contains": "semana" },
+      { "key": "com_carlos_api_erp", "owner": "Carlos Lima", "owner_side": "client", "status": "conditional", "anchor": "Se o pessoal do ERP responder, eu vejo se tem API", "must_not_be": "confirmed" }
+    ],
+    "requirements": [
+      { "key": "req_catalogo_preco_cliente", "type": "functional", "anchor": "cada cliente tem uma tabela de preço diferente, isso tem que aparecer certo" },
+      { "key": "req_pedido", "type": "functional", "anchor": "O cliente monta o pedido ali e manda" },
+      { "key": "req_integracao_erp", "type": "integration", "anchor": "Precisa falar com o nosso ERP, senão não adianta" },
+      { "key": "req_login", "type": "functional", "anchor": "pode ser e-mail e senha mesmo" }
+    ],
+    "contradictions": [
+      {
+        "key": "iss_credito_todo_pedido",
+        "description": "Ana afirma que todo pedido passa por crédito e depois que clientes antigos compram direto.",
+        "anchors": [
+          "Todo pedido passa pelo crédito antes de ser liberado",
+          "Os clientes antigos compram direto, sem análise"
+        ]
+      }
+    ],
+    "vague_terms": [
+      { "key": "vago_rapido", "anchor": "o sistema tem que ser rápido" },
+      { "key": "vago_ifood", "anchor": "simples de usar, tipo o app do iFood" },
+      { "key": "vago_integrar_tudo", "anchor": "integrar com tudo que a gente usa" }
+    ],
+    "vendor_suggestions_not_accepted": [
+      {
+        "key": "sug_app_representantes_offline",
+        "anchor": "um aplicativo para os representantes com modo offline",
+        "must_not_appear_in": ["decisions", "requirements", "commitments"]
+      }
+    ],
+    "missing_info": [
+      { "key": "falta_volume", "topic": "volume de clientes, usuários simultâneos e pedidos por mês" },
+      { "key": "falta_erp", "topic": "qual ERP/versão e se há API documentada" },
+      { "key": "falta_prazo", "topic": "prazo ou evento-alvo do cliente" },
+      { "key": "falta_orcamento", "topic": "orçamento ou faixa de investimento" },
+      { "key": "falta_decisor", "topic": "quem decide do lado do cliente" }
+    ],
+    "summary": {
+      "key_decisions_must_include": ["dec_web_first", "dec_faturamento_erp"],
+      "pending_decisions_must_include": ["dec_credito_no_portal", "dec_relatorios_fase1"],
+      "open_points_must_include": ["iss_credito_todo_pedido"],
+      "must_not_appear_as_decision_or_next_step": ["sug_app_representantes_offline"],
+      "limits": { "headline_max_chars": 140, "executive_summary_max_chars": 700, "min_topics": 3, "max_topics": 8 }
+    }
+  },
+  "thresholds": {
+    "min_quote_fidelity": 0.9,
+    "min_expected_items_found": 0.8
+  }
+}

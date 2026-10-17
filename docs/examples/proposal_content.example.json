@@ -52,7 +52,7 @@
     ],
     "technologies": [
       { "layer": "Frontend", "choice": "React/Next.js", "rationale": "Produtividade e responsividade." },
-      { "layer": "Backend", "choice": "Python/FastAPI", "rationale": "Stack da equipe; integrações rápidas." },
+      { "layer": "Backend", "choice": "Node.js/TypeScript (Express)", "rationale": "Stack da equipe; integrações rápidas." },
       { "layer": "Dados", "choice": "PostgreSQL", "rationale": "Relacional, maduro." }
     ],
     "diagram_mermaid": "flowchart LR\n  FE[Portal web] --> API[API]\n  API --> DB[(PostgreSQL)]\n  API --> INT[Camada de integração]\n  INT --> ERP[ERP do cliente]",

@@ -267,6 +267,118 @@
     "Identificação de falantes fornecida pela transcrição; nomes inferidos a partir das apresentações no início da reunião.",
     "iss_04 e sug_02 não têm trecho de origem: são ausências detectadas pela auditoria, não afirmações da reunião."
   ],
+  "meeting_summary": {
+    "headline": "Portal B2B de pedidos para a Distribuidora Horizonte: primeira fase web, integração com ERP ainda em aberto",
+    "executive_summary": "A Distribuidora Horizonte recebe pedidos por WhatsApp e planilha e quer um portal em que os clientes montem pedidos com sua tabela de preço. Ficou fechado que a primeira fase será web e que o faturamento continua no ERP. A aprovação de crédito no portal, o escopo de relatórios e a integração com o ERP seguem pendentes. O cliente envia a planilha de produtos até sexta e a software house entrega a proposta em uma semana.",
+    "topics": [
+      {
+        "title": "Como os pedidos chegam hoje",
+        "summary": "Pedidos por WhatsApp e planilha, com erros de digitação e atraso no faturamento.",
+        "source_refs": [
+          {
+            "quote": "hoje os pedidos chegam por WhatsApp e planilha, e a gente erra muito na digitação",
+            "segment_id": "s004",
+            "speaker": "Ana Souza",
+            "start_ms": 41200,
+            "end_ms": 48900
+          }
+        ]
+      },
+      {
+        "title": "Catálogo com preço por cliente",
+        "summary": "O portal precisa mostrar o catálogo com a tabela de preço correta de cada cliente.",
+        "source_refs": [
+          {
+            "quote": "cada cliente tem uma tabela de preço diferente, isso tem que aparecer certo",
+            "segment_id": "s011",
+            "speaker": "Ana Souza",
+            "start_ms": 120400,
+            "end_ms": 125000
+          }
+        ]
+      },
+      {
+        "title": "Integração com o ERP",
+        "summary": "O estoque e o envio de pedidos dependem do ERP; ainda não se sabe qual é o ERP nem se há API.",
+        "source_refs": [
+          {
+            "quote": "precisa falar com o nosso ERP, senão não adianta",
+            "segment_id": "s018",
+            "speaker": "Carlos",
+            "start_ms": 201000,
+            "end_ms": 204300
+          }
+        ]
+      },
+      {
+        "title": "Escopo da primeira fase",
+        "summary": "Ficou combinado começar pela versão web e deixar o aplicativo para depois.",
+        "source_refs": [
+          {
+            "quote": "então fechamos: primeiro web, app depois",
+            "segment_id": "s027",
+            "speaker": "Marina",
+            "start_ms": 310000,
+            "end_ms": 312900
+          }
+        ]
+      },
+      {
+        "title": "Aprovação de crédito",
+        "summary": "Houve afirmações conflitantes sobre quais pedidos passam pela análise de crédito; o ponto depende do financeiro do cliente.",
+        "source_refs": [
+          {
+            "quote": "todo pedido passa pelo crédito antes",
+            "segment_id": "s030",
+            "speaker": "Ana Souza",
+            "start_ms": 335000,
+            "end_ms": 337100
+          },
+          {
+            "quote": "os clientes antigos compram direto, sem análise",
+            "segment_id": "s044",
+            "speaker": "Ana Souza",
+            "start_ms": 460000,
+            "end_ms": 462900
+          }
+        ]
+      },
+      {
+        "title": "Próximos passos",
+        "summary": "O cliente envia a planilha de produtos e a software house retorna com a proposta.",
+        "source_refs": [
+          {
+            "quote": "eu te mando a planilha de produtos até sexta",
+            "segment_id": "s035",
+            "speaker": "Ana Souza",
+            "start_ms": 380000,
+            "end_ms": 382600
+          }
+        ]
+      }
+    ],
+    "key_decisions": [
+      "dec_01"
+    ],
+    "pending_decisions": [
+      "dec_02"
+    ],
+    "next_steps": [
+      "com_01",
+      "com_02",
+      "com_03"
+    ],
+    "open_points": [
+      "iss_01",
+      "iss_03"
+    ],
+    "meta": {
+      "prompt_version": "summarize@1.0",
+      "model": "<OPENAI_MODEL>",
+      "generated_at": "2026-10-17T14:03:40Z",
+      "basis": "analysis"
+    }
+  },
   "review_completed": false,
   "meta": {
     "schema_version": "1.0",

@@ -1,0 +1,86 @@
+{
+  "date": "2026-10-17T15:42:19.750Z",
+  "audio": "sample_meeting.mp3",
+  "audio_bytes": 10001280,
+  "reference_words": 1438,
+  "note": "WER sobre áudio sintético (TTS) limpo; tende a ser otimista frente a áudio real.",
+  "results": [
+    {
+      "model": "whisper-1",
+      "wer": 0.0236,
+      "seconds": 32,
+      "segments": 135,
+      "speakers": [],
+      "usage": {
+        "type": "duration",
+        "seconds": 626
+      }
+    },
+    {
+      "model": "gpt-4o-transcribe",
+      "wer": 0.0076,
+      "seconds": 27,
+      "segments": 0,
+      "speakers": [],
+      "usage": {
+        "type": "tokens",
+        "total_tokens": 8137,
+        "input_tokens": 6250,
+        "input_token_details": {
+          "text_tokens": 0,
+          "audio_tokens": 6250
+        },
+        "output_tokens": 1887
+      }
+    },
+    {
+      "model": "gpt-4o-mini-transcribe",
+      "wer": 0.0216,
+      "seconds": 14,
+      "segments": 0,
+      "speakers": [],
+      "usage": {
+        "type": "tokens",
+        "total_tokens": 8129,
+        "input_tokens": 6250,
+        "input_token_details": {
+          "text_tokens": 0,
+          "audio_tokens": 6250
+        },
+        "output_tokens": 1879
+      }
+    },
+    {
+      "model": "gpt-4o-transcribe-diarize",
+      "wer": 0.0459,
+      "seconds": 276,
+      "segments": 271,
+      "speakers": [
+        "A",
+        "B",
+        "C"
+      ],
+      "usage": {
+        "type": "tokens",
+        "total_tokens": 33079,
+        "input_tokens": 13036,
+        "input_token_details": {
+          "text_tokens": 1092,
+          "audio_tokens": 11944
+        },
+        "output_tokens": 20043
+      }
+    },
+    {
+      "model": "gpt-transcribe",
+      "wer": 0.0216,
+      "seconds": 12,
+      "segments": 0,
+      "speakers": [],
+      "usage": {
+        "type": "duration",
+        "seconds": 626
+      }
+    }
+  ]
+}
