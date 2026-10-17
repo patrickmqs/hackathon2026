@@ -201,7 +201,7 @@ export const MeetingSummaryOutput = z.object({
   key_decisions: z.array(z.string()),    // ids de decisions com status "confirmed"
   pending_decisions: z.array(z.string()),// ids de decisions com status "pending_validation"
   next_steps: z.array(z.string()),       // ids de commitments (qualquer status; a UI exibe o status)
-  open_points: z.array(z.string()),      // ids de open_issues
+  open_points: z.array(z.string()),      // ids de open_issues; no máximo 5, priorizados (contradição > impacto em esforço/arquitetura/prazo > custo/escopo)
 });
 export const SummaryMeta = z.object({
   prompt_version: z.string(),            // "summarize@1.0"
@@ -241,7 +241,7 @@ O orquestrador funde `ExtractionOutput` + `GapAuditOutput` (aplicando `downgrade
 | `open_issues` | Informação ausente que afeta esforço/arquitetura/custo/prazo; termos vagos ("rápido", "integrar com tudo"); contradições; perguntas feitas e não respondidas. | Detalhe de implementação normal que a proposta pode assumir e declarar em premissas (isso vira `tech_suggestion.category=assumption`). |
 | `tech_suggestions` | Qualquer recomendação originada do modelo (arquitetura, stack, módulo extra, premissa). Também ideias do fornecedor na reunião **que o cliente não confirmou**. | Nunca vira decisão/requisito sem ação humana na revisão. |
 
-**Falantes.** Se `has_speakers=false`, o extrator só preenche `commitment.owner` quando o texto deixa óbvio ("eu, Ana, …" ou contexto claro); senão `owner="não identificado"`, `owner_side="unknown"`, `confidence="low"`, e `limitations[]` recebe nota. O prompt proíbe inventar nomes.
+**Falantes.** Se `has_speakers=false`, o extrator só preenche `commitment.owner` quando a própria fala identifica quem fala ("eu, Ana, …") ou a pessoa é chamada pelo nome logo antes de assumir o compromisso; nunca deduz o dono por ser "o outro lado" ou por papel (em teste com áudio sem rótulos, um compromisso da Marina foi atribuído ao Rafael, que também é do fornecedor). Sem essa pista: `owner="não identificado"`, `confidence="low"` e nota em `limitations[]`; `owner_side` só vira `client`/`vendor` se a fala deixar o lado claro ("a gente volta com a proposta" = fornecedor), senão `unknown`. Um compromisso `confirmed` sem dono é rebaixado a `tentative` (§6.1). O prompt proíbe inventar nomes.
 
 ## 5. Prompts e responsabilidades
 
@@ -274,7 +274,7 @@ Regras próprias do `summarize.md`:
 > - O resumo descreve **o que foi dito e combinado**, não o que seria bom fazer. Não acrescente recomendações, requisitos, valores, prazos ou nomes que não estejam na transcrição.
 > - Decisão só vai em `key_decisions` se a análise a marca como `confirmed`; as demais vão em `pending_decisions`. Nunca escreva no texto que algo foi "acordado" ou "fechado" se estiver em `pending_decisions`.
 > - Sugestões da IA (`tech_suggestions`) e ideias do fornecedor não acolhidas **não** entram no resumo como decisão; se citadas, diga explicitamente que ficaram em aberto.
-> - Contradições e informações ausentes relevantes entram em `open_points` pelo id da pendência.
+> - Contradições e informações ausentes relevantes entram em `open_points` pelo id da pendência, **no máximo 5**, os mais importantes primeiro; temas genéricos ficam só na análise.
 > - Cada tópico cita um trecho literal (`quote`) da transcrição. Ordene os tópicos na ordem em que a conversa aconteceu.
 > - Português claro para quem não assistiu à reunião: sem jargão da análise (ids, "source_refs") no texto.
 
@@ -315,6 +315,7 @@ Tudo que o validador altera é registrado em `limitations[]` para o revisor ver.
 | Cada `quote` dos tópicos ocorre na transcrição (mesma normalização de §6.1) | Remove a `source_ref` inválida; tópico sem nenhuma `source_ref` válida é descartado; se restarem < 3 tópicos, reprocessa |
 | Todo número (sequência de dígitos) no texto do resumo aparece na transcrição ou nos itens da análise | Reprocessa com a lista de números não encontrados |
 | `basis=reviewed`: nenhum id de item `rejected` ou `pending` | Remove o id e registra em `limitations[]` |
+| Mais de 5 ids em `open_points` | Mantém os 5 de maior prioridade (contradição > impacto em esforço/arquitetura/prazo > custo/escopo; a ordem do modelo desempata), sem reprocessar; registra em `limitations[]`. As demais pendências continuam só na análise |
 
 ## 7. Detecção de ambiguidades
 

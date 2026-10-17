@@ -86,7 +86,7 @@ stateDiagram-v2
 No topo, acima das duas colunas, o **`SummaryPanel`** (recolhível; aberto por padrão):
 - Manchete (`headline`) e resumo executivo (`executive_summary`).
 - **Tópicos** em ordem cronológica: título + resumo curto; cada um mostra `mm:ss` (se há timestamp) e, ao clicar, o `TranscriptPane` rola até o trecho citado.
-- Faixa de **chips por id** que resolvem o texto na própria análise: *Decisões confirmadas* · *Decisões pendentes* · *Próximos passos* (com status do compromisso e prazo dito) · *Pontos em aberto*. Clicar num chip rola até o `ReviewableItemCard` correspondente.
+- Faixa de **chips por id** que resolvem o texto na própria análise: *Decisões confirmadas* · *Decisões pendentes* · *Próximos passos* (com status do compromisso e prazo dito) · *Pontos em aberto* (até 5; o restante fica na análise, com link "ver todas as N pendências"). Clicar num chip rola até o `ReviewableItemCard` correspondente.
 - Rodapé: "Resumo gerado por IA às {hora} · base: análise completa | itens revisados". Se `review_completed` e `basis = "analysis"`, badge "Gerado antes da revisão — pode incluir itens rejeitados" + botão **Atualizar resumo** (`POST …/summary` com `basis: "reviewed"`, com confirmação). Botão **Copiar resumo** (texto puro) para colar em e-mail/chat.
 - Estado vazio (`meeting_summary = null`): "Não foi possível resumir esta reunião" + botão **Gerar resumo**. A revisão da análise não depende dele.
 - Rótulo fixo: "Resumo gerado por IA a partir da transcrição. A fonte de verdade são os itens abaixo."

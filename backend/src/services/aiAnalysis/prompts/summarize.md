@@ -16,7 +16,7 @@ O resumo é derivado da análise: ele **referencia** decisões, compromissos e p
 - `key_decisions`: ids das decisões com `status: "confirmed"` — todas elas.
 - `pending_decisions`: ids das decisões com `status: "pending_validation"` — todas elas.
 - `next_steps`: ids dos compromissos (`com_*`), de qualquer status, na ordem em que apareceram.
-- `open_points`: ids das pendências (`iss_*`) relevantes. SEMPRE inclua toda pendência do tipo `contradiction` e as pendências de maior impacto (ausência de informação que muda esforço, arquitetura ou prazo). Pode omitir pendências menores.
+- `open_points`: ids das pendências (`iss_*`), **no máximo 5**, em ordem de prioridade: primeiro as `contradiction`, depois ausências de informação que mudam esforço, arquitetura ou prazo, depois custo e escopo. Omita temas genéricos ou menores (ex.: hospedagem, LGPD) se houver pendências mais importantes; elas continuam na análise.
 - Use somente ids que existem na análise recebida, no tipo certo. Não invente ids.
 
 ## Regras de conteúdo

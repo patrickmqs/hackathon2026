@@ -24,7 +24,20 @@ export const SUMMARY_LIMITS = {
   topic_summary: 400,
   min_topics: 3,
   max_topics: 8,
+  max_open_points: 5,
 } as const;
+
+const HIGH_IMPACT = new Set(["effort", "architecture", "timeline"]);
+
+/** Prioridade de uma pendência para o resumo: contradição > impacto em esforço/arquitetura/prazo > custo/escopo. */
+export function openIssuePriority(i: { type: string; impact: string[]; confidence: string }): number {
+  return (
+    (i.type === "contradiction" ? 100 : 0) +
+    10 * i.impact.filter((x) => HIGH_IMPACT.has(x)).length +
+    3 * i.impact.filter((x) => !HIGH_IMPACT.has(x)).length +
+    (i.confidence === "high" ? 1 : 0)
+  );
+}
 
 export interface SummaryValidation {
   /** Resumo com as correções automáticas aplicadas (listas, quotes, referências preenchidas). */
@@ -268,6 +281,20 @@ export function validateSummary(
 
   s.next_steps = dedupe(s.next_steps);
   s.open_points = dedupe(s.open_points);
+
+  // 3b. No máximo `max_open_points` pontos em aberto, os mais prioritários (corte determinístico, sem repair;
+  //     a ordem original do modelo desempata). As demais pendências continuam na análise.
+  if (s.open_points.length > SUMMARY_LIMITS.max_open_points) {
+    const rank = (id: string) => (issues.has(id) ? openIssuePriority(issues.get(id)!) : -1);
+    const ordered = s.open_points
+      .map((id, idx) => ({ id, idx, p: rank(id) }))
+      .sort((a, b) => b.p - a.p || a.idx - b.idx)
+      .slice(0, SUMMARY_LIMITS.max_open_points)
+      .sort((a, b) => a.idx - b.idx);
+    const cut = s.open_points.length - ordered.length;
+    s.open_points = ordered.map((o) => o.id);
+    limitations.push(`Resumo: ${cut} pendência(s) de menor prioridade ficam só na análise (limite de ${SUMMARY_LIMITS.max_open_points} pontos em aberto no resumo).`);
+  }
 
   // 4. Limites de tamanho e de quantidade -> repair.
   if (!s.headline.trim() || s.headline.length > SUMMARY_LIMITS.headline)
