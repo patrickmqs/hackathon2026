@@ -36,6 +36,8 @@ const MODELS: Cfg[] = [
 ];
 
 const refWords = norm(truth);
+fs.mkdirSync(outDir, { recursive: true });
+const results: Record<string, unknown>[] = [];
 console.log(`áudio: ${audio}\nreferência: ${refWords.length} palavras\n`);
 console.log("modelo".padEnd(28), "WER".padEnd(8), "tempo".padEnd(8), "segm.".padEnd(7), "falantes");
 
@@ -50,7 +52,12 @@ for (const { model, extra } of MODELS) {
     const text = res.text ?? (res.segments ?? []).map((s) => s.text).join(" ");
     const speakers = new Set((res.segments ?? []).map((s) => s.speaker).filter(Boolean));
     const w = wer(refWords, norm(text));
-    fs.writeFileSync(path.join(outDir, `bench_${model}.json`), JSON.stringify(res, null, 2));
+    fs.writeFileSync(path.join(outDir, `${model}.json`), JSON.stringify(res, null, 2));
+    results.push({
+      model, wer: Number(w.toFixed(4)), seconds: Math.round((Date.now() - t0) / 1000),
+      segments: res.segments?.length ?? 0, speakers: [...speakers],
+      usage: (res as { usage?: unknown }).usage ?? null,
+    });
     console.log(
       model.padEnd(28),
       `${(w * 100).toFixed(1)}%`.padEnd(8),
@@ -60,5 +67,22 @@ for (const { model, extra } of MODELS) {
     );
   } catch (e) {
     console.log(model.padEnd(28), `FALHOU: ${(e as Error).message.split("\n")[0]}`);
+    results.push({ model, error: (e as Error).message.split("\n")[0] });
   }
 }
+
+fs.writeFileSync(
+  path.join(outDir, "results.json"),
+  JSON.stringify(
+    {
+      date: new Date().toISOString(),
+      audio: path.basename(audio),
+      audio_bytes: fs.statSync(audio).size,
+      reference_words: refWords.length,
+      note: "WER sobre áudio sintético (TTS) limpo; tende a ser otimista frente a áudio real.",
+      results,
+    },
+    null,
+    2,
+  ),
+);

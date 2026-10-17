@@ -4,3 +4,4 @@ AGENTS.md
 .env
 node_modules/
 logs/
+sample_data/*.mp3
