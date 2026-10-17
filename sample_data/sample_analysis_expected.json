@@ -63,6 +63,38 @@
       "limits": { "headline_max_chars": 140, "executive_summary_max_chars": 700, "min_topics": 3, "max_topics": 8 }
     }
   },
+  "audio_no_speakers": {
+    "description": "Expectativas para a transcrição gerada a partir do áudio (gpt-4o-transcribe), SEM rótulos de falante. Critério por CONTEÚDO (regex sobre descrição + citações normalizadas: minúsculas, sem acento), não por âncora, porque o modelo cita falas diferentes entre execuções. Donos de compromisso não são esperados: sem falantes, o dono correto é 'não identificado'.",
+    "transcript_source": "docs/benchmarks/transcription/run2/gpt-4o-transcribe.json",
+    "decisions_confirmed": [
+      { "key": "dec_web_first", "all_of": ["web|responsiv", "app|aplicativo|nativ"] },
+      { "key": "dec_faturamento_erp", "all_of": ["fatur|nota fiscal", "erp"] }
+    ],
+    "decisions_pending": [
+      { "key": "dec_credito_no_portal", "all_of": ["cr[eé]dito|credito"] },
+      { "key": "dec_relatorios_fase1", "all_of": ["relat"] }
+    ],
+    "commitments": [
+      { "key": "com_ana_planilha", "all_of": ["planilha", "sexta"], "status": "confirmed" },
+      { "key": "com_carlos_api_erp", "all_of": ["api|erp"], "owner_contains": "Carlos", "status": "conditional" },
+      { "key": "com_proposta_sem_dono", "all_of": ["proposta", "semana"], "owner_must_be": "não identificado", "must_not_be": "confirmed" }
+    ],
+    "requirements": [
+      { "key": "req_catalogo", "all_of": ["cat[aá]logo|catalogo"] },
+      { "key": "req_tabela_preco_cliente", "all_of": ["tabela de pre[cç]o|pre[cç]os? (personalizad|conforme|por cliente|de cada cliente)"] },
+      { "key": "req_pedido", "all_of": ["pedido|carrinho"] },
+      { "key": "req_integracao_erp", "all_of": ["erp"] },
+      { "key": "req_login", "all_of": ["login|autentica|e.?mail e senha"] }
+    ],
+    "open_issues": [
+      { "key": "contradicao_credito", "type": "contradiction" },
+      { "key": "vago_rapido", "any_of": ["r[aá]pid|rapid"] },
+      { "key": "vago_ifood", "any_of": ["ifood|simples de usar"] },
+      { "key": "vago_integrar_tudo", "any_of": ["integrar com tudo|tudo que a gente usa|outros sistemas|lista completa de sistemas"] }
+    ],
+    "forbidden_as_decision": ["offline|representantes"],
+    "thresholds": { "min_items_found_rate": 0.8, "runs": 3 }
+  },
   "thresholds": {
     "min_quote_fidelity": 0.9,
     "min_expected_items_found": 0.8

@@ -63,6 +63,21 @@ describe("structuredCompletion", () => {
     expect(parse).toHaveBeenCalledTimes(1);
   });
 
+  it("não faz retry em 429 por falta de crédito (insufficient_quota)", async () => {
+    const err = new OpenAI.RateLimitError(
+      429,
+      { message: "You have no credits remaining.", code: "insufficient_quota", type: "insufficient_quota" },
+      "You have no credits remaining.",
+      new Headers(),
+    );
+    const parse = vi.fn().mockRejectedValue(err);
+    __setTestHooks({ client: fake(parse) });
+    const e = await run().catch((x) => x);
+    expect(e).toBeInstanceOf(AiProviderError);
+    expect(parse).toHaveBeenCalledTimes(1);
+    expect(sleeps).toEqual([]);
+  });
+
   it("lança AiOutputInvalidError quando output_parsed é null", async () => {
     __setTestHooks({ client: fake(() => ({ output_parsed: null, usage: null, output_text: "recusa" })) });
     await expect(run()).rejects.toBeInstanceOf(AiOutputInvalidError);
