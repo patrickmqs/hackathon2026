@@ -63,7 +63,7 @@ npm run bench:transcribe -- <audio>    # compara 5 modelos de transcrição
 | Área | Arquivos |
 |------|----------|
 | Contratos | `shared/src/schemas/{analysis,proposal}.ts` · exemplos em `docs/examples/` |
-| Orquestração | `backend/src/services/aiAnalysis/pipeline.ts` (`analyzeMeeting`: extrai → valida → audita → resume; `onProgress`; resumo não bloqueante) |
+| Orquestração | `backend/src/services/aiAnalysis/pipeline.ts` (`analyzeMeeting`: extrai → valida → audita → resume; `onProgress`; resumo obrigatório para concluir) |
 | Extração / auditoria / resumo | `aiAnalysis/{extract,gapAudit,summarize}.ts` · prompts em `aiAnalysis/prompts/*.md` (+ `repair.md`) |
 | Validação | `aiAnalysis/{validators,summaryValidator}.ts` |
 | Transcrição | `services/transcription/{service,types}.ts` |

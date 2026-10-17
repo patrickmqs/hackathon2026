@@ -288,7 +288,7 @@ tentativa 1 → responses.parse com zodTextFormat
 tentativa 2 falha → tentativa 3 (última)
 tentativa 3 falha → Meeting.status = failed, error.code = AI_OUTPUT_INVALID, error.details = violações
 ```
-Isso vale para as etapas 3, 5 e 9. A **etapa 5b (resumo) é não bloqueante**: depois da 3ª tentativa inválida, a reunião segue para `analysis_ready` com `meeting_summary = null` e `limitations[]` ganha "Resumo da reunião não gerado: <motivo>". No `POST /meetings/{id}/summary` (geração manual), a falha devolve `500 AI_OUTPUT_INVALID` normalmente.
+Isso vale para as etapas 3, 5 e 9. A **etapa 5b (resumo) é obrigatória para concluir o job da reunião**: depois da 3ª tentativa inválida, a reunião vai para `failed` e pode ser reprocessada; ela só segue para `analysis_ready` quando `meeting_summary` estiver disponível. No `POST /meetings/{id}/summary` (geração manual), a falha devolve `500 AI_OUTPUT_INVALID` normalmente.
 Erros de rede/5xx/429 da OpenAI: retry com backoff 1 s, 3 s, 8 s (3×) antes de `AI_PROVIDER_ERROR` — tratado dentro de `structuredCompletion`, independente das tentativas acima.
 
 ### 6.1 Validações pós-schema (`validators.ts`)
@@ -499,7 +499,7 @@ Comandos: `npm test` (unitários + rotas com fixtures gravadas em `tests/fixture
 8. **Repair:** fixture com saída inválida → segunda tentativa é acionada com `repair.md` (mock do client).
 9. **Resumo — schema e fidelidade:** `meeting_summary` valida em `MeetingSummary.safeParse`; `executive_summary` ≤ 700 caracteres; 3–8 tópicos; ≥ 90% das `quote` dos tópicos existem na transcrição; nenhum número no texto que não esteja na transcrição.
 10. **Resumo — não promove nem esconde:** com o gabarito (`expected.summary`), `key_decisions` contém as 2 decisões confirmadas e **não** contém as 2 pendentes (que estão em `pending_decisions`); a contradição plantada aparece em `open_points`; a sugestão do fornecedor não acolhida não aparece como decisão nem como próximo passo confirmado.
-11. **Resumo — falha não bloqueante:** mock do client que falha 3× na etapa 5b → reunião termina em `analysis_ready` com `meeting_summary = null` e nota em `limitations[]`.
+11. **Resumo — falha bloqueia a conclusão:** mock do client que falha 3× na etapa 5b → job termina em `failed`, sem marcar a análise como pronta.
 12. **Robustez em áudio sem falantes (`tests/ai/robustness.live.test.ts`, só com `AI_TESTS=1`):** roda o pipeline completo `AI_RUNS` vezes (padrão 3) sobre a transcrição do áudio, com o gabarito `audio_no_speakers` (critério por conteúdo, não por âncora). Invariantes em TODA execução: sugestão do fornecedor nunca vira decisão; citações literais ≥ 90%; compromisso condicional do Carlos nunca `confirmed`; compromisso da proposta nunca `confirmed` nem com dono inventado; resumo coerente (listas certas, ≤ 5 pontos, contradição listada). A taxa média de itens encontrados deve ser ≥ 80%, mas oscila entre execuções e não é invariante. Ausência de item só entra na taxa; violação quebra o teste.
 
 Registrar por execução: modelo, versão de prompt, tokens, latência (`logs/ai_runs.jsonl`) — insumo para as métricas de PRODUCT_SPEC §11.

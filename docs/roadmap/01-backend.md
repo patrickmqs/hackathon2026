@@ -13,7 +13,7 @@ Esta é a carga mais alta do time. Se apertar, cortar/simplificar na ordem: What
 | B3 | `shared/schemas/{common,proposal,delivery,api}.ts` + `docs/examples/proposal_content.example.json` | P0 | H0–2 | B1 | Exemplos validam; P2/P3 desbloqueados |
 | B4 | `prisma/schema.prisma` (ARCHITECTURE §3), migration inicial, docker-compose com Postgres, `.env.example`, seção de setup no README | P0 | H1–4 | B1 | Pessoa nova sobe com `docker compose up` |
 | B5 | Repositórios + rotas **Projects** e **Meetings** (texto/áudio multipart com `multer`, `GET`, `reprocess`) + `FileStorage` | P0 | H3–6 | B2, B4 | Criar projeto e reunião por texto via cliente HTTP |
-| B6 | Orquestrador do job (`runPipeline`, estados de Meeting, `JOB_STALE_MINUTES`, `progress.step` incl. `summarizing`) integrando extração da P4; etapa de resumo (IA17) **não bloqueante** | P0 | H5–8 | B5, P4:A5 | texto → `analysis_ready` ponta a ponta |
+| B6 | Orquestrador do job (`runPipeline`, estados de Meeting, `JOB_STALE_MINUTES`, `progress.step` incl. `summarizing`) integrando extração da P4; etapa de resumo (IA17) obrigatória para `analysis_ready` | P0 | H5–8 | B5, P4:A5 | texto → `analysis_ready` ponta a ponta |
 | B7 | Rotas **Analysis** (`GET`, `PUT` preservando `meta`, `complete-review`) + middleware `demoUser` | P0 | H7–9 | B6 | Critérios "Revisão" de PRODUCT_SPEC §10 |
 | B7b | Rotas de resumo: `GET/POST /meetings/{id}/summary` (`basis: analysis\|reviewed`, `SUMMARY_NOT_AVAILABLE`), `PUT /analysis` preserva `meeting_summary`, evento `analysis.summary_generated` | P0 | H9–11 | B7, P4:IA17 | Contrato de API_SPEC §4.4 |
 | B8 | `estimation/engine.ts` + `historical.ts` (usa `rules.ts` da P4) | P0 | H8–11 | B3 | Determinístico; teste unitário |

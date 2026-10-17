@@ -40,7 +40,7 @@ Legenda: **[P0]** essencial · **[P1]** se der tempo · ✅ critério de pronto.
 | A5 | `prompts/extract.md` v1 + `prompts/loader.ts` (`gray-matter`) + `extract.ts` | P0 | H2–6 | A2, A3 | ✅ transcrição de exemplo → `ExtractionOutput` válido; ≥ 80% do gabarito |
 | A6 | `validators.ts` (quotes, ids, rebaixamentos) | P0 | H5–7 | A5 | ✅ testes unitários das 6 regras |
 | A7 | `prompts/gap_audit.md` + `gapAudit.ts` + fusão no `orchestrator.ts` (com B5) | P0 | H6–9 | A5 | ✅ contradição plantada detectada; compromisso condicional não sai `confirmed` |
-| A7b | `prompts/summarize.md` + `summarize.ts` + `validateSummary` + exemplo e gabarito do resumo (etapa 5b não bloqueante; AI_PIPELINE §3, §6.2) | P0 | H9–12 | A5, A6, A7 | ✅ resumo da reunião de exemplo cumpre os 3 testes de resumo (AI_PIPELINE §11) |
+| A7b | `prompts/summarize.md` + `summarize.ts` + `validateSummary` + exemplo e gabarito do resumo (etapa 5b obrigatória para concluir a análise; AI_PIPELINE §3, §6.2) | P0 | H9–12 | A5, A6, A7 | ✅ resumo da reunião de exemplo cumpre os 3 testes de resumo (AI_PIPELINE §11) |
 | A8 | `services/transcription/service.ts` (validação, chamada, normalização de segmentos) | P0 | H8–11 | A3 | ✅ `sample_meeting.mp3` → transcrição com metadata correta |
 | A9 | `prompts/compose_proposal.md` + `composer.ts` (com B) | P0 | H10–14 | B8 | ✅ `ProposalTextOutput` válido; builder mantém números das estimativas |
 | A10 | Calibrar `estimation/rules.ts` com `historical_projects.json` (T07, com B) | P0 | H12–14 | B7 | ✅ faixa plausível para a reunião de exemplo |
