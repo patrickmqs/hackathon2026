@@ -1,6 +1,6 @@
 # Pipeline de IA — Proposal AI
 
-Versão 0.1 · 2026-10-17
+Versão 0.2 · 2026-10-17 · Implementação em TypeScript (ver DECISIONS D13)
 
 Relacionados: [ARCHITECTURE.md](ARCHITECTURE.md) §5–7 · [API_SPEC.md](API_SPEC.md) · exemplos em [examples/](examples/)
 
@@ -13,7 +13,7 @@ Responsável: Pessoa A (AI Engineering), com Pessoa B para o motor de estimativa
 1. **A IA extrai e redige; não decide nem estima números.** Horas, equipe e cronograma vêm de regras determinísticas.
 2. **Toda afirmação tem origem.** Cada item carrega `source_refs[]` com citação literal da transcrição. Sem citação → confiança baixa e registro em `limitations[]`.
 3. **Dúvida vira pendência, não decisão.** Sugestão, hipótese ou "seria bom" nunca viram `decision.status=confirmed` nem `commitment.status=confirmed`.
-4. **Saída sempre validada.** Structured Outputs (JSON Schema estrito gerado do Pydantic) + validação pós-processamento + retry com feedback.
+4. **Saída sempre validada.** Structured Outputs (`zodTextFormat`, JSON Schema estrito gerado do Zod) + validação pós-processamento + retry com feedback.
 5. **Prompts são artefatos versionados**, não strings inline.
 
 ## 2. Etapas
@@ -34,134 +34,167 @@ flowchart LR
     COMP --> PDF[10. PDF]
 ```
 
-| # | Etapa | Módulo | Chamada externa | Tempo alvo |
-|---|-------|--------|-----------------|-----------|
-| 2 | Transcrição | `services/transcription/service.py` | `audio.transcriptions.create(model=OPENAI_TRANSCRIBE_MODEL, response_format="verbose_json" se suportado, timestamp_granularities=["segment"])` | ≤ 1× duração do áudio |
+| # | Etapa | Módulo (`backend/src/`) | Chamada externa | Tempo alvo |
+|---|-------|-------------------------|-----------------|-----------|
+| 2 | Transcrição | `services/transcription/service.ts` | `client.audio.transcriptions.create({ file: fs.createReadStream(path), model, response_format: "verbose_json", timestamp_granularities: ["segment"] })` (se o modelo suportar; senão `"json"`) | ≤ 1× duração do áudio |
 | 2b | Normalização | idem | — | ms |
-| 3 | Extração | `services/ai_analysis/extract.py` | chat completion / responses com `response_format` = JSON Schema de `ExtractionOutput` | 20–60 s |
-| 4 | Validação | `services/ai_analysis/validators.py` | — | ms |
-| 5 | Auditoria de lacunas | `services/ai_analysis/gap_audit.py` | idem, schema `GapAuditOutput` | 10–30 s |
-| 7 | Builder | `services/proposal/builder.py` | — | ms |
-| 8 | Estimativas | `services/estimation/engine.py` | — | ms |
-| 9 | Composição | `services/proposal/composer.py` | idem, schema `ProposalTextOutput` | 15–40 s |
+| 3 | Extração | `services/aiAnalysis/extract.ts` | `client.responses.parse({ model, input, text: { format: zodTextFormat(ExtractionOutput, "extraction") } })` | 20–60 s |
+| 4 | Validação | `services/aiAnalysis/validators.ts` | — | ms |
+| 5 | Auditoria de lacunas | `services/aiAnalysis/gapAudit.ts` | idem, schema `GapAuditOutput` | 10–30 s |
+| 7 | Builder | `services/proposal/builder.ts` | — | ms |
+| 8 | Estimativas | `services/estimation/engine.ts` | — | ms |
+| 9 | Composição | `services/proposal/composer.ts` | idem, schema `ProposalTextOutput` | 15–40 s |
 
 Modelos: configuráveis por env (`OPENAI_MODEL`, `OPENAI_TRANSCRIBE_MODEL`). Padrões sugeridos no `.env.example`; **confirmar disponibilidade na hora 0** (DECISIONS H01). Temperatura baixa (0–0.2) em extração e auditoria; 0.4 na composição.
 
+Wrapper único em `integrations/openai/client.ts`:
+```ts
+export async function structuredCompletion<T extends z.ZodTypeAny>(opts: {
+  prompt: LoadedPrompt;            // {name, version, system, temperature}
+  input: string;                   // conteúdo do usuário já montado
+  schema: T; schemaName: string;
+  attempt?: number;
+}): Promise<{ data: z.infer<T>; usage: Usage; latencyMs: number }>
+```
+Faz retry com backoff em `APIConnectionError`/`RateLimitError`/5xx (1 s, 3 s, 8 s), registra `usage` e latência em `logs/ai_runs.jsonl` e lança `AiOutputInvalidError` quando `output_parsed` é `null` (recusa ou JSON inválido).
+
 ## 3. Schema da análise — `MeetingAnalysis`
 
-Pydantic em `backend/app/schemas/analysis.py`. Exemplo completo: [examples/analysis.example.json](examples/analysis.example.json).
+Zod em `shared/src/schemas/analysis.ts`. Exemplo completo: [examples/analysis.example.json](examples/analysis.example.json).
 
-```python
-# schemas/analysis.py  (versão 1.0)
-from typing import Literal
-from pydantic import BaseModel, Field
+> **Regras para compatibilidade com Structured Outputs estritos:** todo campo é obrigatório no schema enviado ao modelo — use `.nullable()` em vez de `.optional()`; sem `.default()`; sem `z.record` com chaves dinâmicas nos schemas enviados ao LLM (use arrays de pares); `z.enum` para literais. Os schemas de **persistência/API** podem ter `.default()` — por isso existem dois: `XOutput` (LLM, estrito) e `X` (API), derivados do mesmo núcleo.
 
-Confidence   = Literal["high", "medium", "low"]
-ReviewStatus = Literal["pending", "confirmed", "edited", "rejected", "needs_clarification"]
-Side         = Literal["client", "vendor", "unknown"]
+```ts
+// shared/src/schemas/analysis.ts  (versão 1.0)
+import { z } from "zod";
 
-class SourceRef(BaseModel):
-    quote: str                      # trecho LITERAL da transcrição (≤ 300 chars)
-    segment_id: str | None = None   # id do segmento, se houver
-    speaker: str | None = None      # como aparece na transcrição, se houver
-    start_ms: int | None = None
-    end_ms: int | None = None
+export const Confidence   = z.enum(["high", "medium", "low"]);
+export const ReviewStatus = z.enum(["pending", "confirmed", "edited", "rejected", "needs_clarification"]);
+export const Side         = z.enum(["client", "vendor", "unknown"]);
 
-class ReviewableItem(BaseModel):
-    id: str                         # ex.: "req_003" — estável entre revisões
-    confidence: Confidence
-    source_refs: list[SourceRef] = Field(default_factory=list)
-    review_status: ReviewStatus = "pending"
-    reviewer_note: str | None = None
+export const SourceRef = z.object({
+  quote: z.string().max(300),            // trecho LITERAL da transcrição
+  segment_id: z.string().nullable(),     // id do segmento, se houver
+  speaker: z.string().nullable(),        // como aparece na transcrição
+  start_ms: z.number().int().nullable(),
+  end_ms: z.number().int().nullable(),
+});
 
-class ClientNeed(ReviewableItem):
-    category: Literal["problem", "business_goal", "target_audience", "constraint"]
-    description: str
+const Reviewable = z.object({
+  id: z.string(),                        // ex.: "req_003" — estável entre revisões
+  confidence: Confidence,
+  source_refs: z.array(SourceRef),
+  review_status: ReviewStatus,           // LLM sempre devolve "pending"
+  reviewer_note: z.string().nullable(),
+});
 
-class Requirement(ReviewableItem):
-    title: str
-    description: str
-    type: Literal["functional", "non_functional", "integration"]
-    priority: Literal["must", "should", "could", "unknown"] = "unknown"
-    module_id: str | None = None          # referência a Module.id
-    depends_on: list[str] = []            # ids de outros requisitos
+export const ClientNeed = Reviewable.extend({
+  category: z.enum(["problem", "business_goal", "target_audience", "constraint"]),
+  description: z.string(),
+});
 
-class Module(BaseModel):
-    id: str                               # "mod_01"
-    name: str
-    description: str
-    requirement_ids: list[str] = []
-    complexity: Literal["S", "M", "L", "XL", "unknown"] = "unknown"   # entrada do motor de estimativas
-    complexity_rationale: str | None = None
+export const Requirement = Reviewable.extend({
+  title: z.string(),
+  description: z.string(),
+  type: z.enum(["functional", "non_functional", "integration"]),
+  priority: z.enum(["must", "should", "could", "unknown"]),
+  module_id: z.string().nullable(),      // referência a Module.id
+  depends_on: z.array(z.string()),       // ids de outros requisitos
+});
 
-class Decision(ReviewableItem):
-    description: str
-    status: Literal["confirmed", "pending_validation"]
-    agreed_by: list[str] = []             # nomes/papéis citados
-    scope_effect: Literal["in_scope", "out_of_scope", "constraint", "other"] = "other"
+export const Module = z.object({
+  id: z.string(),                        // "mod_01"
+  name: z.string(),
+  description: z.string(),
+  requirement_ids: z.array(z.string()),
+  complexity: z.enum(["S", "M", "L", "XL", "unknown"]),   // entrada do motor de estimativas
+  complexity_rationale: z.string().nullable(),
+});
 
-class Commitment(ReviewableItem):
-    owner: str                            # quem assumiu (nome ou papel)
-    owner_side: Side
-    description: str
-    due_text: str | None = None           # prazo COMO DITO ("até sexta", "fim do mês")
-    status: Literal["confirmed", "tentative", "conditional"]
-    caveats: str | None = None            # condições/ressalvas ditas
+export const Decision = Reviewable.extend({
+  description: z.string(),
+  status: z.enum(["confirmed", "pending_validation"]),
+  agreed_by: z.array(z.string()),        // nomes/papéis citados
+  scope_effect: z.enum(["in_scope", "out_of_scope", "constraint", "other"]),
+});
 
-class OpenIssue(ReviewableItem):
-    type: Literal["missing_info", "vague_requirement", "contradiction", "question", "risk"]
-    description: str
-    impact: list[Literal["effort", "architecture", "cost", "timeline", "scope"]] = []
-    suggested_question: str | None = None # pergunta para a próxima reunião
-    related_ids: list[str] = []           # itens afetados
+export const Commitment = Reviewable.extend({
+  owner: z.string(),                     // quem assumiu (nome ou papel)
+  owner_side: Side,
+  description: z.string(),
+  due_text: z.string().nullable(),       // prazo COMO DITO ("até sexta")
+  status: z.enum(["confirmed", "tentative", "conditional"]),
+  caveats: z.string().nullable(),
+});
 
-class TechSuggestion(ReviewableItem):
-    category: Literal["architecture", "technology", "module", "assumption", "process"]
-    description: str
-    rationale: str
-    risks: str | None = None
-    # NUNCA tem status de decisão; é sempre "sugestão da IA"
+export const OpenIssue = Reviewable.extend({
+  type: z.enum(["missing_info", "vague_requirement", "contradiction", "question", "risk"]),
+  description: z.string(),
+  impact: z.array(z.enum(["effort", "architecture", "cost", "timeline", "scope"])),
+  suggested_question: z.string().nullable(),
+  related_ids: z.array(z.string()),
+});
 
-class Participant(BaseModel):
-    name: str | None = None
-    role: str | None = None
-    side: Side
+export const TechSuggestion = Reviewable.extend({
+  category: z.enum(["architecture", "technology", "module", "assumption", "process"]),
+  description: z.string(),
+  rationale: z.string(),
+  risks: z.string().nullable(),
+  // NUNCA tem status de decisão; é sempre "sugestão da IA"
+});
 
-class TranscriptMetadata(BaseModel):
-    language: str | None
-    duration_ms: int | None
-    has_speakers: bool
-    has_timestamps: bool
-    source_type: Literal["audio", "text"]
+export const Participant = z.object({
+  name: z.string().nullable(), role: z.string().nullable(), side: Side,
+});
 
-class AnalysisMeta(BaseModel):
-    schema_version: str = "1.0"
-    prompt_version: str                   # ex.: "extract@1.2+gap_audit@1.0"
-    model: str
-    generated_at: str
-    reviewed_by: str | None = None
-    reviewed_at: str | None = None
+export const TranscriptMetadata = z.object({
+  language: z.string().nullable(),
+  duration_ms: z.number().int().nullable(),
+  has_speakers: z.boolean(),
+  has_timestamps: z.boolean(),
+  source_type: z.enum(["audio", "text"]),
+});
 
-class MeetingAnalysis(BaseModel):
-    meeting_id: str
-    summary: str                          # 3–6 frases, neutro
-    participants: list[Participant]
-    client_needs: list[ClientNeed]
-    requirements: list[Requirement]
-    modules: list[Module]
-    decisions: list[Decision]
-    commitments: list[Commitment]
-    open_issues: list[OpenIssue]
-    tech_suggestions: list[TechSuggestion]
-    transcript_metadata: TranscriptMetadata
-    limitations: list[str]                # ex.: "Transcrição sem identificação de falantes"
-    review_completed: bool = False
-    meta: AnalysisMeta
+export const AnalysisMeta = z.object({
+  schema_version: z.literal("1.0"),
+  prompt_version: z.string(),            // "extract@1.0+gap_audit@1.0"
+  model: z.string(),
+  generated_at: z.string().datetime(),
+  reviewed_by: z.string().nullable(),
+  reviewed_at: z.string().datetime().nullable(),
+});
+
+// --- Saídas dos LLMs (estritas) ---
+export const ExtractionOutput = z.object({
+  summary: z.string(),
+  participants: z.array(Participant),
+  client_needs: z.array(ClientNeed),
+  requirements: z.array(Requirement),
+  modules: z.array(Module),
+  decisions: z.array(Decision),
+  commitments: z.array(Commitment),
+  tech_suggestions: z.array(TechSuggestion),
+  limitations: z.array(z.string()),
+});
+
+export const GapAuditOutput = z.object({
+  open_issues: z.array(OpenIssue),
+  downgrades: z.array(z.object({ id: z.string(), to: z.enum(["pending_validation", "tentative"]), reason: z.string() })),
+  additional_limitations: z.array(z.string()),
+});
+
+// --- Documento persistido / API ---
+export const MeetingAnalysis = ExtractionOutput.extend({
+  meeting_id: z.string().uuid(),
+  open_issues: z.array(OpenIssue),
+  transcript_metadata: TranscriptMetadata,
+  review_completed: z.boolean().default(false),
+  meta: AnalysisMeta,
+});
+export type MeetingAnalysis = z.infer<typeof MeetingAnalysis>;
 ```
 
-Saídas intermediárias dos LLMs são subconjuntos: `ExtractionOutput` (tudo exceto `open_issues`, `meta`, `transcript_metadata`, `review_*`) e `GapAuditOutput` (`open_issues`, `contradiction_flags: [{decision_or_requirement_id, conflicting_with_id, explanation}]`, `additional_limitations`). O orquestrador funde as duas.
-
-Para Structured Outputs estritos: todos os campos obrigatórios no schema enviado (opcionais viram `anyOf [T, null]`), `additionalProperties: false`. Pydantic faz isso via `model_json_schema()` + ajuste em `integrations/openai/schema.py`.
+O orquestrador funde `ExtractionOutput` + `GapAuditOutput` (aplicando `downgrades`) + metadados em `MeetingAnalysis`.
 
 ## 4. Categorias e critérios de classificação
 
@@ -178,12 +211,11 @@ Para Structured Outputs estritos: todos os campos obrigatórios no schema enviad
 
 ## 5. Prompts e responsabilidades
 
-Arquivos em `backend/app/services/ai_analysis/prompts/`, com front-matter:
+Arquivos em `backend/src/services/aiAnalysis/prompts/`, carregados por `prompts/loader.ts` (`gray-matter`), com front-matter:
 ```
 ---
 name: extract
 version: 1.0
-model_hint: OPENAI_MODEL
 temperature: 0.1
 ---
 ```
@@ -191,9 +223,9 @@ temperature: 0.1
 | Prompt | Responsabilidade | Entrada | Saída (schema) |
 |--------|------------------|---------|----------------|
 | `extract.md` | Extrair necessidades, requisitos, módulos, decisões, compromissos, sugestões; propor `complexity` por módulo com justificativa; citar literalmente. | transcrição (texto + segmentos se houver), dados do projeto, idioma | `ExtractionOutput` |
-| `gap_audit.md` | Dado transcrição + extração, listar: informações ausentes para estimar, requisitos vagos, contradições entre itens, perguntas sem resposta, riscos; sugerir pergunta para cada. Rebaixar para `pending_validation`/`tentative` decisões/compromissos sem evidência (retorna `downgrade: [{id, reason}]`). | transcrição + `ExtractionOutput` | `GapAuditOutput` |
+| `gap_audit.md` | Dado transcrição + extração, listar: informações ausentes para estimar, requisitos vagos, contradições entre itens, perguntas sem resposta, riscos; sugerir pergunta para cada. Rebaixar decisões/compromissos sem evidência (`downgrades`). | transcrição + `ExtractionOutput` | `GapAuditOutput` |
 | `compose_proposal.md` | Redigir textos das seções a partir **somente** dos itens com `review_status ∈ {confirmed, edited}` e das estimativas já calculadas. Não introduzir requisitos novos; não alterar números; marcar sugestões como sugestões. | análise revisada filtrada + `EstimateResult` + `vendor_profile` | `ProposalTextOutput` |
-| `repair.md` (sufixo) | Anexado ao reenvio quando a validação falha: lista os erros Pydantic/regra e pede correção mantendo o restante. | saída anterior + erros | mesmo schema |
+| `repair.md` (sufixo) | Anexado ao reenvio quando a validação falha: lista os erros Zod/regra e pede correção mantendo o restante. | saída anterior + erros | mesmo schema |
 
 Regras comuns nos prompts (trecho do `extract.md`):
 > - Responda no idioma da transcrição.
@@ -201,20 +233,21 @@ Regras comuns nos prompts (trecho do `extract.md`):
 > - Não classifique como `confirmed` nada que dependa de "talvez", "se", "acho que", "seria bom", "a gente pode".
 > - Não invente nomes de pessoas, empresas, prazos ou valores. Prazos vão em `due_text` exatamente como ditos.
 > - Sugestões suas vão em `tech_suggestions`, nunca em `decisions` ou `requirements`.
+> - Campos sem valor recebem `null`, nunca são omitidos.
 
 ## 6. Estratégia para saídas inválidas
 
 ```
-tentativa 1 → structured output
-  ├─ JSON inválido / schema violado (ValidationError) → tentativa 2 com repair.md + erros
-  ├─ válido mas regras de negócio falham (ver §6.1) → tentativa 2 com repair.md + lista de violações
+tentativa 1 → responses.parse com zodTextFormat
+  ├─ output_parsed null / recusa / ZodError → tentativa 2 com repair.md + erros formatados (z.prettifyError)
+  ├─ válido mas regras de negócio falham (§6.1) → tentativa 2 com repair.md + lista de violações
   └─ válido → segue
 tentativa 2 falha → tentativa 3 (última)
 tentativa 3 falha → Meeting.status = failed, error.code = AI_OUTPUT_INVALID, error.details = violações
 ```
-Erros de rede/5xx/429 da OpenAI: retry com backoff 1 s, 3 s, 8 s (3×) antes de `AI_PROVIDER_ERROR`.
+Erros de rede/5xx/429 da OpenAI: retry com backoff 1 s, 3 s, 8 s (3×) antes de `AI_PROVIDER_ERROR` — tratado dentro de `structuredCompletion`, independente das tentativas acima.
 
-### 6.1 Validações pós-schema (`validators.py`)
+### 6.1 Validações pós-schema (`validators.ts`)
 | Regra | Ação se violada |
 |-------|-----------------|
 | Cada `quote` ocorre na transcrição (normalizando espaços, caixa e pontuação final) | Rebaixa `confidence` para `low`, remove a `source_ref` inválida, adiciona a `limitations[]`. Se item fica sem refs **e** é `decision.confirmed` ou `commitment.confirmed` → rebaixa para `pending_validation`/`tentative`. Não reprocessa. |
@@ -247,127 +280,130 @@ Cada "não" vira um `OpenIssue(type=missing_info)` com `impact` e `suggested_que
 
 ## 8. Schema da proposta — `ProposalContent`
 
-Pydantic em `backend/app/schemas/proposal.py`. Exemplo: [examples/proposal_content.example.json](examples/proposal_content.example.json). Mapeia as 16 seções do briefing.
+Zod em `shared/src/schemas/proposal.ts`. Exemplo: [examples/proposal_content.example.json](examples/proposal_content.example.json). Mapeia as 16 seções do briefing.
 
-```python
-class Party(BaseModel):
-    company: str; contact_name: str | None; contact_email: str | None; contact_phone: str | None
+```ts
+export const Party = z.object({
+  company: z.string(), contact_name: z.string().nullable(),
+  contact_email: z.string().email().nullable(), contact_phone: z.string().nullable(),
+});
+export const Vendor = z.object({
+  company: z.string(), contact_name: z.string().nullable(), contact_email: z.string().nullable(),
+  website: z.string().nullable(), is_demo_profile: z.boolean(),
+});
+export const ProposalModule = z.object({
+  id: z.string(), name: z.string(), description: z.string(),
+  features: z.array(z.string()),
+  complexity: z.enum(["S", "M", "L", "XL"]),
+  source_requirement_ids: z.array(z.string()),
+});
+export const ArchitectureSection = z.object({
+  overview: z.string(),
+  components: z.array(z.object({ name: z.string(), responsibility: z.string() })),
+  technologies: z.array(z.object({ layer: z.string(), choice: z.string(), rationale: z.string() })),
+  diagram_mermaid: z.string().nullable(),
+  is_ai_suggestion: z.literal(true),     // SEMPRE true no MVP; renderizado com rótulo
+});
+export const Profile = z.enum(["backend_dev", "frontend_dev", "qa", "ux", "pm", "devops"]);
+export const EstimateLine = z.object({
+  module_id: z.string(), profile: Profile,
+  hours_min: z.number().int(), hours_max: z.number().int(),
+  rationale: z.string().nullable(),      // P1
+});
+export const Estimates = z.object({
+  method: z.string(),                    // "rules_v1 + historical_demo"
+  basis_label: z.string(),
+  lines: z.array(EstimateLine),
+  totals_by_profile: z.record(Profile, z.object({ hours_min: z.number().int(), hours_max: z.number().int() })),
+  total_hours_min: z.number().int(), total_hours_max: z.number().int(),
+  confidence: Confidence,
+  assumptions: z.array(z.string()),
+});
+export const TeamPhase = z.object({
+  phase: z.string(), duration_weeks: z.number().int(),
+  roles: z.array(z.object({ profile: Profile, allocation_pct: z.number().int(), count: z.number().int() })),
+});
+export const SchedulePhase = z.object({
+  name: z.string(), duration_weeks: z.number().int(),
+  depends_on: z.array(z.string()), deliverables: z.array(z.string()),
+});
+export const Commercial = z.object({
+  status: z.enum(["not_provided", "demo_rates", "provided"]),
+  currency: z.string().nullable(),
+  hourly_rates: z.record(Profile, z.number()).nullable(),
+  total_min: z.number().nullable(), total_max: z.number().nullable(),
+  payment_terms: z.string().nullable(), validity_days: z.number().int().nullable(),
+  disclaimer: z.string().nullable(),     // obrigatório se demo_rates (refine)
+}).refine(c => c.status !== "demo_rates" || !!c.disclaimer, { message: "disclaimer obrigatório em demo_rates" });
+export const ProposalMeta = z.object({
+  version: z.number().int(), revision_label: z.enum(["rascunho", "aprovada"]),
+  created_at: z.string().datetime(), language: z.string(),
+  source_meeting_id: z.string().uuid(), source_analysis_prompt_version: z.string(),
+});
 
-class Vendor(BaseModel):
-    company: str; contact_name: str | None; contact_email: str | None; website: str | None
-    is_demo_profile: bool = True
-
-class ProposalModule(BaseModel):
-    id: str; name: str; description: str
-    features: list[str]
-    complexity: Literal["S", "M", "L", "XL"]
-    source_requirement_ids: list[str]
-
-class ArchitectureSection(BaseModel):
-    overview: str
-    components: list[dict]            # {name, responsibility}
-    technologies: list[dict]          # {layer, choice, rationale}
-    diagram_mermaid: str | None
-    is_ai_suggestion: bool = True     # SEMPRE true no MVP; renderizado com rótulo
-
-class EstimateLine(BaseModel):
-    module_id: str; profile: str      # "backend_dev", "frontend_dev", "qa", "pm", "ux", "devops"
-    hours_min: int; hours_max: int
-    rationale: str | None            # P1: justificativa textual
-
-class Estimates(BaseModel):
-    method: str                       # "rules_v1 + historical_demo"
-    basis_label: str                  # "Base demonstrativa — projetos fictícios"
-    lines: list[EstimateLine]
-    totals_by_profile: dict[str, dict]  # {profile: {hours_min, hours_max}}
-    total_hours_min: int; total_hours_max: int
-    confidence: Confidence
-    assumptions: list[str]
-
-class TeamPhase(BaseModel):
-    phase: str; duration_weeks: int
-    roles: list[dict]                 # {profile, allocation_pct, count}
-
-class SchedulePhase(BaseModel):
-    name: str; duration_weeks: int; depends_on: list[str]; deliverables: list[str]
-
-class Commercial(BaseModel):
-    status: Literal["not_provided", "demo_rates", "provided"]
-    currency: str | None
-    hourly_rates: dict[str, float] | None
-    total_min: float | None; total_max: float | None
-    payment_terms: str | None; validity_days: int | None
-    disclaimer: str | None            # obrigatório se demo_rates
-
-class ProposalMeta(BaseModel):
-    version: int; revision_label: str # "rascunho" | "aprovada"
-    created_at: str; language: str
-    source_meeting_id: str; source_analysis_prompt_version: str
-
-class ProposalContent(BaseModel):
-    schema_version: str = "1.0"
-    title: str
-    client: Party                     # 1 capa
-    vendor: Vendor
-    executive_summary: str            # 2
-    business_context: str             # 3
-    objectives: list[str]             # 4
-    scope: dict                       # 5  {in_scope: [str], out_of_scope: [str]}
-    modules: list[ProposalModule]     # 6
-    requirements_and_integrations: list[dict]  # 7 {title, description, type}
-    architecture: ArchitectureSection # 8
-    assumptions: list[str]            # 9
-    dependencies: list[str]           # 9
-    exclusions: list[str]             # 9
-    estimates: Estimates              # 10
-    team: list[TeamPhase]             # 11
-    schedule: list[SchedulePhase]     # 12
-    total_weeks: int
-    risks: list[dict]                 # 13 {description, mitigation}
-    open_points: list[dict]           # 13 {description, question}
-    commercial: Commercial            # 14
-    next_steps: list[str]             # 15
-    meta: ProposalMeta                # 16
+export const ProposalContent = z.object({
+  schema_version: z.literal("1.0"),
+  title: z.string(),
+  client: Party,                                   // 1
+  vendor: Vendor,
+  executive_summary: z.string(),                   // 2
+  business_context: z.string(),                    // 3
+  objectives: z.array(z.string()),                 // 4
+  scope: z.object({ in_scope: z.array(z.string()), out_of_scope: z.array(z.string()) }), // 5
+  modules: z.array(ProposalModule),                // 6
+  requirements_and_integrations: z.array(z.object({ title: z.string(), description: z.string(), type: z.string() })), // 7
+  architecture: ArchitectureSection,               // 8
+  assumptions: z.array(z.string()),                // 9
+  dependencies: z.array(z.string()),
+  exclusions: z.array(z.string()),
+  estimates: Estimates,                            // 10
+  team: z.array(TeamPhase),                        // 11
+  schedule: z.array(SchedulePhase),                // 12
+  total_weeks: z.number().int(),
+  risks: z.array(z.object({ description: z.string(), mitigation: z.string() })),      // 13
+  open_points: z.array(z.object({ description: z.string(), question: z.string() })),
+  commercial: Commercial,                          // 14
+  next_steps: z.array(z.string()),                 // 15
+  meta: ProposalMeta,                              // 16
+});
+export type ProposalContent = z.infer<typeof ProposalContent>;
 ```
 
-`content_hash = sha256(json.dumps(content, sort_keys=True, ensure_ascii=False, separators=(",", ":")))`.
+`ProposalTextOutput` (saída do LLM #3) contém apenas os campos textuais: `title`, `executive_summary`, `business_context`, `objectives`, `scope`, `modules[].description/features`, `requirements_and_integrations`, `architecture` (sem `is_ai_suggestion`), `assumptions`, `dependencies`, `exclusions`, `risks`, `open_points`, `next_steps`. O `builder.ts` injeta `client`, `vendor`, `estimates`, `team`, `schedule`, `total_weeks`, `commercial`, `meta`.
+
+`content_hash = "sha256:" + createHash("sha256").update(stableStringify(content)).digest("hex")` (`fast-json-stable-stringify`, UTF-8).
 
 ## 9. Estratégia de estimativas (determinística)
 
-Arquivo de regras `services/estimation/rules.py` (dados, não lógica — ajustável sem código, T07):
+Arquivo de regras `services/estimation/rules.ts` (dados, não lógica — ajustável sem alterar o motor, T07):
 
-```python
-HOURS_BY_COMPLEXITY = {   # por módulo, faixa total mín–máx
-    "S":  (24,  48),
-    "M":  (60,  120),
-    "L":  (140, 260),
-    "XL": (300, 520),
-}
-PROFILE_SPLIT = {          # distribuição das horas do módulo
-    "backend_dev": 0.40, "frontend_dev": 0.30, "qa": 0.15, "ux": 0.05, "pm": 0.10,
-}
-INTEGRATION_SURCHARGE = (16, 40)   # por requisito type=integration
-NFR_SURCHARGE_PCT = 0.10           # se houver ≥ 3 requisitos não funcionais
-UNCERTAINTY_PCT = {                # amplia hours_max conforme pendências de impacto effort/architecture
-    0: 0.0, 1: 0.05, 2: 0.10, 3: 0.20,  # ≥3 → 0.20
-}
-CROSS_CUTTING = {                  # horas fixas de projeto
-    "setup_devops": (24, 40), "discovery_refinement": (16, 32), "deploy_handover": (16, 24),
-}
-WEEKLY_CAPACITY_PER_DEV = 32       # horas produtivas/semana
+```ts
+export const HOURS_BY_COMPLEXITY = {   // por módulo, faixa total mín–máx
+  S: [24, 48], M: [60, 120], L: [140, 260], XL: [300, 520],
+} as const;
+export const PROFILE_SPLIT = {          // distribuição das horas do módulo
+  backend_dev: 0.40, frontend_dev: 0.30, qa: 0.15, ux: 0.05, pm: 0.10,
+} as const;
+export const INTEGRATION_SURCHARGE = [16, 40] as const;   // por requisito type=integration
+export const NFR_SURCHARGE_PCT = 0.10;                    // se houver ≥ 3 requisitos não funcionais
+export const UNCERTAINTY_PCT = [0.0, 0.05, 0.10, 0.20];   // índice = nº pendências effort/architecture (≥3 → 0.20)
+export const CROSS_CUTTING = {                            // horas fixas de projeto (perfil devops)
+  setup_devops: [24, 40], discovery_refinement: [16, 32], deploy_handover: [16, 24],
+} as const;
+export const WEEKLY_CAPACITY_PER_DEV = 32;                // horas produtivas/semana
 ```
 
-Algoritmo (`engine.py`):
+Algoritmo (`engine.ts`, função pura `estimate(input): EstimateResult`):
 1. Para cada módulo confirmado: faixa por `complexity` (módulos `unknown` → tratados como `M` **e** gera `assumption`).
 2. Soma sobretaxas de integração e RNF.
 3. Aplica `UNCERTAINTY_PCT` sobre `hours_max` conforme nº de `open_issues` com impacto `effort`/`architecture` **não resolvidos** na revisão.
-4. Divide por perfil via `PROFILE_SPLIT`; adiciona `CROSS_CUTTING`.
-5. **Histórico (demo):** `historical.py` carrega `sample_data/historical_projects.json` (fictício, rotulado) e, por similaridade de nomes/tags de módulos, ajusta ±15% se houver ≥ 2 módulos similares; registra em `assumptions` quais projetos influenciaram.
+4. Divide por perfil via `PROFILE_SPLIT` (arredondando com `Math.round`, ajustando o resto no `backend_dev`); adiciona `CROSS_CUTTING`.
+5. **Histórico (demo):** `historical.ts` carrega `sample_data/historical_projects.json` e, por similaridade de nomes/tags de módulos, ajusta ±15% se houver ≥ 2 módulos similares; registra em `assumptions` quais projetos influenciaram.
 6. Cronograma: fases fixas `Descoberta → Construção (iterações por módulo, ordenadas por dependências) → Estabilização → Implantação`; duração = horas / (devs × capacidade). Equipe sugerida: 2 devs para < 400 h, 3 para < 900 h, 4 acima.
 7. `confidence`: `high` se 0 pendências de impacto e todos módulos com complexidade conhecida; `medium` se ≤ 2; senão `low`.
 8. Comercial: se `include_demo_rates` → aplica `sample_data/vendor_profile.json.hourly_rates` com `status=demo_rates` e `disclaimer` fixo; senão `not_provided`.
 
-Saída `EstimateResult` → alimenta `ProposalContent.estimates/team/schedule/commercial`. O composer de texto recebe esses números **como contexto só-leitura** e é instruído a não alterá-los (validador compara).
+Saída `EstimateResult` → alimenta `ProposalContent.estimates/team/schedule/commercial`. O composer de texto recebe esses números **como contexto só-leitura** e é instruído a não alterá-los (o builder sobrescreve de qualquer forma; o validador compara e loga divergências).
 
 ## 10. Limites do que pode ser inferido
 
@@ -383,7 +419,7 @@ Saída `EstimateResult` → alimenta `ProposalContent.estimates/team/schedule/co
 
 ## 11. Testes com exemplos de reunião
 
-Pasta `sample_data/` + `backend/tests/ai/`:
+Pasta `sample_data/` + `backend/tests/ai/` (vitest):
 
 | Arquivo | Uso |
 |---------|-----|
@@ -393,14 +429,15 @@ Pasta `sample_data/` + `backend/tests/ai/`:
 | `historical_projects.json` | 8–12 projetos fictícios com módulos, complexidade e horas "realizadas". |
 | `vendor_profile.json` | Software house fictícia: nome, contato, rates demonstrativos. |
 
-Testes (`pytest -m ai` chama a API real; `-m "not ai"` usa fixtures gravadas):
-1. **Schema:** saída valida em `MeetingAnalysis`.
+Comandos: `npm test` (unitários + rotas com fixtures gravadas em `tests/fixtures/ai/*.json`, sem rede) · `npm run test:ai` (`AI_TESTS=1`, chama a API real; `describe.skipIf(!process.env.AI_TESTS)`).
+
+1. **Schema:** saída valida em `MeetingAnalysis.safeParse`.
 2. **Fidelidade:** ≥ 90% das `quote` existem na transcrição.
 3. **Classificação:** itens do gabarito presentes (≥ 80%); nenhuma `tech_suggestion` do gabarito aparece em `decisions`.
 4. **Contradição:** a contradição plantada aparece em `open_issues(type=contradiction)`.
 5. **Rebaixamento:** o compromisso condicional não sai como `confirmed`.
-6. **Determinismo da estimativa:** mesma análise → mesmos números (teste unitário puro).
-7. **Composer não altera números:** `ProposalContent.estimates` idêntico ao `EstimateResult`.
-8. **Repair:** fixture com saída inválida → segunda tentativa é acionada com `repair.md`.
+6. **Determinismo da estimativa:** mesma análise → mesmos números (teste unitário puro de `estimate`).
+7. **Builder não deixa o composer alterar números:** `ProposalContent.estimates` idêntico ao `EstimateResult`.
+8. **Repair:** fixture com saída inválida → segunda tentativa é acionada com `repair.md` (mock do client).
 
 Registrar por execução: modelo, versão de prompt, tokens, latência (`logs/ai_runs.jsonl`) — insumo para as métricas de PRODUCT_SPEC §11.

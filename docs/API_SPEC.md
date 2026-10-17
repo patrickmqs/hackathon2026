@@ -4,7 +4,7 @@ Versão 0.1 · 2026-10-17 · Base URL local: `http://localhost:8000/api/v1`
 
 Relacionados: [ARCHITECTURE.md](ARCHITECTURE.md) · [AI_PIPELINE.md](AI_PIPELINE.md) (schemas `MeetingAnalysis`, `ProposalContent`) · exemplos em [examples/](examples/)
 
-Este documento é o **contrato entre frontend e backend**. Alterações devem ser feitas aqui primeiro, depois no código. O backend expõe OpenAPI em `/docs`; em caso de divergência, este documento prevalece até a implementação ser corrigida.
+Este documento é o **contrato entre frontend e backend**. Alterações devem ser feitas aqui primeiro, depois nos schemas Zod em `shared/src/schemas/` e só então no código. Os JSONs em `docs/examples/` são validados pelos schemas em teste; em caso de divergência, este documento prevalece até a implementação ser corrigida.
 
 ---
 
@@ -33,7 +33,7 @@ Todas as respostas de erro:
 
 | HTTP | `code` | Quando |
 |------|--------|--------|
-| 400 | `VALIDATION_ERROR` | Corpo/query inválido (detalhes Pydantic em `details.errors`) |
+| 400 | `VALIDATION_ERROR` | Corpo/query inválido (issues do Zod em `details.errors`, formato `{ path, message, code }`) |
 | 400 | `UPLOAD_INVALID` | Tipo de arquivo não permitido ou tamanho > `MAX_UPLOAD_MB` |
 | 400 | `MEETING_INPUT_REQUIRED` | Nem áudio nem transcrição fornecidos |
 | 401 | `DEMO_USER_REQUIRED` | Header `X-Demo-User` ausente em operação que exige ator |

@@ -2,7 +2,7 @@
 
 Plataforma que transforma reuniões comerciais (áudio ou transcrição) em propostas técnicas e comerciais estruturadas, revisadas por humanos, aprovadas explicitamente e enviadas por Gmail e/ou WhatsApp — com rastreabilidade entre cada item da proposta e o trecho da reunião que o originou.
 
-> **Status:** hackathon de 24 h — fase de documentação e estrutura concluída; implementação em andamento. Nenhuma integração externa foi testada ainda. Veja [docs/DECISIONS.md](docs/DECISIONS.md) para hipóteses e pendências.
+> **Status:** hackathon de 24 h — fase de documentação concluída; implementação em andamento. Nenhuma integração externa foi testada ainda. Veja [docs/DECISIONS.md](docs/DECISIONS.md) para hipóteses e pendências.
 
 ## O que o produto faz
 
@@ -20,18 +20,24 @@ Plataforma que transforma reuniões comerciais (áudio ou transcrição) em prop
 
 | Camada | Tecnologia |
 |--------|------------|
-| Frontend | Next.js (App Router) · React · TypeScript · Tailwind CSS |
-| Backend | Python 3.12 · FastAPI · Pydantic v2 · SQLAlchemy 2 · Alembic |
-| IA | OpenAI API (SDK oficial) — transcrição + Structured Outputs validados com Pydantic; prompts versionados em arquivos |
-| Dados | PostgreSQL 16 (docker-compose) · fallback SQLite · arquivos em disco (`STORAGE_DIR`) |
-| PDF | Template Jinja2 HTML/CSS → Playwright (Chromium headless) |
-| Integrações | Gmail API (OAuth 2.0, escopo `gmail.send`) · WhatsApp Business Cloud API |
+| Linguagem | TypeScript ponta a ponta (Node 20+) — monorepo com npm workspaces |
+| Frontend | Next.js 16 (App Router) · React 19 · Tailwind CSS 4 |
+| Backend | Express 5 · Zod · Prisma · `pino` · `multer` |
+| Contrato | Pacote `shared/` com schemas Zod e tipos usados por frontend e backend |
+| IA | SDK oficial `openai` (Node) — transcrição + Structured Outputs (`zodTextFormat`); prompts versionados em arquivos |
+| Dados | PostgreSQL 16 (docker-compose) · arquivos em disco (`STORAGE_DIR`) |
+| PDF | Template Handlebars HTML/CSS → Playwright (Chromium headless) |
+| Integrações | Gmail API via `googleapis` (OAuth 2.0, escopo `gmail.send`) · WhatsApp Business Cloud API via `fetch` |
+| Testes | `vitest` + `supertest` |
 | Deploy | Local via docker-compose (recomendado para a demo); opcional Vercel (frontend) + Railway (backend + Postgres) |
+
+Por que Node em vez do Python/FastAPI sugerido no briefing: [docs/DECISIONS.md D13](docs/DECISIONS.md).
 
 ## Estrutura do repositório
 
 ```text
-proposal-ai/
+hackathon2026/
+├── package.json                 # workspaces: backend, frontend, shared
 ├── README.md
 ├── .env.example                 # todas as variáveis, sem valores reais
 ├── docker-compose.yml           # postgres + backend + frontend
@@ -39,28 +45,31 @@ proposal-ai/
 │   ├── PRODUCT_SPEC.md          # visão, personas, escopo P0/P1/P2, RF/RNF, critérios de aceitação
 │   ├── ARCHITECTURE.md          # componentes, modelo de dados, máquinas de estado, fluxos, falhas, deploy
 │   ├── API_SPEC.md              # contrato REST frontend ↔ backend, erros, enums
-│   ├── AI_PIPELINE.md           # etapas, schemas MeetingAnalysis/ProposalContent, prompts, validação, estimativas
+│   ├── AI_PIPELINE.md           # etapas, schemas Zod MeetingAnalysis/ProposalContent, prompts, validação, estimativas
 │   ├── INTEGRATIONS.md          # Gmail OAuth, WhatsApp Cloud API, env vars, estados, plano B
 │   ├── UX_FLOW.md               # telas, componentes, estados, revisão, aprovação, envio
 │   ├── TEAM_TASKS.md            # divisão A/B/C/D, dependências, marcos, contingência
 │   ├── DECISIONS.md             # decisões, hipóteses, descartes, pendências, abertas
+│   ├── roadmap/                 # divisão por pessoa (P1–P4) e roadmap individual
 │   └── examples/                # JSONs de exemplo dos contratos
+├── shared/                      # @proposal-ai/shared
+│   └── src/schemas/{common,analysis,proposal,delivery,api}.ts
 ├── frontend/                    # Next.js
-│   └── src/{app,components,features/{projects,meetings,analysis,proposals,deliveries},lib,services,types}
-├── backend/                     # FastAPI
-│   ├── app/
-│   │   ├── main.py
-│   │   ├── api/{routes/,dependencies.py}
-│   │   ├── core/                # config, errors, logging, storage
+│   └── src/{app,components,features/{projects,meetings,analysis,proposals,deliveries},lib,services}
+├── backend/                     # Express 5
+│   ├── prisma/schema.prisma
+│   ├── src/
+│   │   ├── index.ts, app.ts
+│   │   ├── config/env.ts
+│   │   ├── api/{routes/,middleware/}
+│   │   ├── core/                # errors, logger, storage, hash
 │   │   ├── domain/              # enums e transições de estado
-│   │   ├── schemas/             # Pydantic (analysis, proposal, delivery, errors)
-│   │   ├── models/              # SQLAlchemy
 │   │   ├── repositories/
-│   │   ├── services/{transcription,ai_analysis/prompts,estimation,proposal,pdf,delivery}
+│   │   ├── services/{transcription,aiAnalysis/prompts,estimation,proposal,pdf,delivery}
 │   │   ├── integrations/{openai,gmail,whatsapp}
-│   │   └── templates/           # proposal.html.j2, styles.css, e-mail
+│   │   └── templates/           # proposal.hbs, styles.css, e-mail
 │   └── tests/
-├── scripts/                     # check_openai.py, seed_demo.py, e2e_demo.py
+├── scripts/                     # check-openai.ts, seed-demo.ts, e2e-demo.ts
 └── sample_data/                 # transcrição, áudio, gabarito, histórico fictício, perfil do fornecedor
 ```
 
@@ -68,8 +77,8 @@ Responsabilidades por pasta: [docs/ARCHITECTURE.md §2](docs/ARCHITECTURE.md#2-c
 
 ## Pré-requisitos
 
-- Docker + Docker Compose (recomendado) **ou** Python 3.12 + Node 20 + PostgreSQL local (ou SQLite).
-- `uv` (ou `pip`) para Python; `pnpm` (ou `npm`) para o frontend.
+- Node 20+ e npm 10+.
+- Docker + Docker Compose (para o Postgres) **ou** uma `DATABASE_URL` de um Postgres hospedado (Neon, Supabase, Railway).
 - Chave da OpenAI com acesso a um modelo de chat com Structured Outputs e a um modelo de transcrição.
 - Para Gmail: projeto no Google Cloud com Gmail API habilitada e client OAuth (passo a passo em [docs/INTEGRATIONS.md §2.3](docs/INTEGRATIONS.md)).
 - Para WhatsApp: app Meta Business com número de teste ([docs/INTEGRATIONS.md §3.1](docs/INTEGRATIONS.md)).
@@ -79,43 +88,38 @@ Sem credenciais de Gmail/WhatsApp o sistema funciona inteiro; os canais terminam
 ## Instalação local
 
 ```bash
-git clone <repo> proposal-ai && cd proposal-ai
+git clone https://github.com/patrickmqs/hackathon2026.git && cd hackathon2026
 cp .env.example .env            # preencha OPENAI_API_KEY no mínimo
+npm install                     # instala os três workspaces
 ```
 
-### Opção A — tudo via Docker (recomendado)
+### Opção A — tudo via Docker (recomendado para a demo)
 
 ```bash
 docker compose up --build
-# backend:  http://localhost:8000  (OpenAPI em /docs)
+# backend:  http://localhost:8000
 # frontend: http://localhost:3000
 ```
 
-### Opção B — manual
+### Opção B — Postgres no Docker, apps em modo dev
 
 ```bash
-# Backend
-cd backend
-uv sync                          # ou: python -m venv .venv && pip install -e .
-uv run playwright install chromium
-uv run alembic upgrade head      # usa DATABASE_URL; sem Postgres, defina DATABASE_URL=sqlite:///./dev.db
-uv run uvicorn app.main:app --reload --port 8000
-
-# Frontend (outro terminal)
-cd frontend
-pnpm install
-pnpm dev                         # http://localhost:3000
+docker compose up -d postgres
+npm run db:migrate -w backend           # npx prisma migrate dev
+npx playwright install chromium         # uma vez
+npm run dev -w backend                  # http://localhost:8000
+npm run dev -w frontend                 # http://localhost:3000 (outro terminal)
 ```
 
 ## Configuração de ambiente
 
-Todas as variáveis estão documentadas em [`.env.example`](.env.example) e em [docs/INTEGRATIONS.md §4](docs/INTEGRATIONS.md). Mínimo para rodar:
+Todas as variáveis estão documentadas em [`.env.example`](.env.example) e em [docs/INTEGRATIONS.md §4](docs/INTEGRATIONS.md). O backend valida o `.env` no boot (`config/env.ts`, Zod) e falha com mensagem clara se faltar algo obrigatório. Mínimo para rodar:
 
 | Variável | Para quê |
 |----------|----------|
 | `OPENAI_API_KEY` | obrigatória — transcrição e análise |
-| `OPENAI_MODEL`, `OPENAI_TRANSCRIBE_MODEL` | confirmar modelos disponíveis na sua conta (`python scripts/check_openai.py`) |
-| `DATABASE_URL` | Postgres do compose por padrão; `sqlite:///./dev.db` para rodar sem Docker |
+| `OPENAI_MODEL`, `OPENAI_TRANSCRIBE_MODEL` | confirmar modelos disponíveis na sua conta (`npm run check:openai`) |
+| `DATABASE_URL` | Postgres do compose por padrão |
 | `NEXT_PUBLIC_API_URL` | URL do backend vista pelo navegador |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | opcional — habilita Gmail |
 | `WHATSAPP_TOKEN` / `WHATSAPP_PHONE_NUMBER_ID` | opcional — habilita WhatsApp |
@@ -125,28 +129,29 @@ Todas as variáveis estão documentadas em [`.env.example`](.env.example) e em [
 
 ### Identidade em modo demonstração
 
-Não há autenticação real neste MVP. Operações de revisão, aprovação e autorização de envio exigem o header `X-Demo-User: <nome>`, que o frontend envia a partir do nome definido em *Configurações*. Isso garante **rastreabilidade** (quem aprovou, quem autorizou) — **não é segurança**. Não exponha a aplicação publicamente sem substituir `api/dependencies.py:get_demo_user` por autenticação real. Detalhes: [docs/DECISIONS.md R03](docs/DECISIONS.md).
+Não há autenticação real neste MVP. Operações de revisão, aprovação e autorização de envio exigem o header `X-Demo-User: <nome>`, que o frontend envia a partir do nome definido em *Configurações*. Isso garante **rastreabilidade** (quem aprovou, quem autorizou) — **não é segurança**. Não exponha a aplicação publicamente sem substituir `api/middleware/demoUser.ts` por autenticação real. Detalhes: [docs/DECISIONS.md R03](docs/DECISIONS.md).
 
 ## Executando
 
 | Ação | Comando |
 |------|---------|
 | Subir tudo | `docker compose up` |
-| Backend dev | `cd backend && uv run uvicorn app.main:app --reload` |
-| Frontend dev | `cd frontend && pnpm dev` |
-| Frontend com mocks (sem backend) | `NEXT_PUBLIC_USE_MOCKS=true pnpm dev` |
-| Migrations | `cd backend && uv run alembic upgrade head` |
-| Seed de demo | `cd backend && uv run python ../scripts/seed_demo.py` |
-| Verificar OpenAI | `uv run python scripts/check_openai.py` |
+| Backend dev | `npm run dev -w backend` |
+| Frontend dev | `npm run dev -w frontend` |
+| Frontend com mocks (sem backend) | `NEXT_PUBLIC_USE_MOCKS=true npm run dev -w frontend` |
+| Migrations | `npm run db:migrate -w backend` |
+| Prisma Studio | `npx prisma studio` (em `backend/`) |
+| Seed de demo | `npm run seed:demo` |
+| Verificar OpenAI | `npm run check:openai` |
+| Typecheck geral | `npm run typecheck --workspaces` |
 
 ## Testes
 
 ```bash
-cd backend
-uv run pytest -m "not ai"        # unitários + rotas, sem chamadas externas (fixtures gravadas)
-uv run pytest -m ai              # chama a OpenAI de verdade; registra em logs/ai_runs.jsonl
-cd ../frontend && pnpm test       # componentes (se houver tempo — P1)
-python scripts/e2e_demo.py        # percorre a jornada completa pela API e valida estados
+npm test -w backend              # unitários + rotas (supertest), sem chamadas externas (fixtures gravadas)
+npm run test:ai -w backend       # AI_TESTS=1 — chama a OpenAI de verdade; registra em logs/ai_runs.jsonl
+npm test -w frontend             # componentes (se houver tempo — P1)
+npm run e2e:demo                 # scripts/e2e-demo.ts: percorre a jornada completa pela API e valida estados
 ```
 
 O que os testes de IA verificam (gabarito em `sample_data/sample_analysis_expected.json`): schema válido, ≥ 90% das citações existem na transcrição, ≥ 80% dos itens do gabarito presentes, nenhuma sugestão classificada como decisão, contradição plantada detectada, compromisso condicional não sai como confirmado, estimativas determinísticas. Detalhes: [docs/AI_PIPELINE.md §11](docs/AI_PIPELINE.md).
@@ -163,7 +168,7 @@ Limitações conhecidas: Gmail `sent` = aceito pela API, não entregue; WhatsApp
 
 ## Fluxo de demonstração (6–8 min)
 
-Pré-demo: `seed_demo.py` cria um projeto em cada etapa; destinatário de teste envia "oi" ao número WhatsApp de teste (abre janela de 24 h); Gmail já conectado em *Configurações*.
+Pré-demo: `npm run seed:demo` cria um projeto em cada etapa; destinatário de teste envia "oi" ao número WhatsApp de teste (abre janela de 24 h); Gmail já conectado em *Configurações*.
 
 1. **Dashboard** → "Novo projeto" → *Distribuidora Horizonte (fictícia)*.
 2. **Nova reunião** → aba *Enviar áudio* → `sample_data/sample_meeting.mp3` → painel de progresso (transcrevendo → analisando → auditando). *(Plano B: colar `sample_transcript_pt.txt`.)*
@@ -187,7 +192,8 @@ Backup: vídeo gravado da jornada + PDF gerado + prints, caso a rede do evento f
 | [AI_PIPELINE](docs/AI_PIPELINE.md) | Etapas, schemas, prompts, validação, estimativas, testes |
 | [INTEGRATIONS](docs/INTEGRATIONS.md) | Gmail, WhatsApp, env vars, estados, plano alternativo |
 | [UX_FLOW](docs/UX_FLOW.md) | Telas, componentes, estados |
-| [TEAM_TASKS](docs/TEAM_TASKS.md) | Divisão, dependências, marcos, contingência |
+| [TEAM_TASKS](docs/TEAM_TASKS.md) | Referência detalhada de tarefas, dependências, marcos, contingência |
+| [roadmap/](docs/roadmap/README.md) | Divisão adotada por pessoa (P1 backend · P2 frontend A · P3 frontend B · P4 IA) com roadmap individual |
 | [DECISIONS](docs/DECISIONS.md) | Decisões, hipóteses, descartes, pendências |
 
 ## Licença e dados
