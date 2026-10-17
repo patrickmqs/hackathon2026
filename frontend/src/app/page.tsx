@@ -1,69 +1,13 @@
-import Image from "next/image";
+import Link from "next/link";
+import { AppShell, Badge, Button, Card } from "@/components/AppShell";
+import { projects } from "@/lib/mocks";
 
 export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+  return <AppShell title="Projetos" eyebrow="VISÃO GERAL" action={<Button href="/projects/new">+ Novo projeto</Button>}>
+    <div className="welcome"><div><h2>Bom dia, Marina <span>✦</span></h2><p>Acompanhe suas propostas e transforme conversas em próximos passos.</p></div><div className="metrics"><b>03<small>projetos ativos</small></b><b>01<small>aguardando revisão</small></b></div></div>
+    <div className="grid-2"><Card className="wide"><div className="card-heading"><div><h2>Seus projetos</h2><p>Atualizados recentemente</p></div><Link href="/projects/demo">Ver todos →</Link></div><div className="project-list">{projects.map((project, index) => <Link href={index === 0 ? "/projects/demo" : "#"} className="project-row" key={project.name}><b className={`project-icon p${index}`}>⌁</b><span className="project-name"><strong>{project.name}</strong><small>{project.client}</small></span><i className="progress"><em style={{ width: `${project.progress}%` }} /></i><Badge tone={project.tone}>{project.status}</Badge><small className="updated">há {index ? "1 dia" : "12 min"}</small>›</Link>)}</div></Card>
+      <Card><div className="card-heading"><div><h2>Saúde dos canais</h2><p>Prontos para enviar</p></div><b className="green-text">●</b></div><div className="health-list"><p><b className="channel gmail">M</b><span><strong>Gmail</strong><small>Conectado como marina@acme.io</small></span><b className="green-text">✓</b></p><p><b className="channel whatsapp">◔</b><span><strong>WhatsApp</strong><small>Não configurado</small></span><b>—</b></p></div><Link href="/settings">Gerenciar canais →</Link></Card>
     </div>
-  );
+    <Card className="activity"><div className="card-heading"><div><h2>Atividade recente</h2><p>Eventos dos seus projetos</p></div><Link href="/projects/demo">Ver timeline →</Link></div><p className="activity-row"><i className="dot green" /><span><strong>Proposta aprovada</strong><small>App de fidelidade · Rafael Mendes</small></span><time>Ontem, 16:42</time></p><p className="activity-row"><i className="dot blue" /><span><strong>Análise pronta para revisão</strong><small>Portal de Pedidos B2B · Proposal AI</small></span><time>Hoje, 10:18</time></p></Card>
+  </AppShell>;
 }
