@@ -6,7 +6,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import analysisExample from "../../docs/examples/analysis.example.json";
 import proposalExample from "../../docs/examples/proposal_content.example.json";
-import { ProposalTextOutput as SharedTextOutput } from "../../shared/src/schemas/proposal";
 import { __setTestHooks } from "../src/integrations/openai/client.js";
 import { loadPrompt } from "../src/services/aiAnalysis/prompts/loader.js";
 import * as rules from "../src/services/estimation/rules.js";
@@ -45,12 +44,6 @@ function textFromExample(): Text {
     next_steps: proposalExample.next_steps,
   };
 }
-
-describe("schema local do composer", () => {
-  it("tem o mesmo JSON Schema de shared ProposalTextOutput (anti-divergência)", () => {
-    expect(z.toJSONSchema(ProposalTextOutput)).toEqual(z.toJSONSchema(SharedTextOutput));
-  });
-});
 
 describe("prompt compose_proposal", () => {
   it("carrega com temperature 0.4", () => {

@@ -164,6 +164,7 @@ export const MeetingAnalysis = ExtractionOutput.extend({
 });
 
 export type SourceRef = z.infer<typeof SourceRef>;
+export type OpenIssue = z.infer<typeof OpenIssue>;
 export type MeetingSummaryOutput = z.infer<typeof MeetingSummaryOutput>;
 export type MeetingSummary = z.infer<typeof MeetingSummary>;
 export type ExtractionOutput = z.infer<typeof ExtractionOutput>;

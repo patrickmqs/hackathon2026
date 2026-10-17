@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "description": "Backend em Node + TypeScript + Express",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/backend/src/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node dist/backend/src/index.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:ai": "AI_TESTS=1 vitest run tests/ai"

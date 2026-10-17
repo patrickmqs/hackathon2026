@@ -6,33 +6,8 @@ import { AiOutputInvalidError } from "../../core/errors.js";
 import { loadPrompt } from "../aiAnalysis/prompts/loader.js";
 import { z } from "zod";
 
-// ATENÇÃO: o backend ainda não enxerga `shared/` (sem workspace; tsconfig com rootDir=src), então o
-// schema abaixo é uma CÓPIA de `ProposalTextOutput` (shared/src/schemas/proposal.ts). O teste
-// tests/composer.test.ts compara o JSON Schema das duas versões para impedir divergência.
-// Quando o workspace existir, troque por `import { ProposalTextOutput } from "@proposal-ai/shared"`.
-const RequirementItem = z.object({ title: z.string(), description: z.string(), type: z.string() });
-export const ProposalTextOutput = z.object({
-  title: z.string(),
-  executive_summary: z.string(),
-  business_context: z.string(),
-  objectives: z.array(z.string()),
-  scope: z.object({ in_scope: z.array(z.string()), out_of_scope: z.array(z.string()) }),
-  modules: z.array(z.object({ id: z.string(), description: z.string(), features: z.array(z.string()) })),
-  requirements_and_integrations: z.array(RequirementItem),
-  architecture: z.object({
-    overview: z.string(),
-    components: z.array(z.object({ name: z.string(), responsibility: z.string() })),
-    technologies: z.array(z.object({ layer: z.string(), choice: z.string(), rationale: z.string() })),
-    diagram_mermaid: z.string().nullable(),
-  }),
-  assumptions: z.array(z.string()),
-  dependencies: z.array(z.string()),
-  exclusions: z.array(z.string()),
-  risks: z.array(z.object({ description: z.string(), mitigation: z.string() })),
-  open_points: z.array(z.object({ description: z.string(), question: z.string() })),
-  next_steps: z.array(z.string()),
-});
-export type ProposalTextOutput = z.infer<typeof ProposalTextOutput>;
+import { ProposalTextOutput } from "../../../../shared/src/schemas/proposal.js";
+export { ProposalTextOutput };
 
 // Tipos estruturais mínimos do que o composer lê de MeetingAnalysis / EstimateResult (shared).
 interface ReviewedItem {

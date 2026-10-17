@@ -2,7 +2,7 @@
 // `ProposalContent` é o conteúdo completo; `ProposalTextOutput` é a saída do LLM #3
 // (estrita: todo campo obrigatório, `.nullable()` no lugar de `.optional()`, sem `.default()`, sem z.record).
 import { z } from "zod";
-import { Confidence } from "./analysis";
+import { Confidence } from "./analysis.js";
 
 export const Party = z.object({
   company: z.string(),
