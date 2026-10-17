@@ -8,7 +8,7 @@ Relacionados: [API_SPEC.md](API_SPEC.md) · [AI_PIPELINE.md](AI_PIPELINE.md) · 
 
 ## 1. Visão arquitetural
 
-Monolito modular: um frontend Next.js e um backend FastAPI, com PostgreSQL e armazenamento de arquivos em disco. O pipeline de IA é uma sequência de serviços Python dentro do backend. Integrações externas (OpenAI, Gmail, WhatsApp) ficam atrás de adapters com interface própria, isolados da lógica de negócio.
+Monolito modular: um frontend Next.js e um backend Express (Node/TypeScript), com PostgreSQL e armazenamento de arquivos em disco. O pipeline de IA é uma sequência de serviços TypeScript dentro do backend. Integrações externas (OpenAI, Gmail, WhatsApp) ficam atrás de adapters com interface própria, isolados da lógica de negócio.
 
 ```mermaid
 flowchart TB
@@ -16,14 +16,14 @@ flowchart TB
         FE[Next.js App<br/>React · TS · Tailwind]
     end
 
-    subgraph Backend[FastAPI]
+    subgraph Backend[Express]
         API[Rotas REST]
-        ORCH[Orquestrador de análise<br/>BackgroundTasks]
+        ORCH[Orquestrador de análise<br/>jobs em-processo]
         SVC_T[Transcription]
         SVC_A[AI Analysis<br/>extract + gap audit]
         SVC_P[Proposal Composer]
         SVC_E[Estimation Engine<br/>determinístico]
-        SVC_PDF[PDF Renderer<br/>Jinja2 + Playwright]
+        SVC_PDF[PDF Renderer<br/>Nunjucks + Playwright]
         SVC_APR[Approval & Versioning]
         SVC_D[Delivery Service]
         REPO[Repositories]
@@ -58,7 +58,7 @@ flowchart TB
 ```
 
 Princípios:
-1. **Rotas finas, serviços gordos.** Rotas validam entrada (Pydantic), chamam um serviço, mapeiam erro para o formato padrão.
+1. **Rotas finas, serviços gordos.** Rotas validam entrada (Zod), chamam um serviço, mapeiam erro para o formato padrão.
 2. **Estado explícito.** Toda entidade com ciclo de vida tem `status` enumerado e transições validadas no serviço, nunca na rota.
 3. **Snapshots imutáveis** para versões de proposta; aprovação e envio apontam para IDs de snapshot.
 4. **Adapters sem regra de negócio.** `GmailAdapter.send(...)` não sabe o que é proposta; recebe destinatário, assunto, corpo, anexo e devolve `ProviderResult`.
@@ -80,27 +80,27 @@ Princípios:
 | `types/` | Tipos TS espelhando os schemas do backend (gerados do OpenAPI ou mantidos à mão a partir de `docs/examples/`). |
 | `lib/` | Formatação, polling hook, store leve de usuário demo. |
 
-### 2.2 Backend (`backend/app/`)
+### 2.2 Backend (`backend/src/`)
 
 | Camada | Pasta | Responsabilidade |
 |--------|-------|------------------|
-| API | `api/routes/` | `projects.py`, `meetings.py`, `analysis.py`, `proposals.py`, `approvals.py`, `deliveries.py`, `auth_google.py`, `webhooks.py`, `health.py`. |
-| API | `api/dependencies.py` | Sessão de banco, `get_demo_user()` (lê `X-Demo-User`), `request_id`. |
-| Core | `core/` | `config.py` (Settings via pydantic-settings), `logging.py`, `errors.py` (exceções de domínio → HTTP), `storage.py` (`FileStorage`). |
+| API | `routes/` | `projects.ts`, `meetings.ts`, `analysis.ts`, `proposals.ts`, `approvals.ts`, `deliveries.ts`, `authGoogle.ts`, `webhooks.ts`, `health.ts`. |
+| API | `middleware/` | Sessão de banco (Prisma), `getDemoUser()` (lê `X-Demo-User`), `requestId`. |
+| Core | `core/` | `config.ts` (env validada com Zod), `logging.ts`, `errors.ts` (exceções de domínio → HTTP), `storage.ts` (`FileStorage`). |
 | Domínio | `domain/` | Enums de status, transições permitidas, regras puras (ex.: `can_generate_proposal(analysis)`). |
-| Schemas | `schemas/` | Pydantic de entrada/saída da API e dos documentos de IA (`analysis.py`, `proposal.py`, `delivery.py`, `errors.py`). |
-| Modelos | `models/` | SQLAlchemy ORM. |
+| Schemas | `schemas/` | Zod de entrada/saída da API e dos documentos de IA (`analysis.ts`, `proposal.ts`, `delivery.ts`, `errors.ts`). |
+| Modelos | `prisma/schema.prisma` | Prisma ORM (modelos + migrations em `prisma/migrations/`). |
 | Repositórios | `repositories/` | CRUD por agregado; única camada que fala com a sessão. |
 | Serviços | `services/transcription/` | `TranscriptionService`: valida arquivo, chama adapter OpenAI, normaliza para `Transcript`. |
-| Serviços | `services/ai_analysis/` | `extract.py`, `gap_audit.py`, `prompts/`, `orchestrator.py` (sequência + estados). |
-| Serviços | `services/estimation/` | `rules.py` (tabela S/M/L/XL × perfil), `engine.py`, `historical.py` (carrega `sample_data/historical_projects.json`). |
-| Serviços | `services/proposal/` | `composer.py` (IA texto), `builder.py` (monta `ProposalContent`), `versioning.py`. |
-| Serviços | `services/pdf/` | `renderer.py` (Jinja2 → HTML → Playwright → PDF). |
-| Serviços | `services/delivery/` | `service.py` (autorização, idempotência, fan-out por canal), `channels.py` (estados). |
-| Integrações | `integrations/openai/` | `client.py` (transcribe, structured completion com retry). |
-| Integrações | `integrations/gmail/` | `oauth.py`, `adapter.py`. |
-| Integrações | `integrations/whatsapp/` | `adapter.py`, `webhook.py`. |
-| Templates | `templates/proposal/` | `proposal.html.j2`, `styles.css`, assets. |
+| Serviços | `services/ai_analysis/` | `extract.ts`, `gap_audit.ts`, `prompts/`, `orchestrator.ts` (sequência + estados). |
+| Serviços | `services/estimation/` | `rules.ts` (tabela S/M/L/XL × perfil), `engine.ts`, `historical.ts` (carrega `sample_data/historical_projects.json`). |
+| Serviços | `services/proposal/` | `composer.ts` (IA texto), `builder.ts` (monta `ProposalContent`), `versioning.ts`. |
+| Serviços | `services/pdf/` | `renderer.ts` (Nunjucks → HTML → Playwright → PDF). |
+| Serviços | `services/delivery/` | `service.ts` (autorização, idempotência, fan-out por canal), `channels.ts` (estados). |
+| Integrações | `integrations/openai/` | `client.ts` (transcribe, structured completion com retry). |
+| Integrações | `integrations/gmail/` | `oauth.ts`, `adapter.ts`. |
+| Integrações | `integrations/whatsapp/` | `adapter.ts`, `webhook.ts`. |
+| Templates | `templates/proposal/` | `proposal.njk`, `styles.css`, assets. |
 
 ## 3. Modelo de dados
 
@@ -171,8 +171,8 @@ Estado agregado do `Delivery` é derivado dos canais: todos `sent/delivered` →
 sequenceDiagram
     participant U as Usuário
     participant FE as Frontend
-    participant API as FastAPI
-    participant BG as BackgroundTask
+    participant API as Express
+    participant BG as Job em-processo
     participant OAI as OpenAI
     participant DB as Postgres
 
@@ -192,7 +192,7 @@ sequenceDiagram
     end
     BG->>OAI: extract (structured output)
     OAI-->>BG: MeetingAnalysis (parcial)
-    BG->>BG: validar Pydantic; verificar quotes existem na transcrição
+    BG->>BG: validar com Zod; verificar quotes existem na transcrição
     BG->>OAI: gap_audit (structured output)
     OAI-->>BG: open_issues + contradições
     BG->>DB: Analysis(content); status=analysis_ready
@@ -206,7 +206,7 @@ sequenceDiagram
 sequenceDiagram
     participant U as Usuário
     participant FE as Frontend
-    participant API as FastAPI
+    participant API as Express
     participant EST as Estimation
     participant OAI as OpenAI
     participant PDF as Playwright
@@ -248,46 +248,47 @@ sequenceDiagram
 |-------|---------|---------|-------|------|
 | 1 Receber | rota | áudio/texto | `Meeting` | não |
 | 2 Transcrever | `TranscriptionService` | áudio | `Transcript{text, segments?, metadata}` | modelo de transcrição |
-| 3 Extrair | `extract.py` | transcrição | `MeetingAnalysis` (sem `open_issues` completos) | sim, structured output |
-| 4 Validar | `validators.py` | análise | análise + `limitations[]` | não |
-| 5 Auditar lacunas | `gap_audit.py` | transcrição + análise | `open_issues[]`, contradições | sim, structured output |
+| 3 Extrair | `extract.ts` | transcrição | `MeetingAnalysis` (sem `open_issues` completos) | sim, structured output |
+| 4 Validar | `validators.ts` | análise | análise + `limitations[]` | não |
+| 5 Auditar lacunas | `gap_audit.ts` | transcrição + análise | `open_issues[]`, contradições | sim, structured output |
 | 6 Revisar | UI + `PUT /analysis` | análise | análise com `review_status` por item | humano |
-| 7 Construir proposta | `builder.py` | análise revisada | `ProposalContent` parcial | não |
-| 8 Estimar | `estimation/engine.py` | módulos + complexidade | horas, equipe, cronograma | não |
-| 9 Compor texto | `composer.py` | 7 + 8 | textos das seções | sim, structured output |
-| 10 Gerar PDF | `pdf/renderer.py` | `ProposalContent` | PDF | não |
+| 7 Construir proposta | `builder.ts` | análise revisada | `ProposalContent` parcial | não |
+| 8 Estimar | `estimation/engine.ts` | módulos + complexidade | horas, equipe, cronograma | não |
+| 9 Compor texto | `composer.ts` | 7 + 8 | textos das seções | sim, structured output |
+| 10 Gerar PDF | `pdf/renderer.ts` | `ProposalContent` | PDF | não |
 | 11 Aprovar / autorizar | serviços | — | `Approval`, `Delivery` | humano |
 
 ## 8. Integrações externas
 
 | Integração | Adapter | Protocolo | Credenciais | Estado quando ausente |
 |------------|---------|-----------|-------------|-----------------------|
-| OpenAI | `integrations/openai/client.py` | SDK oficial Python | `OPENAI_API_KEY` | Pipeline falha com `AI_PROVIDER_NOT_CONFIGURED` (sem IA não há produto) |
-| Gmail | `integrations/gmail/` | Google API Python client, OAuth 2.0 (authorization code) | `GOOGLE_CLIENT_ID/SECRET`, token em `oauth_credentials` | Canal `skipped_no_credentials` |
-| WhatsApp | `integrations/whatsapp/` | HTTPS REST (`httpx`) para Graph API | `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID` | Canal `skipped_no_credentials` |
+| OpenAI | `integrations/openai/client.ts` | SDK oficial JS | `OPENAI_API_KEY` | Pipeline falha com `AI_PROVIDER_NOT_CONFIGURED` (sem IA não há produto) |
+| Gmail | `integrations/gmail/` | Google API client JS (`googleapis`), OAuth 2.0 (authorization code) | `GOOGLE_CLIENT_ID/SECRET`, token em `oauth_credentials` | Canal `skipped_no_credentials` |
+| WhatsApp | `integrations/whatsapp/` | HTTPS REST (`fetch`/`undici`) para Graph API | `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID` | Canal `skipped_no_credentials` |
 
 Interface comum dos canais:
-```python
-class ChannelAdapter(Protocol):
-    channel: Literal["gmail", "whatsapp"]
-    def is_configured(self) -> bool: ...
-    def send(self, req: ChannelSendRequest) -> ProviderResult: ...
-    # ProviderResult: ok: bool, provider_message_id: str|None, error: ProviderError|None, raw: dict
+```ts
+interface ChannelAdapter {
+  channel: "gmail" | "whatsapp";
+  isConfigured(): boolean;
+  send(req: ChannelSendRequest): ProviderResult;
+  // ProviderResult: { ok: boolean, provider_message_id: string|null, error: ProviderError|null, raw: Record<string, unknown> }
+}
 ```
 Detalhes em [INTEGRATIONS.md](INTEGRATIONS.md).
 
 ## 9. Persistência
 
-- **PostgreSQL 16** via docker-compose; `DATABASE_URL` configurável. Fallback `sqlite:///./dev.db` para quem não tem Docker.
-- **SQLAlchemy 2.x** (sync — simplicidade; o trabalho pesado é I/O de rede em background e não precisa de async DB).
-- **Alembic** para migrations desde o primeiro modelo. Comando: `alembic upgrade head` no startup do container.
+- **PostgreSQL 16** via docker-compose; `DATABASE_URL` configurável. Fallback `file:./dev.db` para quem não tem Docker.
+- **Prisma ORM** (tipagem gerada do schema; o trabalho pesado é I/O de rede em background e não precisa de async DB).
+- **Prisma Migrate** para migrations desde o primeiro modelo. Comando: `prisma migrate deploy` no startup do container.
 - **Arquivos** em `STORAGE_DIR` (`./storage` local, volume no Railway): `audio/{meeting_id}.{ext}`, `pdfs/{proposal_id}/v{n}.pdf`. Metadados no banco. Servidos por endpoint autenticado-demo, nunca por diretório estático público.
 
 ## 10. Geração documental
 
-1. `ProposalContent` (JSON validado) → contexto Jinja2.
-2. Template `proposal.html.j2` + `styles.css` (fontes embutidas, cores da identidade, `@page` com margens e numeração).
-3. Playwright Chromium headless → `page.set_content(html)` → `page.pdf(format="A4", print_background=True, display_header_footer=True, footer_template=...)`.
+1. `ProposalContent` (JSON validado) → contexto Nunjucks.
+2. Template `proposal.njk` + `styles.css` (fontes embutidas, cores da identidade, `@page` com margens e numeração).
+3. Playwright Chromium headless → `page.setContent(html)` → `page.pdf({ format: "A4", printBackground: true, displayHeaderFooter: true, footerTemplate: "..." })`.
 4. Rodapé: `Proposta {title} · v{n} · gerada em {date} · {revision_label}` + número de página.
 5. Blocos condicionais: seção comercial só renderiza se `commercial.status != "not_provided"`; aviso de "valores demonstrativos" se `demo_rates`; sugestões da IA sempre com rótulo e cor distinta.
 6. Resultado gravado em `PDF_ARTIFACT`; regenerar a mesma versão sobrescreve o arquivo (conteúdo idêntico por construção, exceto data de geração — por isso a data no rodapé é a de **criação da versão**, não a de renderização).
@@ -298,8 +299,8 @@ Resumo; justificativas completas em [DECISIONS.md](DECISIONS.md) §2.
 
 | Decisão | Ganho | Custo aceito |
 |---------|-------|--------------|
-| `BackgroundTasks` + polling | Zero infra extra | Job perdido em restart; sem escala horizontal |
-| Sync SQLAlchemy | Menos armadilhas em 24 h | Threads bloqueiam em I/O de banco (irrelevante nesse volume) |
+| Jobs assíncronos em-processo + polling | Zero infra extra | Job perdido em restart; sem escala horizontal |
+| Prisma ORM | Tipagem gerada + migrations declarativas | Camada extra de codegen; queries `await` (irrelevante nesse volume) |
 | JSON para documentos | Schema evolui sem migration | Sem query por campo interno (não precisamos) |
 | Snapshots imutáveis | Auditoria e reprodutibilidade | Mais linhas no banco; UI precisa de "versões" |
 | IA não estima números | Auditável, sem alucinação de horas | Estimativa menos "inteligente"; depende de boa classificação de complexidade |
@@ -312,7 +313,7 @@ Resumo; justificativas completas em [DECISIONS.md](DECISIONS.md) §2.
 |-------|----------|---------------|--------------|
 | Upload inválido (tipo/tamanho) | validação na rota | `400 UPLOAD_INVALID` | Toast com motivo |
 | OpenAI indisponível / timeout | exceção do SDK | retry 2× com backoff (1 s, 3 s); depois `Meeting.failed` com `error` | Banner "Falha na análise — reprocessar" |
-| Saída da IA inválida (schema) | `ValidationError` Pydantic | reenvia com erro no prompt (até 2×); depois `failed` | idem |
+| Saída da IA inválida (schema) | `ZodError` | reenvia com erro no prompt (até 2×); depois `failed` | idem |
 | Quote não encontrada na transcrição | validador pós-extração | item mantido, `confidence` rebaixada para `low`, `limitations[]` registra | Ícone de alerta no item |
 | Playwright falha | exceção | `500 PDF_RENDER_FAILED`; versão permanece válida | Botão "tentar novamente" |
 | Aprovação de versão alterada | hash ≠ | `409 PROPOSAL_HASH_MISMATCH` | Mensagem de erro |
@@ -330,7 +331,7 @@ Todos os erros de API seguem o envelope de API_SPEC §2 e são logados com `requ
 
 **Opcional (se sobrar tempo, T08):**
 - Frontend → Vercel (`NEXT_PUBLIC_API_URL` apontando para o backend).
-- Backend → Railway, imagem base `mcr.microsoft.com/playwright/python:v1.x-jammy`, volume em `/data` para `STORAGE_DIR`, Postgres gerenciado do Railway.
+- Backend → Railway, imagem base `mcr.microsoft.com/playwright:v1.x-jammy`, volume em `/data` para `STORAGE_DIR`, Postgres gerenciado do Railway.
 - Ajustar `GOOGLE_REDIRECT_URI` e `CORS_ORIGINS`.
 - Webhook do WhatsApp exige URL pública HTTPS — em local, usar túnel (`ngrok`/`cloudflared`) apenas se P1 webhook entrar.
 

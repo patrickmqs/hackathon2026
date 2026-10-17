@@ -21,10 +21,10 @@ Plataforma que transforma reuniões comerciais (áudio ou transcrição) em prop
 | Camada | Tecnologia |
 |--------|------------|
 | Frontend | Next.js (App Router) · React · TypeScript · Tailwind CSS |
-| Backend | Python 3.12 · FastAPI · Pydantic v2 · SQLAlchemy 2 · Alembic |
-| IA | OpenAI API (SDK oficial) — transcrição + Structured Outputs validados com Pydantic; prompts versionados em arquivos |
+| Backend | Node 20+ · Express 5 · TypeScript · Zod · Prisma ORM |
+| IA | OpenAI API (SDK oficial JS) — transcrição + Structured Outputs validados com Zod; prompts versionados em arquivos |
 | Dados | PostgreSQL 16 (docker-compose) · fallback SQLite · arquivos em disco (`STORAGE_DIR`) |
-| PDF | Template Jinja2 HTML/CSS → Playwright (Chromium headless) |
+| PDF | Template Nunjucks HTML/CSS → Playwright (Chromium headless) para Node |
 | Integrações | Gmail API (OAuth 2.0, escopo `gmail.send`) · WhatsApp Business Cloud API |
 | Deploy | Local via docker-compose (recomendado para a demo); opcional Vercel (frontend) + Railway (backend + Postgres) |
 
@@ -47,20 +47,21 @@ proposal-ai/
 │   └── examples/                # JSONs de exemplo dos contratos
 ├── frontend/                    # Next.js
 │   └── src/{app,components,features/{projects,meetings,analysis,proposals,deliveries},lib,services,types}
-├── backend/                     # FastAPI
-│   ├── app/
-│   │   ├── main.py
-│   │   ├── api/{routes/,dependencies.py}
+├── backend/                     # Express (Node + TypeScript)
+│   ├── src/
+│   │   ├── index.ts             # aplicação Express
+│   │   ├── routes/              # projects, meetings, analysis, proposals, approvals, deliveries, authGoogle, webhooks, health
+│   │   ├── middleware/          # X-Demo-User, request_id
 │   │   ├── core/                # config, errors, logging, storage
 │   │   ├── domain/              # enums e transições de estado
-│   │   ├── schemas/             # Pydantic (analysis, proposal, delivery, errors)
-│   │   ├── models/              # SQLAlchemy
+│   │   ├── schemas/             # Zod (analysis, proposal, delivery, errors)
 │   │   ├── repositories/
 │   │   ├── services/{transcription,ai_analysis/prompts,estimation,proposal,pdf,delivery}
 │   │   ├── integrations/{openai,gmail,whatsapp}
-│   │   └── templates/           # proposal.html.j2, styles.css, e-mail
+│   │   └── templates/           # proposal.njk, styles.css, e-mail
+│   ├── prisma/                  # schema.prisma + migrations/
 │   └── tests/
-├── scripts/                     # check_openai.py, seed_demo.py, e2e_demo.py
+├── scripts/                     # check_openai.ts, seed_demo.ts, e2e_demo.ts
 └── sample_data/                 # transcrição, áudio, gabarito, histórico fictício, perfil do fornecedor
 ```
 
@@ -68,8 +69,8 @@ Responsabilidades por pasta: [docs/ARCHITECTURE.md §2](docs/ARCHITECTURE.md#2-c
 
 ## Pré-requisitos
 
-- Docker + Docker Compose (recomendado) **ou** Python 3.12 + Node 20 + PostgreSQL local (ou SQLite).
-- `uv` (ou `pip`) para Python; `pnpm` (ou `npm`) para o frontend.
+- Docker + Docker Compose (recomendado) **ou** Node 20+ + PostgreSQL local (ou SQLite).
+- `pnpm` (ou `npm`) para backend e frontend.
 - Chave da OpenAI com acesso a um modelo de chat com Structured Outputs e a um modelo de transcrição.
 - Para Gmail: projeto no Google Cloud com Gmail API habilitada e client OAuth (passo a passo em [docs/INTEGRATIONS.md §2.3](docs/INTEGRATIONS.md)).
 - Para WhatsApp: app Meta Business com número de teste ([docs/INTEGRATIONS.md §3.1](docs/INTEGRATIONS.md)).
@@ -87,7 +88,7 @@ cp .env.example .env            # preencha OPENAI_API_KEY no mínimo
 
 ```bash
 docker compose up --build
-# backend:  http://localhost:8000  (OpenAPI em /docs)
+# backend:  http://localhost:8000  (OpenAPI em /docs via swagger-ui-express)
 # frontend: http://localhost:3000
 ```
 
@@ -96,10 +97,10 @@ docker compose up --build
 ```bash
 # Backend
 cd backend
-uv sync                          # ou: python -m venv .venv && pip install -e .
-uv run playwright install chromium
-uv run alembic upgrade head      # usa DATABASE_URL; sem Postgres, defina DATABASE_URL=sqlite:///./dev.db
-uv run uvicorn app.main:app --reload --port 8000
+pnpm install
+pnpm exec playwright install chromium
+pnpm prisma migrate dev          # usa DATABASE_URL; sem Postgres, defina DATABASE_URL="file:./dev.db"
+pnpm dev                         # http://localhost:8000
 
 # Frontend (outro terminal)
 cd frontend
@@ -114,8 +115,8 @@ Todas as variáveis estão documentadas em [`.env.example`](.env.example) e em [
 | Variável | Para quê |
 |----------|----------|
 | `OPENAI_API_KEY` | obrigatória — transcrição e análise |
-| `OPENAI_MODEL`, `OPENAI_TRANSCRIBE_MODEL` | confirmar modelos disponíveis na sua conta (`python scripts/check_openai.py`) |
-| `DATABASE_URL` | Postgres do compose por padrão; `sqlite:///./dev.db` para rodar sem Docker |
+| `OPENAI_MODEL`, `OPENAI_TRANSCRIBE_MODEL` | confirmar modelos disponíveis na sua conta (`pnpm tsx scripts/check_openai.ts`) |
+| `DATABASE_URL` | Postgres do compose por padrão; `file:./dev.db` para rodar sem Docker |
 | `NEXT_PUBLIC_API_URL` | URL do backend vista pelo navegador |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | opcional — habilita Gmail |
 | `WHATSAPP_TOKEN` / `WHATSAPP_PHONE_NUMBER_ID` | opcional — habilita WhatsApp |
@@ -125,28 +126,28 @@ Todas as variáveis estão documentadas em [`.env.example`](.env.example) e em [
 
 ### Identidade em modo demonstração
 
-Não há autenticação real neste MVP. Operações de revisão, aprovação e autorização de envio exigem o header `X-Demo-User: <nome>`, que o frontend envia a partir do nome definido em *Configurações*. Isso garante **rastreabilidade** (quem aprovou, quem autorizou) — **não é segurança**. Não exponha a aplicação publicamente sem substituir `api/dependencies.py:get_demo_user` por autenticação real. Detalhes: [docs/DECISIONS.md R03](docs/DECISIONS.md).
+Não há autenticação real neste MVP. Operações de revisão, aprovação e autorização de envio exigem o header `X-Demo-User: <nome>`, que o frontend envia a partir do nome definido em *Configurações*. Isso garante **rastreabilidade** (quem aprovou, quem autorizou) — **não é segurança**. Não exponha a aplicação publicamente sem substituir `src/middleware/demoUser.ts:getDemoUser()` por autenticação real. Detalhes: [docs/DECISIONS.md R03](docs/DECISIONS.md).
 
 ## Executando
 
 | Ação | Comando |
 |------|---------|
 | Subir tudo | `docker compose up` |
-| Backend dev | `cd backend && uv run uvicorn app.main:app --reload` |
+| Backend dev | `cd backend && pnpm dev` |
 | Frontend dev | `cd frontend && pnpm dev` |
 | Frontend com mocks (sem backend) | `NEXT_PUBLIC_USE_MOCKS=true pnpm dev` |
-| Migrations | `cd backend && uv run alembic upgrade head` |
-| Seed de demo | `cd backend && uv run python ../scripts/seed_demo.py` |
-| Verificar OpenAI | `uv run python scripts/check_openai.py` |
+| Migrations | `cd backend && pnpm prisma migrate dev` |
+| Seed de demo | `cd backend && pnpm tsx ../scripts/seed_demo.ts` |
+| Verificar OpenAI | `pnpm tsx scripts/check_openai.ts` |
 
 ## Testes
 
 ```bash
 cd backend
-uv run pytest -m "not ai"        # unitários + rotas, sem chamadas externas (fixtures gravadas)
-uv run pytest -m ai              # chama a OpenAI de verdade; registra em logs/ai_runs.jsonl
-cd ../frontend && pnpm test       # componentes (se houver tempo — P1)
-python scripts/e2e_demo.py        # percorre a jornada completa pela API e valida estados
+pnpm test                        # unitários + rotas, sem chamadas externas (fixtures gravadas) — Vitest
+pnpm test:ai                     # chama a OpenAI de verdade; registra em logs/ai_runs.jsonl
+cd ../frontend && pnpm test      # componentes (se houver tempo — P1)
+pnpm tsx scripts/e2e_demo.ts     # percorre a jornada completa pela API e valida estados
 ```
 
 O que os testes de IA verificam (gabarito em `sample_data/sample_analysis_expected.json`): schema válido, ≥ 90% das citações existem na transcrição, ≥ 80% dos itens do gabarito presentes, nenhuma sugestão classificada como decisão, contradição plantada detectada, compromisso condicional não sai como confirmado, estimativas determinísticas. Detalhes: [docs/AI_PIPELINE.md §11](docs/AI_PIPELINE.md).
@@ -163,7 +164,7 @@ Limitações conhecidas: Gmail `sent` = aceito pela API, não entregue; WhatsApp
 
 ## Fluxo de demonstração (6–8 min)
 
-Pré-demo: `seed_demo.py` cria um projeto em cada etapa; destinatário de teste envia "oi" ao número WhatsApp de teste (abre janela de 24 h); Gmail já conectado em *Configurações*.
+Pré-demo: `seed_demo.ts` cria um projeto em cada etapa; destinatário de teste envia "oi" ao número WhatsApp de teste (abre janela de 24 h); Gmail já conectado em *Configurações*.
 
 1. **Dashboard** → "Novo projeto" → *Distribuidora Horizonte (fictícia)*.
 2. **Nova reunião** → aba *Enviar áudio* → `sample_data/sample_meeting.mp3` → painel de progresso (transcrevendo → analisando → auditando). *(Plano B: colar `sample_transcript_pt.txt`.)*

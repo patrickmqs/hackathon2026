@@ -8,7 +8,7 @@ Relacionados: [DECISIONS.md](DECISIONS.md) (pendências T01–T08, abertas A01�
 
 ## 1. Regras do jogo
 
-1. **Contratos primeiro.** Até H+2 ninguém implementa tela ou serviço sem o schema correspondente existir em `backend/app/schemas/` e em `docs/examples/`. O frontend desenvolve contra os JSONs de exemplo (mock) até o endpoint real existir.
+1. **Contratos primeiro.** Até H+2 ninguém implementa tela ou serviço sem o schema correspondente existir em `backend/src/schemas/` e em `docs/examples/`. O frontend desenvolve contra os JSONs de exemplo (mock) até o endpoint real existir.
 2. **Trunk-based.** Branch `main` sempre sobe com `docker compose up`. Commits pequenos; PR opcional; sem rebase longo. Quebrou o `main`, para e conserta.
 3. **Caminho feliz antes de robustez.** Primeiro a jornada ponta a ponta com transcrição textual (H+10); depois áudio, PDF bonito, Gmail, falhas.
 4. **Checkpoints a cada 4 h** (15 min, em pé): o que fechou, o que bloqueia, o que corta.
@@ -18,10 +18,10 @@ Relacionados: [DECISIONS.md](DECISIONS.md) (pendências T01–T08, abertas A01�
 
 | Pessoa | Papel | Pastas principais | Entrega-chave |
 |--------|-------|-------------------|---------------|
-| **A** | AI Engineering | `services/transcription`, `services/ai_analysis`, `services/estimation` (regras), `schemas/analysis.py`, `integrations/openai`, `sample_data/`, `tests/ai` | Análise estruturada confiável a partir de texto e áudio |
-| **B** | Backend & documentos | `main.py`, `api/`, `models/`, `repositories/`, `services/proposal`, `services/pdf`, `schemas/proposal.py`, `templates/`, Alembic, docker | API completa, versionamento, aprovação, PDF |
+| **A** | AI Engineering | `services/transcription`, `services/ai_analysis`, `services/estimation` (regras), `schemas/analysis.ts`, `integrations/openai`, `sample_data/`, `tests/ai` | Análise estruturada confiável a partir de texto e áudio |
+| **B** | Backend & documentos | `index.ts`, `routes/`, `prisma/`, `repositories/`, `services/proposal`, `services/pdf`, `schemas/proposal.ts`, `templates/`, Prisma Migrate, docker | API completa, versionamento, aprovação, PDF |
 | **C** | Frontend | `frontend/` | Todas as telas T1–T9 com estados |
-| **D** | Integrações & produto | `integrations/gmail`, `integrations/whatsapp`, `services/delivery`, `schemas/delivery.py`, `.env.example`, identidade visual, roteiro de demo, testes E2E | Envio por canal com estados honestos; demo ensaiada |
+| **D** | Integrações & produto | `integrations/gmail`, `integrations/whatsapp`, `services/delivery`, `schemas/delivery.ts`, `.env.example`, identidade visual, roteiro de demo, testes E2E | Envio por canal com estados honestos; demo ensaiada |
 
 ## 3. Tarefas por pessoa
 
@@ -31,37 +31,37 @@ Legenda: **[P0]** essencial · **[P1]** se der tempo · ⛓ depende de · ✅ cr
 
 | # | Tarefa | Prio | Janela | Depende | Pronto quando |
 |---|--------|------|--------|---------|---------------|
-| A1 | Validar acesso OpenAI (`scripts/check_openai.py`): modelos de chat com structured outputs e transcrição; fixar `OPENAI_MODEL`/`OPENAI_TRANSCRIBE_MODEL` (T01) | P0 | H0–1 | — | ✅ script imprime modelos OK; `.env` do time atualizado |
-| A2 | Implementar `schemas/analysis.py` exatamente como AI_PIPELINE §3 + gerar `docs/examples/analysis.example.json` a partir dele | P0 | H0–2 | — | ✅ `MeetingAnalysis.model_validate(example)` passa; C e B desbloqueados |
-| A3 | `integrations/openai/client.py`: `transcribe(path)`, `structured_completion(prompt, schema, …)` com retry/backoff e log de tokens/latência | P0 | H1–3 | A1 | ✅ teste com fixture |
+| A1 | Validar acesso OpenAI (`scripts/check_openai.ts`): modelos de chat com structured outputs e transcrição; fixar `OPENAI_MODEL`/`OPENAI_TRANSCRIBE_MODEL` (T01) | P0 | H0–1 | — | ✅ script imprime modelos OK; `.env` do time atualizado |
+| A2 | Implementar `schemas/analysis.ts` exatamente como AI_PIPELINE §3 + gerar `docs/examples/analysis.example.json` a partir dele | P0 | H0–2 | — | ✅ `MeetingAnalysisSchema.safeParse(example)` passa; C e B desbloqueados |
+| A3 | `integrations/openai/client.ts`: `transcribe(path)`, `structuredCompletion(prompt, schema, …)` com retry/backoff e log de tokens/latência | P0 | H1–3 | A1 | ✅ teste com fixture |
 | A4 | Escrever `sample_data/sample_transcript_pt.txt` (com D) e `sample_analysis_expected.json` | P0 | H1–4 | — | ✅ contém os itens plantados (AI_PIPELINE §11) |
-| A5 | `prompts/extract.md` v1 + `extract.py` | P0 | H2–6 | A2, A3 | ✅ transcrição de exemplo → `ExtractionOutput` válido; ≥ 80% do gabarito |
-| A6 | `validators.py` (quotes, ids, rebaixamentos) | P0 | H5–7 | A5 | ✅ testes unitários das 6 regras |
-| A7 | `prompts/gap_audit.md` + `gap_audit.py` + fusão no orquestrador | P0 | H6–9 | A5 | ✅ contradição plantada detectada; compromisso condicional não sai `confirmed` |
-| A8 | `services/transcription/service.py` (validação, chamada, normalização de segmentos) | P0 | H8–11 | A3 | ✅ `sample_meeting.mp3` → transcrição com metadata correta |
-| A9 | `prompts/compose_proposal.md` + `composer.py` (com B) | P0 | H10–14 | B8 | ✅ `ProposalTextOutput` válido; não altera números das estimativas |
-| A10 | Calibrar `estimation/rules.py` com `historical_projects.json` (T07, com B) | P0 | H12–14 | B7 | ✅ faixa plausível para a reunião de exemplo |
+| A5 | `prompts/extract.md` v1 + `extract.ts` | P0 | H2–6 | A2, A3 | ✅ transcrição de exemplo → `ExtractionOutput` válido; ≥ 80% do gabarito |
+| A6 | `validators.ts` (quotes, ids, rebaixamentos) | P0 | H5–7 | A5 | ✅ testes unitários das 6 regras |
+| A7 | `prompts/gap_audit.md` + `gap_audit.ts` + fusão no orquestrador | P0 | H6–9 | A5 | ✅ contradição plantada detectada; compromisso condicional não sai `confirmed` |
+| A8 | `services/transcription/service.ts` (validação, chamada, normalização de segmentos) | P0 | H8–11 | A3 | ✅ `sample_meeting.mp3` → transcrição com metadata correta |
+| A9 | `prompts/compose_proposal.md` + `composer.ts` (com B) | P0 | H10–14 | B8 | ✅ `ProposalTextOutput` válido; não altera números das estimativas |
+| A10 | Calibrar `estimation/rules.ts` com `historical_projects.json` (T07, com B) | P0 | H12–14 | B7 | ✅ faixa plausível para a reunião de exemplo |
 | A11 | `repair.md` + loop de retry por validação | P0 | H14–16 | A6 | ✅ fixture inválida aciona 2ª tentativa |
-| A12 | Suíte `tests/ai` (8 testes de AI_PIPELINE §11) + `logs/ai_runs.jsonl` | P1 | H16–19 | tudo | ✅ `pytest -m ai` verde |
+| A12 | Suíte `tests/ai` (8 testes de AI_PIPELINE §11) + `logs/ai_runs.jsonl` | P1 | H16–19 | tudo | ✅ `pnpm test:ai` verde |
 | A13 | Justificativa textual por linha de estimativa (`rationale`) | P1 | H19–21 | A10 | ✅ aparece no PDF |
 
 ### Pessoa B — Backend & documentos
 
 | # | Tarefa | Prio | Janela | Depende | Pronto quando |
 |---|--------|------|--------|---------|---------------|
-| B1 | Esqueleto FastAPI: `main.py`, `core/config.py`, `core/errors.py` (envelope API_SPEC §2), `core/logging.py` com `request_id`, CORS, `/health` | P0 | H0–2 | — | ✅ `GET /health` responde; erro padrão testado |
-| B2 | `schemas/proposal.py` (AI_PIPELINE §8), `schemas/common.py` (enums API_SPEC §3), `schemas/errors.py`; `docs/examples/proposal_content.example.json` | P0 | H0–2 | — | ✅ exemplo valida; C desbloqueado |
-| B3 | Modelos SQLAlchemy + Alembic inicial (ARCHITECTURE §3); docker-compose com Postgres; fallback SQLite | P0 | H1–4 | — | ✅ `alembic upgrade head` em Postgres e SQLite |
+| B1 | Esqueleto Express: `index.ts`, `core/config.ts`, `core/errors.ts` (envelope API_SPEC §2), `core/logging.ts` com `request_id`, CORS, `/health` | P0 | H0–2 | — | ✅ `GET /health` responde; erro padrão testado |
+| B2 | `schemas/proposal.ts` (AI_PIPELINE §8), `schemas/common.ts` (enums API_SPEC §3), `schemas/errors.ts`; `docs/examples/proposal_content.example.json` | P0 | H0–2 | — | ✅ exemplo valida; C desbloqueado |
+| B3 | Modelos Prisma (`prisma/schema.prisma`) + migrate inicial (ARCHITECTURE §3); docker-compose com Postgres; fallback SQLite | P0 | H1–4 | — | ✅ `prisma migrate dev` em Postgres e SQLite |
 | B4 | Repositórios + rotas **Projects** e **Meetings** (`POST` texto/áudio multipart com validação, `GET`, `reprocess`) + `FileStorage` | P0 | H3–6 | B1, B3 | ✅ criar projeto e reunião por texto via `/docs` |
-| B5 | Orquestrador `BackgroundTasks` + estados de `Meeting` + `JOB_STALE_MINUTES`; integrar extração da A | P0 | H5–8 | B4, A5 | ✅ texto → `analysis_ready` ponta a ponta |
+| B5 | Orquestrador de jobs em-processo + estados de `Meeting` + `JOB_STALE_MINUTES`; integrar extração da A | P0 | H5–8 | B4, A5 | ✅ texto → `analysis_ready` ponta a ponta |
 | B6 | Rotas **Analysis** (`GET`, `PUT` com regras de preservação de `meta`, `complete-review`) + `X-Demo-User` dependency | P0 | H7–9 | B5 | ✅ critérios "Revisão" de PRODUCT_SPEC §10 |
-| B7 | `services/estimation/engine.py` (AI_PIPELINE §9) + `historical.py` | P0 | H8–11 | B2 | ✅ determinístico; teste unitário |
-| B8 | `services/proposal/builder.py` + `versioning.py` (hash, imutabilidade) + rotas **Proposals** (`POST`, `GET`, `versions`) | P0 | H9–13 | B6, B7, A9 | ✅ gerar proposta e criar v2 via API |
-| B9 | Template `proposal.html.j2` + `styles.css` (16 seções, blocos condicionais, rótulo de sugestão, rodapé com versão) | P0 | H11–15 | B2 | ✅ HTML abre no navegador com dados do exemplo |
-| B10 | `services/pdf/renderer.py` (Playwright) + rotas `POST/GET …/pdf`; Dockerfile com Chromium (T04) | P0 | H13–16 | B9 | ✅ PDF A4 gerado em < 10 s local e no container |
+| B7 | `services/estimation/engine.ts` (AI_PIPELINE §9) + `historical.ts` | P0 | H8–11 | B2 | ✅ determinístico; teste unitário |
+| B8 | `services/proposal/builder.ts` + `versioning.ts` (hash, imutabilidade) + rotas **Proposals** (`POST`, `GET`, `versions`) | P0 | H9–13 | B6, B7, A9 | ✅ gerar proposta e criar v2 via API |
+| B9 | Template `proposal.njk` + `styles.css` (16 seções, blocos condicionais, rótulo de sugestão, rodapé com versão) | P0 | H11–15 | B2 | ✅ HTML abre no navegador com dados do exemplo |
+| B10 | `services/pdf/renderer.ts` (Playwright) + rotas `POST/GET …/pdf`; Dockerfile com Chromium (T04) | P0 | H13–16 | B9 | ✅ PDF A4 gerado em < 10 s local e no container |
 | B11 | Rota **Approve** (hash check, supersede, `Approval`) + eventos de auditoria (`events`) | P0 | H15–17 | B8 | ✅ critérios "Aprovação" de PRODUCT_SPEC §10 |
 | B12 | Rota `GET /projects/{id}/events` (timeline) | P1 | H18–20 | B11 | ✅ eventos listados |
-| B13 | Hardening: limites de upload, mensagens de erro, `JOB_STALE`, seeds de demo (`scripts/seed_demo.py`) | P0 | H18–22 | tudo | ✅ seed cria projeto pronto para cada etapa da demo |
+| B13 | Hardening: limites de upload, mensagens de erro, `JOB_STALE`, seeds de demo (`scripts/seed_demo.ts`) | P0 | H18–22 | tudo | ✅ seed cria projeto pronto para cada etapa da demo |
 
 ### Pessoa C — Frontend
 
@@ -88,11 +88,11 @@ Legenda: **[P0]** essencial · **[P1]** se der tempo · ⛓ depende de · ✅ cr
 | D2 | Google Cloud: projeto, Gmail API, consent Testing + test users, client OAuth (T02) | P0 | H0–3 | — | ✅ `client_id/secret` no `.env` compartilhado |
 | D3 | Meta: app, número de teste, token, destinatários de teste; **decisão go/no-go WhatsApp real até H+6** (T03) | P0 | H1–6 | — | ✅ `curl` de teste envia texto ao celular do demonstrador, **ou** fallback R13 registrado em DECISIONS |
 | D4 | Com A: roteiro da reunião fictícia; gravar `sample_meeting.mp3` (5–8 min); `vendor_profile.json`, `historical_projects.json` (T05) | P0 | H2–6 | — | ✅ arquivos em `sample_data/` com rótulo de demonstração |
-| D5 | `schemas/delivery.py` + `services/delivery/service.py` (idempotência, validação de destinatário, fan-out, estados agregados, `alternative`) + rotas **Deliveries**; adapters iniciam como "não configurado" | P0 | H4–10 | B1, B3 | ✅ `POST /deliveries` sem credenciais → ambos `skipped_no_credentials`; replay → mesmo delivery |
-| D6 | `integrations/gmail/oauth.py` + rotas `/auth/google/*` + `adapter.py` (MIME + anexo) + `GMAIL_FORCE_FAIL` | P0 | H8–14 | D2, D5, B10 | ✅ PDF real chega na caixa de teste; `FORCE_FAIL` → `failed` isolado |
-| D7 | `integrations/whatsapp/adapter.py` (upload de mídia + mensagem de documento), mapeamento de erros, `WHATSAPP_FORCE_FAIL` | P0 | H12–16 | D3, D5 | ✅ envio real **ou** erro mapeado legível (`131047`, `131030`) |
+| D5 | `schemas/delivery.ts` + `services/delivery/service.ts` (idempotência, validação de destinatário, fan-out, estados agregados, `alternative`) + rotas **Deliveries**; adapters iniciam como "não configurado" | P0 | H4–10 | B1, B3 | ✅ `POST /deliveries` sem credenciais → ambos `skipped_no_credentials`; replay → mesmo delivery |
+| D6 | `integrations/gmail/oauth.ts` + rotas `/auth/google/*` + `adapter.ts` (MIME + anexo) + `GMAIL_FORCE_FAIL` | P0 | H8–14 | D2, D5, B10 | ✅ PDF real chega na caixa de teste; `FORCE_FAIL` → `failed` isolado |
+| D7 | `integrations/whatsapp/adapter.ts` (upload de mídia + mensagem de documento), mapeamento de erros, `WHATSAPP_FORCE_FAIL` | P0 | H12–16 | D3, D5 | ✅ envio real **ou** erro mapeado legível (`131047`, `131030`) |
 | D8 | Identidade visual: paleta, logo fictício, CSS do PDF com B, textos de e-mail/legenda (T06) | P0 | H10–16 | B9 | ✅ PDF e UI com a mesma identidade |
-| D9 | Testes E2E (script `scripts/e2e_demo.sh`/`.py` chamando a API na ordem da demo) | P0 | H16–20 | B11, D6 | ✅ script percorre criar → … → delivery e valida estados |
+| D9 | Testes E2E (script `scripts/e2e_demo.ts` chamando a API na ordem da demo) | P0 | H16–20 | B11, D6 | ✅ script percorre criar → … → delivery e valida estados |
 | D10 | Roteiro da demo (README §"Fluxo de demonstração"), seeds com B, ensaio cronometrado | P0 | H20–23 | tudo | ✅ demo de 6–8 min ensaiada 2× |
 | D11 | Webhook WhatsApp + túnel; retry manual de canal | P1 | H20–22 | D7 | — |
 
@@ -104,7 +104,7 @@ flowchart LR
     B2[B2 schema proposta] --> C2
     A1[A1 modelos OpenAI] --> A3 --> A5[A5 extract]
     B1[B1 esqueleto API] --> B4[B4 projects/meetings]
-    B3[B3 modelos+Alembic] --> B4
+    B3[B3 modelos Prisma] --> B4
     B4 --> B5[B5 orquestrador]
     A5 --> B5
     B5 --> B6[B6 analysis API] --> C6[C6 tela revisão]
@@ -130,7 +130,7 @@ flowchart LR
 
 | Hora | Marco | Verificação |
 |------|-------|-------------|
-| **H+2** | Contratos congelados | `schemas/*.py` + `docs/examples/*.json` validam; API esqueleto sobe; frontend sobe com mocks; `.env.example` pronto |
+| **H+2** | Contratos congelados | `schemas/*.ts` + `docs/examples/*.json` validam; API esqueleto sobe; frontend sobe com mocks; `.env.example` pronto |
 | **H+6** | Primeira análise real | Transcrição de exemplo → `MeetingAnalysis` válido pela API (`/docs`); go/no-go WhatsApp |
 | **H+10** | **Jornada vertical v0** (texto) | UI: criar projeto → colar transcrição → ver análise → revisar → concluir. Sem proposta ainda. |
 | **H+14** | Proposta gerada | API gera `ProposalContent` com estimativas; HTML do template renderiza; áudio transcreve |
@@ -159,22 +159,22 @@ Marcos deslocam ~2 h (jornada completa em H+20, congelamento H+22 mantido cortan
 
 | Se até… | …isto não aconteceu | Então |
 |---------|---------------------|-------|
-| H+3 | Modelos OpenAI com structured outputs não disponíveis | Usar `json_object` + validação Pydantic + repair (já previsto); A perde ~1 h |
+| H+3 | Modelos OpenAI com structured outputs não disponíveis | Usar `json_object` + validação Zod + repair (já previsto); A perde ~1 h |
 | H+6 | Extração não atinge 80% do gabarito | Aceitar 60%; priorizar que **nada falso-positivo** vire `confirmed`; ajustar prompt em paralelo até H+12 |
 | H+6 | WhatsApp real inviável | Go/no-go: fallback R13 (`skipped_no_credentials` + `wa.me`). Não gastar mais tempo. |
 | H+8 | Transcrição de áudio instável | Demo usa transcrição textual; áudio mostrado só se funcionar no ensaio. Upload continua implementado. |
 | H+12 | Gmail OAuth não conecta | `GmailSmtpAdapter` com app password (mesma interface), UI rotula "SMTP" |
 | H+14 | Playwright falha no container | Rodar backend fora do Docker na demo; ou WeasyPrint com o mesmo HTML |
 | H+16 | Editor da proposta (C7) atrasado | Editor reduzido: só sumário executivo, escopo, premissas e próximos passos editáveis; demais somente leitura |
-| H+18 | Jornada completa não fecha na UI | Demo híbrida: UI até a revisão; proposta/aprovação/envio via `/docs` do FastAPI com narrativa honesta. Cortar C11/C12, B12, A12, A13, D11. |
-| H+20 | Estimativas implausíveis | Ajustar `rules.py` (é dado); explicar na demo que é base demonstrativa |
+| H+18 | Jornada completa não fecha na UI | Demo híbrida: UI até a revisão; proposta/aprovação/envio via `/docs` (OpenAPI do Express) com narrativa honesta. Cortar C11/C12, B12, A12, A13, D11. |
+| H+20 | Estimativas implausíveis | Ajustar `rules.ts` (é dado); explicar na demo que é base demonstrativa |
 | H+22 | Qualquer coisa | **Congelar.** Gravar vídeo de backup da jornada funcionando; preparar PDF gerado e prints. |
 
 ## 8. Definição de pronto (DoD) por etapa
 
 | Etapa | Pronto quando |
 |-------|---------------|
-| Contrato | Pydantic + exemplo JSON em `docs/examples/` + referência no API_SPEC; frontend tem tipo TS |
+| Contrato | Zod + exemplo JSON em `docs/examples/` + referência no API_SPEC; frontend tem tipo TS |
 | Endpoint | Aparece em `/docs`; retorna envelope de erro padrão; coberto pelo E2E ou por teste de rota |
 | Serviço de IA | Teste com fixture gravada (sem rede) + 1 execução real registrada em `logs/ai_runs.jsonl` |
 | Tela | Estados: carregando, vazio, erro, sucesso; funciona com mock e com API; sem erro no console |

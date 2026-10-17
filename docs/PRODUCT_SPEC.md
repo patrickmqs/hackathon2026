@@ -160,7 +160,7 @@ Detalhe tela a tela em [UX_FLOW.md](UX_FLOW.md).
 | RNF02 | **Identidade (limitação):** sem autenticação real no MVP. Operações de revisão, aprovação e autorização exigem header `X-Demo-User` para rastreabilidade. Documentado como modo demonstração. |
 | RNF03 | **Validação de upload:** tipos permitidos e tamanho máximo configuráveis (`MAX_UPLOAD_MB`, padrão 25). |
 | RNF04 | **Latência:** processamento de reunião assíncrono; UI mostra progresso; nenhuma requisição HTTP bloqueia > 30 s. |
-| RNF05 | **Resiliência da IA:** saídas inválidas são rejeitadas pela validação Pydantic e reprocessadas até 2 vezes com feedback do erro; falha definitiva deixa a reunião em `failed` com motivo. |
+| RNF05 | **Resiliência da IA:** saídas inválidas são rejeitadas pela validação Zod e reprocessadas até 2 vezes com feedback do erro; falha definitiva deixa a reunião em `failed` com motivo. |
 | RNF06 | **Reprodutibilidade:** o PDF de uma versão pode ser regenerado a qualquer momento a partir do snapshot, com conteúdo idêntico. |
 | RNF07 | **Auditoria:** eventos de domínio (criação, análise pronta, revisão concluída, versão criada, aprovação, autorização, resultado por canal) gravados em `events` com ator e timestamp. |
 | RNF08 | **Idempotência:** chave única por delivery; unicidade `(proposal_version_id, channel, recipient)`. |
