@@ -307,3 +307,8 @@
 [data-theme="dark"] .transcript-panel,
 [data-theme="dark"] .transcript-search { background: #182433; color: var(--ink); border-color: #2c3a4d; }
 [data-theme="dark"] .next .button { background: var(--tint-blue-bg); color: var(--tint-blue-fg); }
+
+/* Modo escuro: botão "Nova proposta" em azul mais fundo (o azul padrão do tema escuro é claro demais) */
+[data-theme="dark"] .select-file-button { background: #2b4c9b; color: #eaf1ff; border: 1px solid #3a5db3; }
+[data-theme="dark"] .select-file-button:hover:not(:disabled) { background: #345ab5; }
+[data-theme="dark"] .select-file-button:disabled { opacity: .6; }
