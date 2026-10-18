@@ -186,12 +186,13 @@ export class GmailOAuthAdapter implements ChannelAdapter {
 export async function sendTestEmail(
   email: string,
   text: string,
+  subject = "Teste de integração — Proposal AI",
 ): Promise<{ ok: boolean; providerMessageId: string | null; error: string | null }> {
   if (!(await getGmailStatus()).connected) {
     return { ok: false, providerMessageId: null, error: "Gmail não conectado. Conecte primeiro." };
   }
   try {
-    const result = await sendMail(email, "Teste de integração — Proposal AI", text);
+    const result = await sendMail(email, subject, text);
     return {
       ok: result.ok,
       providerMessageId: result.providerMessageId,

@@ -142,3 +142,26 @@ h3{font-size:15px;margin:16px 0 2px}.muted{color:#6b7080}table{border-collapse:c
 <h2>Investimento</h2><p>${esc(c.commercial.disclaimer ?? "A definir.")}</p></body></html>`;
   return `data:text/html;charset=utf-8,${encodeURIComponent(html)}`;
 }
+
+/** Texto da proposta para o envio real (e-mail/WhatsApp) feito pela demo. */
+export function demoProposalText(): string {
+  const c = CONTENT;
+  const bullets = (items: string[]) => items.map((i) => `• ${i}`).join("\n");
+  return [
+    `Proposta comercial — ${c.client.company}`,
+    c.title,
+    "",
+    c.executive_summary,
+    "",
+    "Escopo:",
+    bullets(c.scope.in_scope),
+    "",
+    "Módulos:",
+    bullets(c.modules.map((m) => `${m.name}: ${m.description}`)),
+    "",
+    `Prazo estimado: ${c.total_weeks} semanas · ${c.estimates.total_hours_min}–${c.estimates.total_hours_max} horas`,
+    "",
+    "Próximos passos:",
+    bullets(c.next_steps),
+  ].join("\n");
+}

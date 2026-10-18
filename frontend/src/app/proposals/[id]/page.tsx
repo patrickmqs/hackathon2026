@@ -5,6 +5,7 @@ import { AppShell, Badge, Button } from "@/components/AppShell";
 import { ErrorBanner, Loading, errorMessage, useLoad } from "@/components/Api";
 import { api } from "@/lib/api";
 import { DEMO_CONTACT, DEMO_ENABLED } from "@/lib/demo-mock";
+import { demoProposalText } from "@/lib/demo-proposal";
 
 function ProposalPageInner() {
   const { id } = useParams<{ id: string }>();
@@ -114,11 +115,23 @@ function ProposalPageInner() {
     setActionError(null);
     try {
       await api.updateProject(project.id, { client: { contact_email: emailVal || null, contact_phone: phoneVal || null } });
-      await api.createDelivery({
-        approval_id: approvalId,
-        idempotency_key: crypto.randomUUID(),
-        channels,
-      });
+      if (DEMO_ENABLED) {
+        // Demo: a proposta é fictícia (não existe no backend), então o envio real usa os mesmos
+        // endpoints das Configurações, levando o texto da proposta.
+        const text = demoProposalText();
+        const results = await Promise.all([
+          emailVal ? api.gmailTest(emailVal, { subject: `Proposta comercial — ${version.content.title}`, message: text }).then((r) => ({ label: "E-mail", r })) : null,
+          phoneVal ? api.whatsappTest(phoneVal, text).then((r) => ({ label: "WhatsApp", r })) : null,
+        ]);
+        const failed = results.filter((x): x is NonNullable<typeof x> => x !== null && !x.r.ok);
+        if (failed.length) throw new Error(failed.map((f) => `${f.label}: ${f.r.error ?? "falha no envio"}`).join(" · "));
+      } else {
+        await api.createDelivery({
+          approval_id: approvalId,
+          idempotency_key: crypto.randomUUID(),
+          channels,
+        });
+      }
       setSent(true);
     } catch (e) {
       setActionError(errorMessage(e));

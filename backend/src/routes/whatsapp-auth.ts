@@ -12,6 +12,7 @@ import {
 
 const TestMessageSchema = z.object({
   phone: z.string().regex(/^\+[1-9]\d{6,14}$/, "Telefone em E.164 (ex. +5511999990000)"),
+  message: z.string().max(4000).optional(),
 });
 
 // Endpoints de pareamento do WhatsApp (Baileys) — WHATSAPP_BAILEYS_ROADMAP §4.3.
@@ -53,7 +54,7 @@ export function whatsappAuthRouter(): Router {
   // Teste manual de integração: envia "oi" para o número informado.
   router.post("/test", async (req, res) => {
     const input = parseBody(TestMessageSchema, req.body);
-    const result = await sendTextMessage(input.phone, "oi 👋");
+    const result = await sendTextMessage(input.phone, input.message ?? "oi 👋");
     res.json({
       ok: result.ok,
       provider_message_id: result.providerMessageId,

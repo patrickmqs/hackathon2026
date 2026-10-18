@@ -156,11 +156,11 @@ const real = {
   whatsappStatus: () => request<WhatsappStatus>("GET", "/auth/whatsapp/status"),
   whatsappQr: () => request<{ qr: string | null }>("GET", "/auth/whatsapp/qr"),
   whatsappDisconnect: () => request<{ ok: boolean }>("DELETE", "/auth/whatsapp"),
-  whatsappTest: (phone: string) => request<WhatsappTestResult>("POST", "/auth/whatsapp/test", { body: { phone } }),
+  whatsappTest: (phone: string, message?: string) => request<WhatsappTestResult>("POST", "/auth/whatsapp/test", { body: { phone, message } }),
   gmailStatus: () => request<GmailStatus>("GET", "/auth/gmail/status"),
   gmailStartUrl: () => `${API_URL}/auth/gmail/start`,
   gmailDisconnect: () => request<{ ok: boolean }>("DELETE", "/auth/gmail"),
-  gmailTest: (email: string) => request<GmailTestResult>("POST", "/auth/gmail/test", { body: { email } }),
+  gmailTest: (email: string, extra?: { subject?: string; message?: string }) => request<GmailTestResult>("POST", "/auth/gmail/test", { body: { email, ...extra } }),
   createDelivery: (body: { approval_id: string; idempotency_key: string; channels: { channel: string; recipient: Record<string, unknown>; options?: Record<string, unknown> }[] }) =>
     request<Delivery>("POST", "/deliveries", { auth: true, body }),
   getDelivery: (id: string) => request<Delivery>("GET", `/deliveries/${id}`),

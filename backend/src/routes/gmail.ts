@@ -14,6 +14,8 @@ import {
 
 const TestEmailSchema = z.object({
   email: z.string().email("E-mail inválido"),
+  subject: z.string().max(200).optional(),
+  message: z.string().max(8000).optional(),
 });
 
 // Endpoints do Gmail (OAuth 2.0) — INTEGRATIONS.md §2.1.
@@ -77,7 +79,7 @@ export function gmailAuthRouter(): Router {
   // Teste manual de integração: envia "oi" para o e-mail informado.
   router.post("/test", async (req, res) => {
     const input = parseBody(TestEmailSchema, req.body);
-    const result = await sendTestEmail(input.email, "oi 👋 — este é um teste de envio do Proposal AI.");
+    const result = await sendTestEmail(input.email, input.message ?? "oi 👋 — este é um teste de envio do Proposal AI.", input.subject);
     res.json({
       ok: result.ok,
       provider_message_id: result.providerMessageId,
