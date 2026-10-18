@@ -2,6 +2,10 @@
 // URL base: NEXT_PUBLIC_API_URL (padrão http://localhost:8000). O header X-Demo-User vem de
 // localStorage["demoUser"] (padrão "Marina") e é exigido em revisão, proposta e aprovação.
 
+import * as demo from "@/lib/demo-mock";
+import * as demoProposal from "@/lib/demo-proposal";
+import { isDemoId } from "@/lib/demo-mock";
+
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
 
 export class ApiError extends Error {
@@ -116,7 +120,7 @@ export interface DeliveryChannel { id: string; channel: string; recipient: { ema
 export interface Delivery { id: string; approval_id: string; proposal_id: string; proposal_version: number; idempotency_key: string; authorized_by: string; authorized_at: string; status: string; channels: DeliveryChannel[] }
 
 // ---------- chamadas ----------
-export const api = {
+const real = {
   health: () => request<{ status: string; ai_configured: boolean }>("GET", "/health"),
   listProjects: () => request<{ items: Project[]; total: number }>("GET", "/projects"),
   getProject: (id: string) => request<Project>("GET", `/projects/${id}`),
@@ -160,6 +164,28 @@ export const api = {
   createDelivery: (body: { approval_id: string; idempotency_key: string; channels: { channel: string; recipient: Record<string, unknown>; options?: Record<string, unknown> }[] }) =>
     request<Delivery>("POST", "/deliveries", { auth: true, body }),
   getDelivery: (id: string) => request<Delivery>("GET", `/deliveries/${id}`),
+};
+
+// Modo demo (NEXT_PUBLIC_DEMO_MOCK): ids "demo-*" são atendidos por src/lib/demo-mock.ts, sem backend.
+export const api: typeof real = {
+  ...real,
+  getProject: async (id) => (isDemoId(id) ? demo.demoProject() : real.getProject(id)),
+  updateProject: async (id, body) => (isDemoId(id) ? demo.updateDemoProject(body) : real.updateProject(id, body)),
+  getMeeting: async (id) => (isDemoId(id) ? demo.demoMeeting() : real.getMeeting(id)),
+  getAnalysis: async (id) => (isDemoId(id) ? demo.demoAnalysis() : real.getAnalysis(id)),
+  saveAnalysis: async (id, a) => (isDemoId(id) ? demo.saveDemoAnalysis(a) : real.saveAnalysis(id, a)),
+  completeReview: async (id, accept) => (isDemoId(id) ? demo.completeDemoReview(accept) : real.completeReview(id, accept)),
+  createProposal: async (projectId, meetingId) => (isDemoId(meetingId) ? demoProposal.createDemoProposal() : real.createProposal(projectId, meetingId)),
+  getProposal: async (id) => (isDemoId(id) ? demoProposal.demoProposal() : real.getProposal(id)),
+  getVersion: async (id, n) => (isDemoId(id) ? demoProposal.demoVersion() : real.getVersion(id, n)),
+  approve: async (id, n, hash, note) => (isDemoId(id) ? demoProposal.approveDemoProposal(note) : real.approve(id, n, hash, note)),
+  pdfUrl: (id, n, download) => (isDemoId(id) ? demoProposal.demoProposalUrl() : real.pdfUrl(id, n, download)),
+  createDelivery: async (body) => (body.approval_id.startsWith("demo-") ? demoProposal.createDemoDelivery(body.channels) : real.createDelivery(body)),
+  reviewChat: async (id, messages) => {
+    if (!isDemoId(id)) return real.reviewChat(id, messages);
+    const analysis = demo.demoAnalysis();
+    return { reply: "Modo demonstração: o chat de revisão não está ativo. Use os botões de cada item para confirmar, editar ou rejeitar.", applied: [], pending_count: 0, analysis };
+  },
 };
 
 // ---------- apresentação ----------

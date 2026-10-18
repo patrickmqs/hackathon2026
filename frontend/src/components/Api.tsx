@@ -33,5 +33,5 @@ export function ErrorBanner({ message, onRetry }: { message: string | null; onRe
 }
 
 export function Loading({ text = "Carregando…" }: { text?: string }) {
-  return <p className="api-loading">{text}</p>;
+  return <div className="skeleton" role="status" aria-live="polite"><span className="sr-only">{text}</span><i /><i /><i /><i /></div>;
 }

@@ -9,6 +9,10 @@ import { projects as mockProjects } from "@/lib/mocks";
 import { STATUS_LABEL, api, timeAgo } from "@/lib/api";
 import "@/components/integration.css";
 
+function FolderGlyph() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg>;
+}
+
 export default function Home() {
   const [period, setPeriod] = useState("30 dias");
   const [status, setStatus] = useState("Todos os status");
@@ -43,10 +47,58 @@ export default function Home() {
   };
   const projects = apiProjects ?? mockProjects.map((m) => ({ id: "demo", updated: "", ...m }));
   const filteredProjects = status === "Todos os status" ? projects : projects.filter((project) => project.status === status);
+
+  // ── KPIs calculados a partir dos dados reais dos projetos ──
+  const total = projects.length;
+  const approved = projects.filter((p) => p.status === "Proposta aprovada" || p.status === "Enviada").length;
+  const inAnalysis = projects.filter((p) => p.status === "Análise pronta" || p.status === "Análise revisada").length;
+  const processing = projects.filter((p) => p.status === "Processando").length;
+
   return <AppShell title="Relatórios" eyebrow="VISÃO GERAL">
     <div className="home">
-    <div className="welcome"><div><h2>Bom dia, Marina <span>✦</span></h2><p>Acompanhe suas propostas e transforme conversas em próximos passos.</p></div><div className="control-group"><select value={period} onChange={(event) => setPeriod(event.target.value)}><option>7 dias</option><option>30 dias</option><option>90 dias</option></select><select value={status} onChange={(event) => setStatus(event.target.value)}><option>Todos os status</option><option>Análise pronta</option><option>Proposta aprovada</option><option>Sem reunião</option><option>Processando</option><option>Análise revisada</option><option>Proposta em rascunho</option><option>Enviada</option><option>Falhou</option></select></div></div>
-    <div className="chart-grid intake-row"><MeetingIntake /><Card className="projects-card"><div className="card-heading"><div><h2>Seus projetos</h2><p>{filteredProjects.length} projetos encontrados</p></div><Link href="/projects/demo">Ver todos →</Link></div><div className="project-list">{apiDown && <p className="api-error" role="alert">⚠ {apiDown} Exibindo dados de exemplo.</p>}{apiProjects && !apiProjects.length && <p className="hint">Nenhum projeto ainda. <Link href="/projects/new">Crie o primeiro →</Link></p>}{actionError && <p className="api-error" role="alert">⚠ {actionError}</p>}{filteredProjects.map((project, index) => <div className="project-item" key={project.id + project.name}>{renamingId === project.id && apiProjects ? <div className="project-rename"><input autoFocus aria-label="Novo nome do projeto" value={draftName} onChange={(e) => setDraftName(e.target.value)} onBlur={() => commitRename(project.id, project.name)} onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); if (e.key === "Escape") { setRenamingId(null); } }} /></div> : <Link href={apiProjects ? `/projects/${project.id}` : (index === 0 ? "/projects/demo" : "#")} className="project-row"><b className={`project-icon p${index}`}>⌁</b><span className="project-name"><strong>{project.name}</strong><small>{project.client}</small></span><i className="progress"><em style={{ width: `${project.progress}%` }} /></i><Badge tone={project.tone}>{project.status}</Badge></Link>}{apiProjects && <ProjectMenu onRename={() => { setDraftName(project.name); setRenamingId(project.id); }} onDelete={() => removeProject(project.id, project.name)} />}</div>)}</div></Card></div>
+      <div className="welcome">
+        <div>
+          <h2>Bom dia, Marina <span>✦</span></h2>
+          <p>Acompanhe suas propostas e transforme conversas em próximos passos.</p>
+        </div>
+        <div className="control-group">
+          <select value={period} onChange={(event) => setPeriod(event.target.value)}><option>7 dias</option><option>30 dias</option><option>90 dias</option></select>
+          <select value={status} onChange={(event) => setStatus(event.target.value)}><option>Todos os status</option><option>Análise pronta</option><option>Proposta aprovada</option><option>Sem reunião</option><option>Processando</option><option>Análise revisada</option><option>Proposta em rascunho</option><option>Enviada</option><option>Falhou</option></select>
+        </div>
+      </div>
+
+      <div className="kpi-row">
+        <div className="kpi-card"><span className="kpi-icon kpi-icon-blue"><FolderGlyph /></span><div><b>{total}</b><small>Projetos ativos</small></div></div>
+        <div className="kpi-card"><span className="kpi-icon kpi-icon-green">✓</span><div><b>{approved}</b><small>Propostas aprovadas</small></div></div>
+        <div className="kpi-card"><span className="kpi-icon kpi-icon-purple">✦</span><div><b>{inAnalysis}</b><small>Em análise</small></div></div>
+        <div className="kpi-card"><span className="kpi-icon kpi-icon-amber">⏱</span><div><b>{processing}</b><small>Processando</small></div></div>
+      </div>
+
+      <div className="chart-grid intake-row">
+        <MeetingIntake />
+        <Card className="projects-card projects-panel">
+          <div className="card-heading">
+            <div><h2>Seus projetos</h2><p>{filteredProjects.length} projetos encontrados</p></div>
+            <Link href="/projects/demo">Ver todos →</Link>
+          </div>
+          <div className="project-list">
+            {apiDown && <p className="api-error" role="alert">⚠ {apiDown} Exibindo dados de exemplo.</p>}
+            {apiProjects && !apiProjects.length && <p className="hint">Nenhum projeto ainda. <Link href="/projects/new">Crie o primeiro →</Link></p>}
+            {actionError && <p className="api-error" role="alert">⚠ {actionError}</p>}
+            {filteredProjects.map((project, index) => <div className="project-item" key={project.id + project.name}>
+              {renamingId === project.id && apiProjects
+                ? <div className="project-rename"><input autoFocus aria-label="Novo nome do projeto" value={draftName} onChange={(e) => setDraftName(e.target.value)} onBlur={() => commitRename(project.id, project.name)} onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); if (e.key === "Escape") { setRenamingId(null); } }} /></div>
+                : <Link href={apiProjects ? `/projects/${project.id}` : (index === 0 ? "/projects/demo" : "#")} className="project-row">
+                    <b className={`project-icon p${index}`}><FolderGlyph /></b>
+                    <span className="project-name"><strong>{project.name}</strong><small>{project.client}</small></span>
+                    <i className="progress"><em style={{ width: `${project.progress}%` }} /></i>
+                    <Badge tone={project.tone}>{project.status}</Badge>
+                  </Link>}
+              {apiProjects && <ProjectMenu onRename={() => { setDraftName(project.name); setRenamingId(project.id); }} onDelete={() => removeProject(project.id, project.name)} />}
+            </div>)}
+          </div>
+        </Card>
+      </div>
     </div>
   </AppShell>;
 }

@@ -4,6 +4,7 @@ import { useState, Suspense } from "react";
 import { AppShell, Badge, Button } from "@/components/AppShell";
 import { ErrorBanner, Loading, errorMessage, useLoad } from "@/components/Api";
 import { api } from "@/lib/api";
+import { DEMO_CONTACT, DEMO_ENABLED } from "@/lib/demo-mock";
 
 function ProposalPageInner() {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +16,7 @@ function ProposalPageInner() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const { data, error, loading, reload } = useLoad(async () => {
     const proposal = await api.getProposal(id);
@@ -32,11 +34,30 @@ function ProposalPageInner() {
   const statusLabel = approved ? "Aprovada" : "Rascunho";
 
   function openSend() {
-    setEmail(project.client.contact_email ?? "");
-    setPhone(project.client.contact_phone ?? "");
+    setEmail(DEMO_ENABLED ? DEMO_CONTACT.email : project.client.contact_email ?? "");
+    setPhone(DEMO_ENABLED ? DEMO_CONTACT.phone : project.client.contact_phone ?? "");
     setActionError(null);
     setSent(false);
     setSendOpen(true);
+  }
+
+  async function copyLink() {
+    const url = `${window.location.origin}/proposals/${proposal.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      // fallback
+      const input = document.createElement("input");
+      input.value = url;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      document.body.removeChild(input);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    }
   }
 
   async function authorizeSend() {
@@ -90,7 +111,6 @@ function ProposalPageInner() {
     setSending(true);
     setActionError(null);
     try {
-      // Persiste o que o usuário preencheu para os próximos envios.
       await api.updateProject(project.id, { client: { contact_email: emailVal || null, contact_phone: phoneVal || null } });
       await api.createDelivery({
         approval_id: version.approval.id,
@@ -105,25 +125,39 @@ function ProposalPageInner() {
     }
   }
 
-  return <AppShell title="Proposta comercial" eyebrow="PROPOSTA">
-    <div className="proposal-pdf-view">
-      <header className="proposal-pdf-head">
-        <div>
+  const topbarActions = (
+    <div className="proposal-topbar-actions">
+      <button type="button" className="btn-copy-link" onClick={copyLink} title="Copiar link da proposta">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
+        {linkCopied ? "Link copiado!" : "Copiar link"}
+      </button>
+      {approved
+        ? <button type="button" className="btn-approve" onClick={openSend}>
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
+            Preparar envio
+          </button>
+        : <button type="button" className="btn-approve" onClick={() => setAuthOpen(true)}>
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+            Aprovar proposta
+          </button>}
+    </div>
+  );
+
+  return <AppShell title={`Proposta v${version.number}`} eyebrow="PROPOSTA" action={topbarActions}>
+    <div className="proposal-viewer">
+      <div className="proposal-viewer-toolbar">
+        <div className="proposal-viewer-meta">
           <Badge tone={tone}>{statusLabel} v{version.number}</Badge>
-          <h2>{version.content.title}</h2>
-          <p>{version.content.client.company}</p>
+          <span className="proposal-viewer-title">{version.content.title}</span>
+          <span className="proposal-viewer-sep">·</span>
+          <span className="proposal-viewer-client">{version.content.client.company}</span>
         </div>
-        <div className="proposal-pdf-actions">
-          {approved
-            ? <Button onClick={openSend}>Preparar envio</Button>
-            : <Button onClick={() => setAuthOpen(true)}>Aprovar esta versão</Button>}
-        </div>
-      </header>
+      </div>
 
       <ErrorBanner message={actionError} />
 
-      <div className="proposal-pdf-frame">
-        <iframe className="pdf-frame" title="PDF da proposta" src={api.pdfUrl(proposal.id, version.number)} />
+      <div className="proposal-viewer-frame">
+        <iframe className="proposal-viewer-iframe" title="PDF da proposta" src={api.pdfUrl(proposal.id, version.number)} />
       </div>
     </div>
 

@@ -8,6 +8,7 @@ import { api, type Analysis, type Meeting } from "@/lib/api";
 import { launchPendingMeeting } from "@/lib/pending-meeting";
 import { ensureProposal } from "@/lib/proposal-job";
 import "./processing.css";
+import "./orb.css";
 
 const AUDIO_STEPS = [
   { key: "created", label: "Arquivo recebido", detail: "Seu áudio foi enviado e está pronto para processamento." },
@@ -282,7 +283,23 @@ function MeetingProcessingPageInner() {
 
             <div className="proc-orb-wrap" aria-live="polite">
               <div className={`proc-orb${done ? " done" : ""}${isFailed ? " failed" : ""}`}>
-                <span className="ring r1" /><span className="ring r2" /><span className="spinner" />
+                <span className="orb-glow" />
+                <svg className="orb-svg" viewBox="0 0 200 200" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="orb-grad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="var(--orb-a)" />
+                      <stop offset="100%" stopColor="var(--orb-b)" />
+                    </linearGradient>
+                  </defs>
+                  <circle className="orb-halo" cx="100" cy="100" r="94" />
+                  <circle className="orb-track" cx="100" cy="100" r="76" />
+                  <circle className="orb-arc" cx="100" cy="100" r="76" pathLength="100" />
+                  <g className="orb-satellites">
+                    <circle cx="100" cy="6" r="3.2" />
+                    <circle cx="194" cy="100" r="2.2" />
+                    <circle cx="34" cy="166" r="2.6" />
+                  </g>
+                </svg>
                 <span className="core">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     {done
@@ -292,7 +309,6 @@ function MeetingProcessingPageInner() {
                         : <><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" /><circle cx="12" cy="12" r="3.2" /></>}
                   </svg>
                 </span>
-                {!done && !isFailed && [0, 1, 2, 3, 4, 5].map((i) => <span key={i} className={`orbit-dot o${i}`} />)}
               </div>
               <h2>{stageTitle}</h2>
               <p>{stageText}</p>
