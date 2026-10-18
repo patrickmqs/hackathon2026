@@ -38,7 +38,7 @@ function NewMeetingInner() {
         setMeeting(m);
         if (m.status === "analysis_ready" || m.status === "reviewed") {
           if (timer.current) clearInterval(timer.current);
-          router.push(`/meetings/${id}/analysis`);
+          router.push(`/projects/${projectId}`);
         } else if (m.status === "failed") {
           if (timer.current) clearInterval(timer.current);
           setError(m.error?.message ?? "O processamento falhou.");
