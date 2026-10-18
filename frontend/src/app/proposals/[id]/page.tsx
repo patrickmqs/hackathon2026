@@ -34,8 +34,8 @@ function ProposalPageInner() {
   const statusLabel = approved ? "Aprovada" : "Rascunho";
 
   function openSend() {
-    setEmail(project.client.contact_email ?? (DEMO_ENABLED ? DEMO_CONTACT.email : ""));
-    setPhone(project.client.contact_phone ?? (DEMO_ENABLED ? DEMO_CONTACT.phone : ""));
+    setEmail(DEMO_ENABLED ? DEMO_CONTACT.email : project.client.contact_email ?? "");
+    setPhone(DEMO_ENABLED ? DEMO_CONTACT.phone : project.client.contact_phone ?? "");
     setActionError(null);
     setSent(false);
     setSendOpen(true);

@@ -1,10 +1,11 @@
-// Modo demo: com NEXT_PUBLIC_DEMO_MOCK=true, importar uma reunião não chama a IA. A tela de
+// Modo demo (padrão): importar uma reunião não chama a IA. A tela de
 // processamento roda ~15s "de verdade" e termina numa análise pronta (Clínica Sorriso Vivo).
 // Estado só em memória: recarregar a página reinicia a demo.
 import { isProposalApproved, resetDemoProposal, DEMO_PROPOSAL_ID } from "@/lib/demo-proposal";
 import type { Analysis, Meeting, Project, Summary } from "@/lib/api";
 
-export const DEMO_ENABLED = process.env.NEXT_PUBLIC_DEMO_MOCK === "true";
+// Ligado por padrão (o deploy não precisa de variável); NEXT_PUBLIC_DEMO_MOCK=false volta ao fluxo real.
+export const DEMO_ENABLED = process.env.NEXT_PUBLIC_DEMO_MOCK !== "false";
 export const DEMO_DELAY_MS = 15_000;
 // Destinatário pré-preenchido no envio da proposta (só no modo demo, quando o projeto não tem contato).
 export const DEMO_CONTACT = { email: "patrickmquintino@gmail.com", phone: "+5521999042005" };
