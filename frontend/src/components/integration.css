@@ -69,3 +69,67 @@
 .wa-test-row input { flex: 1; min-width: 0; }
 .wa-actions { display: flex; gap: 6px; flex: none; }
 [data-theme="dark"] .wa-qr { background: #fff; }
+
+/* Logo: versão clara no tema claro, versão escura no tema escuro */
+.brand-logo { height: 58px; width: auto; display: block; }
+.brand-logo-dark { display: none; }
+[data-theme="dark"] .brand-logo-light { display: none; }
+[data-theme="dark"] .brand-logo-dark { display: block; }
+
+/* Header mais compacto (desktop) */
+@media (min-width: 701px) {
+  .main .topbar { height: 68px; }
+  .main .topbar h1 { font-size: 20px; margin-top: 2px; }
+}
+
+/* Botão de tema: só o ícone */
+.topbar-actions .theme-toggle { width: 40px; height: 40px; padding: 0; font-size: 16px; }
+
+/* Início: upload ao lado de "Seus projetos" */
+.chart-grid.intake-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: stretch; }
+.projects-card { display: flex; flex-direction: column; min-height: 0; }
+.projects-card .project-list { flex: 1; max-height: 420px; overflow-y: auto; }
+@media (max-width: 1000px) { .chart-grid.intake-row { grid-template-columns: 1fr; } }
+
+/* Início em tela única (hero): ocupa a altura da janela, sem rolagem da página */
+.main:has(.home) { display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
+.content:has(> .home) { flex: 1; min-height: 0; width: 100%; box-sizing: border-box; padding-top: 16px; padding-bottom: 20px; }
+.home { height: 100%; display: flex; flex-direction: column; gap: 14px; }
+.home > .welcome { flex: none; display: flex; align-items: center; justify-content: space-between; margin: 0; }
+.home > .welcome h2 { margin: 0 0 4px; }
+.home > .welcome .metrics { margin-top: 0; text-align: right; }
+.home > .dashboard-controls { flex: none; margin: 0; min-height: 0; padding: 14px 20px; }
+.home > .chart-grid { flex: 1; min-height: 0; margin: 0; }
+.home > .chart-grid > .card { margin: 0; min-height: 0; overflow-y: auto; }
+.home .meeting-intake { display: flex; flex-direction: column; }
+.home .meeting-dropzone { flex: 1; min-height: 140px; }
+.home .projects-card .project-list { max-height: none; }
+@media (max-width: 1000px) {
+  .main:has(.home) { height: auto; overflow: visible; }
+  .home { height: auto; }
+  .home > .chart-grid > .card { overflow: visible; }
+}
+
+/* Início: upload sem rolagem, mais largo e centralizado; "Seus projetos" mais estreito */
+.chart-grid.intake-row { grid-template-columns: minmax(0, 1.55fr) minmax(0, .85fr); gap: 20px; }
+.home > .chart-grid > .meeting-intake { overflow: visible; justify-content: center; padding: 22px 28px; }
+.home .meeting-intake > .card-heading { margin-bottom: 14px; }
+.home .meeting-dropzone { flex: 0 1 auto; min-height: 150px; }
+@media (max-width: 1000px) { .chart-grid.intake-row { grid-template-columns: 1fr; } }
+
+/* Upload em evidência (card alto); só o bloco de arquivo/botões fica mais compacto e centralizado */
+.home .meeting-dropzone,
+.home .meeting-intake .paste-transcript,
+.home .meeting-intake .analyze-meeting,
+.home .meeting-intake .intake-footnote,
+.home .meeting-intake .selected-file,
+.home .meeting-intake .intake-message { width: 100%; max-width: 440px; margin-left: auto; margin-right: auto; box-sizing: border-box; }
+.home .meeting-dropzone { flex: 0 1 auto; min-height: 150px; padding: 18px 16px; overflow: hidden; text-align: center; }
+.home .meeting-dropzone small, .home .meeting-dropzone strong { max-width: 100%; overflow-wrap: anywhere; }
+.home .meeting-dropzone .select-file-button { max-width: 100%; }
+.home .meeting-intake .paste-transcript { margin-top: 8px; }
+.home .meeting-intake .analyze-meeting { margin-top: 10px; }
+
+/* Botões "Colar transcrição" e "Analisar reunião" mais compactos */
+.home .meeting-intake .paste-transcript,
+.home .meeting-intake .analyze-meeting { max-width: 340px; min-height: 36px; padding-top: 7px; padding-bottom: 7px; font-size: 12px; }

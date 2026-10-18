@@ -3,6 +3,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
+import logoDark from "@/logo/dark.png";
+import logoLight from "@/logo/ligth.png";
 
 export function AppShell({ children, title, eyebrow, action }: { children: ReactNode; title: string; eyebrow?: string; action?: ReactNode }) {
   const [darkMode, setDarkMode] = useState(false);
@@ -18,17 +20,14 @@ export function AppShell({ children, title, eyebrow, action }: { children: React
 
   return <div className="app-frame">
     <main className="main"><header className="topbar"><div className="topbar-heading">
-      <Link href="/" className="brand" aria-label="Proposal AI">
-        <span className="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 32 32" role="img">
-            <path d="M7 8.5A5.5 5.5 0 0 1 12.5 3h7A5.5 5.5 0 0 1 25 8.5v5a5.5 5.5 0 0 1-5.5 5.5H14l-5 4v-4.8A5.5 5.5 0 0 1 7 13.5v-5Z" />
-            <path d="m12 11.5 3 3 6-6" className="brand-check" />
-          </svg>
-        </span>
-        proposal<span>ai</span>
+      <Link href="/" className="brand" aria-label="Scope AI">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="brand-logo brand-logo-light" src={logoLight.src} width={logoLight.width} height={logoLight.height} alt="Scope AI" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="brand-logo brand-logo-dark" src={logoDark.src} width={logoDark.width} height={logoDark.height} alt="" aria-hidden="true" />
       </Link>
       <div className="topbar-title">{eyebrow && <small className="eyebrow">{eyebrow}</small>}<h1>{title}</h1></div>
-    </div><div className="topbar-actions"><button className="theme-toggle" type="button" onClick={() => setDarkMode((current) => !current)} aria-label={darkMode ? "Ativar modo claro" : "Ativar modo escuro"}>{darkMode ? "☀" : "◐"} <span>{darkMode ? "Modo claro" : "Modo escuro"}</span></button>{action}</div></header><div className="content">{children}</div></main>
+    </div><div className="topbar-actions"><button className="theme-toggle" type="button" onClick={() => setDarkMode((current) => !current)} aria-label={darkMode ? "Ativar modo claro" : "Ativar modo escuro"} title={darkMode ? "Ativar modo claro" : "Ativar modo escuro"}>{darkMode ? "☀" : "◐"}</button>{action}</div></header><div className="content">{children}</div></main>
   </div>;
 }
 
