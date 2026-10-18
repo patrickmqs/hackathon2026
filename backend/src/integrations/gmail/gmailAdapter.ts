@@ -62,7 +62,7 @@ function buildRawMime(opts: {
 }
 
 export function mapError(error: unknown): ProviderError {
-  const e = error as { code?: number | string; errors?: { reason?: string; message?: string }[] };
+  const e = error as { code?: number | string; message?: string; errors?: { reason?: string; message?: string }[] };
   const reason = e?.errors?.[0]?.reason ?? "";
   const googleMessage = e?.errors?.[0]?.message ?? "";
   const status = e?.code;
@@ -110,9 +110,10 @@ export function mapError(error: unknown): ProviderError {
       raw: error,
     };
   }
+  const detail = reason || googleMessage || (typeof e?.message === "string" ? e.message : "");
   return {
     code: "GMAIL_SEND_FAILED",
-    message: `Falha ao enviar o e-mail pelo Gmail${reason ? ` (${reason})` : ""}${googleMessage ? `: ${googleMessage}` : ""}.`,
+    message: `Falha ao enviar o e-mail pelo Gmail${detail ? ` (${detail})` : ""}.`,
     retryable: true,
     raw: error,
   };

@@ -87,4 +87,10 @@ describe("mapError", () => {
     const quota = mapError({ code: 403, errors: [{ reason: "dailyLimitExceeded" }] });
     expect(quota.code).toBe("GMAIL_RATE_LIMITED");
   });
+
+  it("expõe a mensagem bruta quando não há reason conhecido", () => {
+    const unknown = mapError({ code: 500, message: "refresh_token inválido" });
+    expect(unknown.code).toBe("GMAIL_SEND_FAILED");
+    expect(unknown.message).toContain("refresh_token inválido");
+  });
 });

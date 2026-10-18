@@ -44,7 +44,6 @@ export function buildAuthUrl(): string {
     prompt: "consent",
     scope: SCOPES,
     state,
-    include_granted_scopes: true,
   });
 }
 
@@ -66,6 +65,13 @@ function decodeEmail(idToken: string | null | undefined): string | null {
   }
 }
 
+export class GmailSendScopeMissingError extends Error {
+  constructor(readonly grantedScope: string) {
+    super("A conta Google não concedeu a permissão de envio (gmail.send).");
+    this.name = "GmailSendScopeMissingError";
+  }
+}
+
 export async function handleCallback(code: string, state: string | undefined): Promise<{ accountEmail: string }> {
   if (!gmailOAuthConfigured()) {
     throw new Error("GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET não configurados no backend.");
@@ -80,6 +86,14 @@ export async function handleCallback(code: string, state: string | undefined): P
   const accountEmail = decodeEmail(tokens.id_token);
   if (!accountEmail) {
     throw new Error("Não foi possível identificar o e-mail da conta Google (adicione os escopos openid/email).");
+  }
+
+  // O envio depende do escopo restrito gmail.send. Se o Google não o concedeu
+  // (app não verificado / fora de "Testing" / conta fora de Test users), não
+  // persiste a conexão para evitar uma "conexão falsa" que só falha no envio.
+  const grantedScope = typeof tokens.scope === "string" ? tokens.scope : "";
+  if (!grantedScope.includes("gmail.send")) {
+    throw new GmailSendScopeMissingError(grantedScope);
   }
 
   await repo.upsertOAuthCredential(PROVIDER, accountEmail, {

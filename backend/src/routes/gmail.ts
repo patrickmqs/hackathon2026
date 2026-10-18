@@ -8,6 +8,7 @@ import {
   disconnectGmail,
   getGmailStatus,
   gmailOAuthConfigured,
+  GmailSendScopeMissingError,
   handleCallback,
 } from "../integrations/gmail/oauth.js";
 
@@ -53,6 +54,7 @@ export function gmailAuthRouter(): Router {
 
   router.get("/callback", async (req, res) => {
     const errorUrl = `${config.frontendUrl}/settings?gmail=error`;
+    const scopeUrl = `${config.frontendUrl}/settings?gmail=scope`;
     try {
       const code = typeof req.query.code === "string" ? req.query.code : "";
       const state = typeof req.query.state === "string" ? req.query.state : undefined;
@@ -62,8 +64,8 @@ export function gmailAuthRouter(): Router {
       }
       await handleCallback(code, state);
       res.redirect(`${config.frontendUrl}/settings?gmail=connected`);
-    } catch {
-      res.redirect(errorUrl);
+    } catch (error) {
+      res.redirect(error instanceof GmailSendScopeMissingError ? scopeUrl : errorUrl);
     }
   });
 

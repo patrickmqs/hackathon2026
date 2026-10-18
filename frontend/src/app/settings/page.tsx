@@ -42,6 +42,9 @@ export default function SettingsPage() {
     } else if (params.get("gmail") === "error") {
       setMessage("Não foi possível conectar o Gmail. Tente novamente.");
       window.history.replaceState({}, "", "/settings");
+    } else if (params.get("gmail") === "scope") {
+      setMessage("A conta Google foi conectada, mas sem a permissão de envio. Reconecte e marque \"Enviar e-mail em seu nome\" (e verifique status \"Testing\" + Test users no Google Cloud).");
+      window.history.replaceState({}, "", "/settings");
     }
     void refreshGmail();
     void refreshWhatsapp();
