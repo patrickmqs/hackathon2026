@@ -32,5 +32,7 @@ ENV NODE_ENV=production \
 
 EXPOSE 8000
 
-# Aplica migrations pendentes e sobe o servidor (PORT é injetada pela plataforma)
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/backend/src/index.js"]
+# Aplica migrations pendentes e sobe o servidor (PORT é injetada pela plataforma).
+# O Neon (URL "-pooler" = pgbouncer) não segura o advisory lock do Prisma e o migrate estoura P1002;
+# com uma única réplica o lock é dispensável.
+CMD ["sh", "-c", "PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK=1 npx prisma migrate deploy && node dist/backend/src/index.js"]
