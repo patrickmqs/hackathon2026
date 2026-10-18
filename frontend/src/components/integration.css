@@ -256,3 +256,54 @@
 [data-theme="dark"] .notice { background: #101823; color: var(--muted); }
 /* O QR code precisa de fundo branco para ser lido; só suaviza a moldura no escuro */
 [data-theme="dark"] .wa-qr { border-color: #2c3a4d; box-shadow: 0 0 0 4px #101823; }
+
+/* Modo escuro: tudo que era tinta clara (selos, ícones, trilhas, avisos) vira tinta translúcida escura.
+   Tons: azul, verde, roxo, âmbar, vermelho e neutro. */
+[data-theme="dark"] {
+  --tint-blue-bg: rgba(120, 164, 255, .16);   --tint-blue-fg: #9dbdff;
+  --tint-green-bg: rgba(91, 202, 156, .16);   --tint-green-fg: #6fd8ac;
+  --tint-purple-bg: rgba(165, 140, 232, .18); --tint-purple-fg: #b9a3f0;
+  --tint-amber-bg: rgba(226, 174, 88, .16);   --tint-amber-fg: #ecc27a;
+  --tint-red-bg: rgba(238, 133, 141, .16);    --tint-red-fg: #f5a1a8;
+  --tint-gray-bg: rgba(152, 167, 187, .14);   --tint-gray-fg: #aebbd0;
+}
+[data-theme="dark"] .badge { background: var(--tint-gray-bg); color: var(--tint-gray-fg); }
+[data-theme="dark"] .badge.blue,
+[data-theme="dark"] .item-icon.blue,
+[data-theme="dark"] .summary-icon.blue,
+[data-theme="dark"] .p0 { background: var(--tint-blue-bg); color: var(--tint-blue-fg); }
+[data-theme="dark"] .badge.green,
+[data-theme="dark"] .summary-icon.green,
+[data-theme="dark"] .p1 { background: var(--tint-green-bg); color: var(--tint-green-fg); }
+[data-theme="dark"] .badge.purple,
+[data-theme="dark"] .item-icon.purple,
+[data-theme="dark"] .summary-icon.purple { background: var(--tint-purple-bg); color: var(--tint-purple-fg); }
+[data-theme="dark"] .badge.amber,
+[data-theme="dark"] .item-icon.amber,
+[data-theme="dark"] .summary-icon.amber,
+[data-theme="dark"] .p2 { background: var(--tint-amber-bg); color: var(--tint-amber-fg); }
+[data-theme="dark"] .badge.red { background: var(--tint-red-bg); color: var(--tint-red-fg); }
+[data-theme="dark"] .gmail { background: var(--tint-red-bg); color: var(--tint-red-fg); }
+[data-theme="dark"] .whatsapp { background: var(--tint-green-bg); color: var(--tint-green-fg); }
+/* trilhas de progresso */
+[data-theme="dark"] .progress,
+[data-theme="dark"] .review-progress i { background: #2c3a4d; }
+/* blocos informativos e de status */
+[data-theme="dark"] .settings-info,
+[data-theme="dark"] .section-nav p.selected,
+[data-theme="dark"] .item-filter button.active,
+[data-theme="dark"] .transcript-speaker > span,
+[data-theme="dark"] .info em { background: var(--tint-blue-bg); color: var(--tint-blue-fg); border-color: transparent; }
+[data-theme="dark"] .detail .ai { background: var(--tint-purple-bg); color: var(--tint-purple-fg); }
+[data-theme="dark"] .approved,
+[data-theme="dark"] .green-info,
+[data-theme="dark"] .settings-message.success,
+[data-theme="dark"] .security-item span { background: var(--tint-green-bg); color: var(--tint-green-fg); border-color: transparent; }
+[data-theme="dark"] .settings-message,
+[data-theme="dark"] .detail blockquote,
+[data-theme="dark"] .transcript-highlight { background: var(--tint-amber-bg); color: var(--tint-amber-fg); border-color: transparent; }
+/* áreas de conteúdo */
+[data-theme="dark"] .dropzone,
+[data-theme="dark"] .transcript-panel,
+[data-theme="dark"] .transcript-search { background: #182433; color: var(--ink); border-color: #2c3a4d; }
+[data-theme="dark"] .next .button { background: var(--tint-blue-bg); color: var(--tint-blue-fg); }
