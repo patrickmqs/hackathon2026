@@ -1,4 +1,5 @@
 import { api, type Meeting } from "@/lib/api";
+import { DEMO_ENABLED, startDemoMeeting } from "@/lib/demo-mock";
 import { getFileExtension, validateTranscript } from "@/lib/meeting-upload";
 
 export type MeetingSource = { kind: "file"; file: File } | { kind: "text"; text: string };
@@ -8,6 +9,7 @@ export type MeetingSource = { kind: "file"; file: File } | { kind: "text"; text:
 let pending: { source: MeetingSource; promise: Promise<Meeting> | null } | null = null;
 
 async function startMeeting(source: MeetingSource): Promise<Meeting> {
+  if (DEMO_ENABLED) return startDemoMeeting();
   // O projeto nasce sem dados: a IA preenche nome e empresa a partir da reunião.
   const project = await api.createProject({});
   if (source.kind === "text") {

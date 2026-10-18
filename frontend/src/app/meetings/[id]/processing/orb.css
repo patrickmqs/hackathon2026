@@ -1,0 +1,93 @@
+/* =====================================================================
+   Redesign da tela de carregamento: orbe em SVG nítido, passos com linha que preenche,
+   barra com brilho e fundo com luz ambiente. Carregado depois de processing.css para sobrepor.
+   ===================================================================== */
+.proc { --orb-a: var(--blue); --orb-b: var(--purple); }
+.proc-orb-wrap { position: relative; }
+.proc-orb-wrap::before {                      /* luz ambiente atrás do orbe */
+  content: ""; position: absolute; inset: 8% 0 auto; margin: 0 auto; width: min(360px, 90%); aspect-ratio: 1;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--orb-a) 22%, transparent), transparent 72%);
+  filter: blur(14px); opacity: .9; pointer-events: none; animation: orb-ambient 5s ease-in-out infinite;
+}
+.proc-orb.done { --orb-a: var(--green); --orb-b: color-mix(in srgb, var(--green) 55%, var(--blue)); }
+.proc-orb.failed { --orb-a: var(--red); --orb-b: color-mix(in srgb, var(--red) 60%, var(--amber)); }
+
+.proc-orb {
+  container-type: normal; position: relative; display: grid; place-items: center; isolation: isolate;
+  width: clamp(170px, 31vh, 250px); height: clamp(170px, 31vh, 250px); color: var(--orb-a);
+}
+.proc-orb .orb-glow {
+  position: absolute; inset: 24%; border-radius: 50%; z-index: -1; filter: blur(10px);
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--orb-a) 38%, transparent), transparent);
+  animation: orb-breathe 3.2s ease-in-out infinite;
+}
+.orb-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.orb-svg circle { fill: none; transform-box: fill-box; transform-origin: center; }
+.orb-halo { stroke: color-mix(in srgb, var(--orb-a) 30%, transparent); stroke-width: 1; stroke-dasharray: 1.5 7; animation: orb-spin 38s linear infinite reverse; }
+.orb-track { stroke: color-mix(in srgb, var(--line) 85%, transparent); stroke-width: 5; }
+.orb-arc {
+  stroke: url(#orb-grad); stroke-width: 5; stroke-linecap: round; stroke-dasharray: 30 70;
+  animation: orb-spin 1.7s linear infinite, orb-stretch 2.6s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--orb-a) 55%, transparent));
+}
+.orb-satellites { transform-box: view-box; transform-origin: 100px 100px; animation: orb-spin 14s linear infinite; }
+.orb-satellites circle { fill: var(--orb-b); stroke: none; opacity: .85; }
+.orb-satellites circle:nth-child(2) { fill: var(--orb-a); }
+.proc-orb .core {
+  position: relative; width: 40%; height: 40%; border-radius: 50%; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  border: 1px solid color-mix(in srgb, var(--orb-a) 35%, var(--line));
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--orb-a) 10%, transparent), inset 0 0 18px color-mix(in srgb, var(--orb-a) 14%, transparent);
+  color: var(--orb-a); animation: orb-core 3.2s ease-in-out infinite;
+}
+.proc-orb .core svg { width: 44%; height: 44%; animation: none; }
+
+/* concluído / falhou: anel cheio e quieto */
+.proc-orb.done .orb-arc, .proc-orb.failed .orb-arc { animation: none; stroke-dasharray: 100 0; }
+.proc-orb.done .orb-satellites, .proc-orb.failed .orb-satellites,
+.proc-orb.done .orb-halo, .proc-orb.failed .orb-halo { animation-play-state: paused; opacity: .35; }
+.proc-orb.done .core { animation: orb-pop .5s var(--ease) both; }
+
+.proc-orb-wrap h2 { margin: clamp(12px, 2.6vh, 24px) 0 6px; font-size: clamp(19px, 3vh, 26px); font-weight: 650; letter-spacing: -.02em; }
+.proc-orb-wrap p { color: var(--muted); font-size: 14px; }
+
+/* passos: a linha vertical preenche conforme avança */
+.proc-steps li::before { background: color-mix(in srgb, var(--line) 80%, transparent); transition: background-color .5s var(--ease-soft); }
+.proc-steps li.complete::before { background: linear-gradient(var(--green), color-mix(in srgb, var(--green) 40%, transparent)); }
+.proc-node { transition: all .4s var(--ease); }
+.proc-steps li.active .proc-node {
+  background: color-mix(in srgb, var(--blue) 14%, transparent);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--blue) 14%, transparent), 0 0 22px color-mix(in srgb, var(--blue) 35%, transparent);
+}
+.proc-steps li.complete .proc-node { animation: orb-pop .45s var(--ease) both; }
+.proc-steps li { transition: opacity .4s var(--ease-soft), transform .4s var(--ease); }
+.proc-steps li.active { transform: translateX(3px); }
+
+/* log: as bordas desbotam enquanto rola */
+.proc-log-body {
+  -webkit-mask-image: linear-gradient(transparent, #000 14px, #000 calc(100% - 14px), transparent);
+  mask-image: linear-gradient(transparent, #000 14px, #000 calc(100% - 14px), transparent);
+  padding: 6px 6px 6px 0;
+}
+
+/* barra de progresso com brilho que percorre o preenchimento */
+.proc-progress .track { height: 10px; background: color-mix(in srgb, var(--line) 70%, transparent); }
+.proc-progress .track i { position: relative; overflow: hidden; background: linear-gradient(90deg, var(--orb-a), var(--orb-b)); }
+.proc-progress .track i::after {
+  content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .45), transparent);
+  animation: orb-sheen 2.2s ease-in-out infinite;
+}
+.proc-percent { font-size: 22px; font-weight: 650; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+
+@keyframes orb-spin { to { transform: rotate(360deg); } }
+@keyframes orb-stretch { 0%, 100% { stroke-dasharray: 22 78; } 50% { stroke-dasharray: 52 48; } }
+@keyframes orb-breathe { 0%, 100% { transform: scale(.92); opacity: .75; } 50% { transform: scale(1.08); opacity: 1; } }
+@keyframes orb-core { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+@keyframes orb-ambient { 0%, 100% { opacity: .65; transform: scale(.96); } 50% { opacity: 1; transform: scale(1.05); } }
+@keyframes orb-pop { 0% { transform: scale(.7); } 60% { transform: scale(1.1); } 100% { transform: scale(1); } }
+@keyframes orb-sheen { to { transform: translateX(100%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .proc-orb *, .proc-orb-wrap::before, .proc-progress .track i::after { animation: none !important; }
+}

@@ -1,0 +1,138 @@
+/* Sistema de movimento e simplicidade: fluidez, transições suaves e menos ruído visual.
+   Carregado depois do globals.css; respeita prefers-reduced-motion. */
+
+:root {
+  --ease: cubic-bezier(.22, 1, .36, 1);       /* desacelera no fim: sensação de "pousar" */
+  --ease-soft: cubic-bezier(.4, 0, .2, 1);
+  --dur-fast: 140ms;
+  --dur: 240ms;
+  --dur-slow: 480ms;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-geist-sans), "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+code, pre, .wa-pairing-code { font-family: var(--font-geist-mono), ui-monospace, monospace; }
+:where(b, strong, h1, h2, h3) { letter-spacing: -.01em; }
+:where(p, li, small) { font-variant-numeric: tabular-nums; }
+
+/* ---------- Entradas: o conteúdo de cada tela sobe e aparece, em sequência ---------- */
+@keyframes fx-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes fx-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fx-pop { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes fx-slide-left { from { transform: translateX(32px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fx-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+/* usados por telas que já referenciavam estes nomes */
+@keyframes proc-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+.content > * { animation: fx-rise var(--dur-slow) var(--ease) both; }
+.content > *:nth-child(2) { animation-delay: 60ms; }
+.content > *:nth-child(3) { animation-delay: 120ms; }
+.content > *:nth-child(4) { animation-delay: 180ms; }
+.content > *:nth-child(n+5) { animation-delay: 240ms; }
+.rv, .proc, .home { animation: none; }               /* telas em hero animam por dentro */
+.home > *, .rv > *, .proc > * { animation: fx-rise var(--dur-slow) var(--ease) both; }
+.home > *:nth-child(2), .rv > *:nth-child(2), .proc > *:nth-child(2) { animation-delay: 70ms; }
+.home > *:nth-child(3), .rv > *:nth-child(3), .proc > *:nth-child(3) { animation-delay: 140ms; }
+.home > *:nth-child(n+4), .rv > *:nth-child(n+4), .proc > *:nth-child(n+4) { animation-delay: 210ms; }
+.chart-grid > *, .project-list > *, .rv-trio > *, .sum-grid > * { animation: fx-rise var(--dur-slow) var(--ease) both; }
+.chart-grid > *:nth-child(2), .project-list > *:nth-child(2), .sum-grid > *:nth-child(2) { animation-delay: 70ms; }
+.project-list > *:nth-child(3), .sum-grid > *:nth-child(3) { animation-delay: 120ms; }
+.project-list > *:nth-child(4), .sum-grid > *:nth-child(4) { animation-delay: 170ms; }
+.project-list > *:nth-child(n+5) { animation-delay: 220ms; }
+
+/* ---------- Transições em tudo que reage ao toque ---------- */
+.button, .card, .badge, a, input, select, textarea, .theme-toggle, .project-row, .remove-file,
+.rv-tabs button, .chat-quick button, .chat-send, .chat-fab, .selected-file, .meeting-dropzone, .topic {
+  transition: background-color var(--dur) var(--ease-soft), color var(--dur) var(--ease-soft),
+    border-color var(--dur) var(--ease-soft), box-shadow var(--dur) var(--ease-soft),
+    transform var(--dur-fast) var(--ease), opacity var(--dur) var(--ease-soft);
+}
+.topbar, .sidebar, body { transition: background-color var(--dur-slow) var(--ease-soft), color var(--dur-slow) var(--ease-soft); }
+
+.button:not(:disabled):hover, .chat-fab:hover { transform: translateY(-1px); }
+.button:not(:disabled):active, .chat-fab:active, .chat-send:not(:disabled):active, .project-menu-btn:active { transform: scale(.97); }
+.project-row:hover { background: color-mix(in srgb, var(--blue) 6%, transparent); border-radius: 10px; }
+:focus-visible { outline: 2px solid color-mix(in srgb, var(--blue) 70%, transparent); outline-offset: 2px; border-radius: 6px; }
+:focus:not(:focus-visible) { outline: none; }
+
+/* ---------- Simplicidade: menos sombra e borda, mais respiro ---------- */
+.card { box-shadow: none; border-color: color-mix(in srgb, var(--line) 75%, transparent); border-radius: 14px; }
+.card-heading { margin-bottom: 14px; }
+.project-row { border-top-color: color-mix(in srgb, var(--line) 55%, transparent); }
+.badge { font-weight: 700; letter-spacing: 0; }
+
+/* ---------- Barras e indicadores animados ---------- */
+.progress em, .proc-progress .track i, .review-progress em { transition: width var(--dur-slow) var(--ease); }
+
+/* ---------- Camadas: modais, painéis e menus entram com movimento ---------- */
+dialog.intake-modal[open] { animation: fx-pop var(--dur) var(--ease) both; }
+dialog.intake-modal::backdrop { animation: fx-fade var(--dur) var(--ease-soft) both; backdrop-filter: blur(3px); }
+.rv-overlay { animation: fx-fade var(--dur) var(--ease-soft) both; backdrop-filter: blur(2px); }
+.rv-drawer { animation: fx-slide-left var(--dur-slow) var(--ease) both; }
+.rv-chat-slot:not(.closed) > .chat { animation: fx-pop var(--dur-slow) var(--ease) both; }
+.project-menu-pop { animation: fx-pop var(--dur-fast) var(--ease) both; transform-origin: top right; }
+.chat-msg { animation: fx-rise var(--dur) var(--ease) both; }
+.rv-insight, .api-error, .intake-message { animation: fx-fade var(--dur) var(--ease-soft) both; }
+
+/* ---------- Carregamento: esqueleto em vez de texto solto ---------- */
+.skeleton { display: grid; gap: 14px; padding: 8px 0; }
+.skeleton i {
+  display: block; height: 18px; border-radius: 9px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--line) 80%, transparent) 25%, color-mix(in srgb, var(--line) 35%, transparent) 50%, color-mix(in srgb, var(--line) 80%, transparent) 75%);
+  background-size: 200% 100%; animation: fx-shimmer 1.6s linear infinite;
+}
+.skeleton i:nth-child(1) { width: 42%; height: 26px; }
+.skeleton i:nth-child(2) { width: 100%; height: 110px; border-radius: 14px; }
+.skeleton i:nth-child(3) { width: 78%; }
+.skeleton i:nth-child(4) { width: 56%; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  /* iteration-count 1: sem isso, animações infinitas com .01ms viram um tremor frenético (giram/piscam sem parar) */
+  *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+/* Fallbacks de Suspense que ainda usam <p className="api-loading">: mesmo esqueleto, sem texto visível */
+.api-loading {
+  display: block; width: min(420px, 60%); height: 26px; margin: 24px 0; font-size: 0; border-radius: 9px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--line) 80%, transparent) 25%, color-mix(in srgb, var(--line) 35%, transparent) 50%, color-mix(in srgb, var(--line) 80%, transparent) 75%);
+  background-size: 200% 100%; animation: fx-shimmer 1.6s linear infinite;
+}
+
+/* ---------- Transições entre telas (View Transitions) ---------- */
+/* Cabeçalho ancorado: o conteúdo troca, o cabeçalho não pisca nem se move. */
+::view-transition-group(app-header) { animation: none; z-index: 100; }
+::view-transition-old(app-header) { display: none; }
+::view-transition-new(app-header) { animation: none; }
+/* Cliques passam por cima da camada de transição. */
+::view-transition { pointer-events: none; }
+
+@keyframes vt-fade { from { opacity: 0; filter: blur(4px); } to { opacity: 1; filter: blur(0); } }
+@keyframes vt-rise { from { transform: translateY(18px) scale(.995); } to { transform: none; } }
+/* Saída rápida, entrada mais lenta e atrasada: a tela antiga some antes de a nova chegar. */
+::view-transition-old(.page-out) { animation: 150ms var(--ease-soft) both vt-fade reverse; }
+::view-transition-new(.page-in) { animation: 260ms var(--ease-soft) 110ms both vt-fade, 480ms var(--ease) 110ms both vt-rise; }
+
+/* Troca de tema: círculo que se expande a partir do botão (a classe só existe durante a troca). */
+.theme-vt::view-transition-old(root),
+.theme-vt::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+.theme-vt::view-transition-old(root) { z-index: 1; }
+.theme-vt::view-transition-new(root) { z-index: 2; }
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*), ::view-transition-new(*), ::view-transition-group(*) { animation-duration: 0s !important; animation-delay: 0s !important; }
+}
+
+/* ---------- Brilho sutil nos cards ao passar o mouse (sem mexer em tamanho) ---------- */
+.chart-grid .card:hover, .projects-card:hover, .rv-summary:hover { border-color: color-mix(in srgb, var(--blue) 35%, var(--line)); }
+
+/* ---------- Orbe de processamento: animações estáveis na GPU ---------- */
+.proc-orb .spinner, .proc-orb .ring, .orbit-dot { will-change: transform; transform-origin: center; backface-visibility: hidden; }
+.proc-orb .spinner { animation: proc-spin 1.6s linear infinite; }
+.proc-orb.done .spinner, .proc-orb.failed .spinner { animation: none; will-change: auto; }

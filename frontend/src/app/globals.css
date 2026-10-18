@@ -69,3 +69,185 @@ dialog.intake-modal{position:fixed;inset:0;width:min(640px,calc(100% - 40px));ma
 [data-theme="dark"] .intake-modal{background:#182433}
 @media(max-width:1000px){.chart-grid{grid-template-columns:minmax(0,1fr) minmax(0,.9fr)}.meeting-intake{padding:18px}.status-chart{gap:14px}.donut{width:96px;height:96px}.donut:after{inset:22px}}
 @media(max-width:700px){.dashboard-controls{display:block}.chart-grid{grid-template-columns:1fr}.control-group{flex-wrap:wrap}.meeting-intake{padding:18px}.meeting-dropzone{min-height:180px}.intake-project-fields{grid-template-columns:1fr}.selected-file{gap:7px}.file-validation{max-width:72px}.intake-modal{padding:18px}.intake-modal-actions{flex-direction:column-reverse}.intake-modal-actions .button{width:100%;min-height:44px}}
+
+/* ── Proposal Viewer (full-width PDF + topbar actions) ── */
+.proposal-topbar-actions{display:flex;align-items:center;gap:10px}
+.btn-copy-link{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--ink);font-size:13px;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s}
+.btn-copy-link:hover{background:color-mix(in srgb,var(--blue) 8%,transparent);border-color:color-mix(in srgb,var(--blue) 30%,var(--line))}
+.btn-copy-link svg{flex:none}
+.btn-approve{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border:0;border-radius:10px;background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 16px color-mix(in srgb,var(--purple) 35%,transparent);transition:opacity .15s,transform .15s}
+.btn-approve:hover{opacity:.9;transform:translateY(-1px)}
+.btn-approve svg{flex:none}
+.proposal-viewer{display:flex;flex-direction:column;height:calc(100vh - 103px);margin:-33px -48px -60px;overflow:hidden}
+.proposal-viewer-toolbar{display:flex;align-items:center;justify-content:space-between;padding:12px 32px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(8px);flex:none}
+.proposal-viewer-meta{display:flex;align-items:center;gap:10px;font-size:13px;min-width:0}
+.proposal-viewer-title{font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.proposal-viewer-sep{color:var(--muted)}
+.proposal-viewer-client{color:var(--muted);white-space:nowrap}
+.proposal-viewer-frame{flex:1;min-height:0;background:#080c12;display:flex;justify-content:center;align-items:stretch;padding:24px 48px}
+.proposal-viewer-iframe{width:100%;max-width:850px;border:0;border-radius:6px;box-shadow:0 8px 40px rgba(0,0,0,.3);background:#fff}
+[data-theme="dark"] .btn-copy-link{color:var(--ink);border-color:var(--line)}
+[data-theme="dark"] .btn-copy-link:hover{background:rgba(120,164,255,.1);border-color:rgba(120,164,255,.3)}
+[data-theme="dark"] .proposal-viewer-toolbar{background:rgba(16,24,35,.8)}
+[data-theme="dark"] .proposal-viewer-frame{background:#080c12}
+@media(max-width:700px){.proposal-viewer{margin:-22px -15px -60px}.proposal-viewer-toolbar{padding:10px 15px}.proposal-viewer-frame{padding:12px}.proposal-topbar-actions{gap:7px}.btn-copy-link span,.btn-copy-link{font-size:11px;padding:8px 10px}.btn-approve{font-size:11px;padding:8px 14px}}
+
+/* ── Pipeline (Reunião → Análise → Proposta) ── */
+.pipeline-meta{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:12px;margin-bottom:22px}
+.pipeline-meta-client{color:var(--ink);font-weight:600}
+.pipeline-meta .badge{margin-left:auto}
+.pipeline-stepper{display:flex;align-items:flex-start;margin-bottom:22px}
+.pipeline-node{display:flex;flex-direction:column;align-items:center;gap:9px;width:160px;flex:none}
+.pipeline-node strong{font-size:14px;color:var(--ink)}
+.pipeline-circle{display:grid;place-items:center;width:46px;height:46px;border-radius:50%;flex:none}
+.pipeline-circle svg{width:19px;height:19px}
+.pipeline-circle-done{background:var(--green);color:#fff}
+.pipeline-circle-active{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;box-shadow:0 0 0 6px color-mix(in srgb,var(--purple) 15%,transparent)}
+.pipeline-circle-upcoming{background:color-mix(in srgb,var(--line) 60%,transparent);color:var(--muted);border:1px solid var(--line)}
+.pipeline-circle-failed{background:var(--red);color:#fff}
+.pipeline-connector{flex:1;height:2px;border-radius:2px;margin-top:23px;min-width:40px}
+.pipeline-connector-filled{background:linear-gradient(90deg,var(--blue),var(--purple))}
+.pipeline-connector-upcoming{background:var(--line)}
+.pipeline-row{display:flex;gap:16px;align-items:stretch;margin-bottom:24px}
+.pipeline-card{display:flex;flex-direction:column;justify-content:space-between;gap:16px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;transition:flex-grow .25s ease,box-shadow .25s ease}
+.pipeline-card.is-collapsed{flex:1;min-width:200px}
+.pipeline-card.is-active{flex:2.2;box-shadow:0 10px 40px color-mix(in srgb,var(--purple) 12%,transparent);border-color:color-mix(in srgb,var(--purple) 40%,var(--line))}
+.pipeline-card-head{display:flex;align-items:center;gap:10px}
+.pipeline-card-head h2{font-size:15px;margin:0;flex:1}
+.pipeline-card-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;flex:none}
+.pipeline-card-icon svg{width:16px;height:16px}
+.pipeline-card-icon-done{background:color-mix(in srgb,var(--green) 16%,transparent);color:var(--green)}
+.pipeline-card-icon-active{background:color-mix(in srgb,var(--purple) 14%,transparent);color:var(--purple)}
+.pipeline-card-icon-upcoming{background:color-mix(in srgb,var(--line) 70%,transparent);color:var(--muted)}
+.pipeline-card-icon-failed{background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red)}
+.pipeline-card-body{flex:1}
+.pipeline-card-title{font-size:13px;font-weight:600;color:var(--ink);margin:0 0 4px}
+.pipeline-card-muted{font-weight:400;color:var(--muted)}
+.pipeline-card-sub{display:block;color:var(--muted);font-size:11px}
+.pipeline-metrics{display:flex;gap:18px;margin-top:14px}
+.pipeline-metric{display:flex;flex-direction:column;gap:2px}
+.pipeline-metric b{font-size:22px;color:var(--ink)}
+.pipeline-metric small{color:var(--muted);font-size:10px}
+.pipeline-insights{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);display:grid;gap:9px}
+.pipeline-insights-title{display:block;font-size:10px;font-weight:700;letter-spacing:.3px;color:var(--muted);text-transform:uppercase}
+.pipeline-insight{display:flex;gap:8px;align-items:flex-start}
+.pipeline-insight span{color:var(--purple);flex:none}
+.pipeline-insight p{margin:0;font-size:12px;color:var(--ink);line-height:1.5}
+.pipeline-skeleton{display:grid;gap:7px;margin-top:14px;padding:12px;border-radius:8px;background:color-mix(in srgb,var(--line) 40%,transparent)}
+.pipeline-skeleton span{display:block;height:6px;border-radius:3px;background:color-mix(in srgb,var(--muted) 25%,transparent)}
+.pipeline-skeleton span:nth-child(1){width:70%}
+.pipeline-skeleton span:nth-child(2){width:50%}
+.pipeline-skeleton span:nth-child(3){width:60%}
+.pipeline-card-foot{display:flex}
+.pipeline-card-foot .button{width:100%}
+[data-theme="dark"] .pipeline-card{background:#182433}
+[data-theme="dark"] .pipeline-circle-upcoming{background:#111c29}
+@media(max-width:1000px){.pipeline-row{flex-direction:column}.pipeline-card.is-active,.pipeline-card.is-collapsed{flex:none}.pipeline-stepper{flex-wrap:wrap;gap:12px}.pipeline-connector{display:none}}
+@media(max-width:700px){.pipeline-node{width:auto}.pipeline-meta{flex-wrap:wrap}}
+
+/* === Dashboard KPIs === */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px}
+.kpi-card{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.kpi-card b{display:block;font-size:24px;color:var(--ink);line-height:1.1}
+.kpi-card small{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.kpi-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;flex:none;font-size:17px;font-style:normal}
+.kpi-icon svg{width:19px;height:19px}
+.kpi-icon-blue{background:color-mix(in srgb,var(--blue) 14%,transparent);color:var(--blue)}
+.kpi-icon-green{background:color-mix(in srgb,var(--green) 14%,transparent);color:var(--green)}
+.kpi-icon-purple{background:color-mix(in srgb,var(--purple) 14%,transparent);color:var(--purple)}
+.kpi-icon-amber{background:color-mix(in srgb,var(--amber) 16%,transparent);color:var(--amber)}
+[data-theme="dark"] .kpi-card{background:#182433}
+@media(max-width:1000px){.kpi-row{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.kpi-row{grid-template-columns:1fr}}
+
+/* === Encaixe garantido no viewport: app inteiro = 100vh, cada tela controla seu próprio scroll interno === */
+html{height:100%}
+body{height:100%}
+.app-frame{display:flex!important;flex-direction:column;height:100vh;height:100dvh;min-height:0;overflow:hidden}
+.app-frame .main{display:flex;flex-direction:column;height:100%;min-height:0;width:100%}
+.app-frame .topbar{flex:none}
+.app-frame .content{flex:1;min-height:0;overflow-y:auto}
+
+/* Home: welcome e KPIs tem altura natural; a grade de cards preenche o espaço restante */
+.home{display:flex;flex-direction:column;height:100%;min-height:0}
+.home .welcome{flex:none}
+.home .kpi-row{flex:none}
+.home .chart-grid.intake-row{flex:1;min-height:280px}
+
+.meeting-intake, .projects-panel{height:100%;box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden}
+.meeting-intake .meeting-dropzone{flex:1;min-height:100px}
+.projects-panel .card-heading{flex:none}
+.projects-panel .project-list{flex:1;min-height:0;overflow-y:auto;margin-top:4px}
+.projects-panel .project-icon{display:grid;place-items:center}
+.projects-panel .project-icon svg{width:16px;height:16px}
+.projects-panel .project-row:hover{background:color-mix(in srgb,var(--blue) 4%,transparent);margin:0 -12px;padding-left:12px;padding-right:12px;border-radius:10px}
+.projects-panel .project-name{min-width:0}
+.projects-panel .project-name strong{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis}
+.projects-panel .progress{display:none}
+.projects-panel .project-item:first-child .project-row{border-top:0}
+@media(max-width:1000px){.app-frame{height:auto;overflow:visible}.app-frame .content{overflow:visible}.home{height:auto}.home .chart-grid.intake-row{flex:none}.meeting-intake, .projects-panel{height:auto;max-height:none;overflow:visible}.meeting-intake .meeting-dropzone{flex:none}.projects-panel .project-list{overflow:visible}}
+
+/* === Modo compacto: reduz paddings/margens/tamanhos para caber com folga no viewport === */
+.app-frame .content{padding:18px 36px 20px}
+.home{gap:10px}
+.welcome{margin-bottom:0}
+.welcome h2{font-size:20px;margin:0 0 3px}
+.welcome p{font-size:12.5px}
+.kpi-row{margin-bottom:0;gap:12px}
+.kpi-card{padding:11px 14px;gap:11px;border-radius:12px}
+.kpi-card b{font-size:19px}
+.kpi-card small{font-size:10px;margin-top:1px}
+.kpi-icon{width:34px;height:34px;border-radius:9px;font-size:14px}
+.kpi-icon svg{width:15px;height:15px}
+.home .chart-grid.intake-row{min-height:220px;gap:14px}
+.meeting-intake{padding:14px}
+.meeting-intake>.card-heading{margin-bottom:8px}
+.meeting-intake>.card-heading h2{font-size:15px}
+.meeting-intake>.card-heading p{font-size:11.5px;line-height:1.4}
+.meeting-intake .meeting-dropzone{min-height:80px;padding:12px 14px;gap:5px}
+.upload-icon{width:30px;height:30px;border-radius:9px}
+.upload-icon svg{width:17px;height:17px}
+.meeting-dropzone strong{font-size:12px}
+.meeting-dropzone small{font-size:9.5px}
+.select-file-button{min-height:32px;padding:7px 13px;font-size:12px}
+.paste-transcript{margin-top:7px;min-height:32px;padding:7px 13px;font-size:11.5px}
+.analyze-meeting{min-height:34px;margin-top:8px;font-size:11.5px}
+.intake-footnote{margin-top:5px;font-size:9px}
+.projects-panel{padding:16px}
+.projects-panel .card-heading{margin-bottom:6px}
+.projects-panel .card-heading h2{font-size:15px}
+.projects-panel .card-heading p{font-size:11.5px}
+.projects-panel .project-row{padding:9px 0}
+.projects-panel .project-icon{width:28px;height:28px;border-radius:7px}
+.projects-panel .project-name strong{font-size:12.5px}
+.projects-panel .project-name small{font-size:9.5px}
+.topbar{height:56px!important}
+.topbar .brand{font-size:17px}
+.topbar-title h1{font-size:16px}
+.topbar-title .eyebrow{font-size:9px}
+@media(max-width:1000px){.app-frame .content{padding:16px 24px 20px}.home .chart-grid.intake-row{min-height:0}}
+
+/* === Pipeline: modo compacto === */
+.pipeline-meta{margin-bottom:12px;font-size:11.5px;gap:7px}
+.pipeline-stepper{margin-bottom:14px}
+.pipeline-node{gap:6px;width:130px}
+.pipeline-node strong{font-size:12.5px}
+.pipeline-circle{width:36px;height:36px}
+.pipeline-circle svg{width:15px;height:15px}
+.pipeline-connector{margin-top:18px;min-width:24px}
+.pipeline-row{gap:12px;margin-bottom:0}
+.pipeline-card{padding:15px;gap:10px;border-radius:13px}
+.pipeline-card-head{gap:8px}
+.pipeline-card-head h2{font-size:13.5px}
+.pipeline-card-icon{width:28px;height:28px;border-radius:8px}
+.pipeline-card-icon svg{width:13px;height:13px}
+.pipeline-card-title{font-size:12px}
+.pipeline-card-sub{font-size:10px}
+.pipeline-metrics{margin-top:9px;gap:10px}
+.pipeline-metric b{font-size:18px}
+.pipeline-metric small{font-size:9px}
+.pipeline-insights{margin-top:10px;padding-top:9px;gap:5px}
+.pipeline-insights-title{font-size:9px}
+.pipeline-insight p{font-size:11px;line-height:1.35}
+.pipeline-skeleton{margin-top:9px;padding:9px;gap:5px}
+.pipeline-card-foot .button{padding:8px 14px;min-height:0;font-size:12px}
