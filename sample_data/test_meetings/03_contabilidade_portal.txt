@@ -1,0 +1,42 @@
+Rafael: Boa tarde, Sandra, boa tarde, Roberto. Eu sou o Rafael, da Software House. A Marina, tech lead, também está na reunião.
+Sandra: Boa tarde. Eu sou a Sandra, sócia do Escritório Contábil Prisma. O Roberto cuida do atendimento aos clientes.
+Roberto: Boa tarde a todos.
+Rafael: Sandra, me conta o cenário atual.
+Sandra: Temos cento e vinte clientes empresa. Todo mês eles mandam documentos por e-mail e WhatsApp: extratos, notas fiscais, folha. A gente se perde e demora para fechar o mês.
+Roberto: Muitas vezes cobramos o mesmo documento três vezes. E não temos um lugar único para o cliente ver o que está pendente.
+Rafael: Então a ideia é um portal do cliente, com envio de documentos e lista de pendências. É isso?
+Sandra: Isso. E também queremos conciliação bancária automática, lendo o extrato do cliente.
+Marina: A conciliação lê arquivos OFX do banco ou vocês querem conexão direta com os bancos?
+Sandra: Arquivo OFX no início. Conexão direta com banco, talvez no futuro.
+Marina: Ótimo, OFX é bem mais simples. Fica decidido OFX na primeira versão?
+Sandra: Decidido, OFX.
+Roberto: Outra coisa importante: assinatura digital de documentos, como contratos e procurações. Hoje imprimimos tudo.
+Marina: Vocês já usam algum serviço de assinatura eletrônica?
+Roberto: Usamos um serviço pago, mas só alguns clientes têm acesso. Queremos integrar com o que já temos.
+Marina: Qual é o serviço? Ele oferece API?
+Roberto: Não sei dizer o nome agora, tenho que ver com o financeiro. Eu mando para você até amanhã.
+Rafael: Combinado, Roberto, anotei. Sandra, sobre quem acessa o portal: só o dono da empresa ou mais pessoas?
+Sandra: O dono e o financeiro da empresa. Cada empresa com dois ou três usuários.
+Marina: E vocês precisam de perfis diferentes, por exemplo quem só envia documento e quem pode assinar?
+Sandra: Sim, o financeiro envia, só o dono assina.
+Roberto: Mas tem clientes pequenos em que o dono faz tudo. Aí o mesmo usuário precisa fazer as duas coisas.
+Marina: Então o perfil precisa ser configurável por empresa. Vou registrar assim.
+Sandra: Perfeito.
+Rafael: Sandra, sobre a lista de pendências, quem define o que o cliente precisa enviar a cada mês?
+Sandra: Hoje é uma lista fixa por empresa. Cada mês a lista se repete, com prazo no dia cinco.
+Roberto: Eu acho que o prazo devia variar por tipo de documento. Folha é dia três, extrato é dia dez.
+Sandra: Não, Roberto, mantém o dia cinco para tudo, é mais simples para o cliente lembrar.
+Roberto: Tudo bem, mas depois a gente revisa se atrapalhar.
+Marina: Vou registrar o dia cinco como regra inicial, com possibilidade de revisão.
+Rafael: E sobre integração com o sistema contábil que vocês usam?
+Sandra: Usamos um sistema contábil tradicional. Os documentos enviados precisam cair na pasta do cliente nesse sistema.
+Marina: Ele tem API?
+Sandra: Não sei. Eu acredito que sim, mas nunca usamos. Vou pedir ao suporte deles.
+Rafael: Então a integração com o sistema contábil fica pendente da resposta do suporte, certo, Sandra?
+Sandra: Isso. Eu peço hoje e te respondo na semana que vem.
+Rafael: Combinado. Sobre prazo e orçamento, vocês já definiram?
+Sandra: Orçamento ainda não. Queríamos entender primeiro o escopo. Prazo, o ideal seria em três meses, antes do fechamento do balanço anual.
+Marina: Com a incerteza da integração, é melhor propor em fases: portal e pendências primeiro, conciliação e assinatura depois.
+Sandra: Pode ser. Gostei da ideia de fases.
+Rafael: Resumindo: a Software House envia a proposta em fases, o Roberto manda o nome do serviço de assinatura amanhã, e a Sandra confirma a API do sistema contábil na semana que vem. Obrigado a todos.
+Sandra: Obrigada, Rafael. Até logo.

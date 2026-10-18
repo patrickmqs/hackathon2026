@@ -1,0 +1,44 @@
+Rafael: Bom dia, Dra. Helena, bom dia, Marcos. Obrigado por separarem esse tempo. Eu sou o Rafael, gerente de contas da Software House, e a Marina, nossa tech lead, vai acompanhar a parte técnica.
+Helena: Bom dia, Rafael. Eu sou a Helena, sou dona da Clínica Sorriso Vivo. O Marcos é o nosso administrador, ele cuida do financeiro e da recepção.
+Marcos: Bom dia a todos. Prazer.
+Rafael: Pra começar, me contem qual é o problema que vocês querem resolver hoje.
+Helena: Hoje a nossa agenda é toda em planilha e no caderno da recepção. A gente perde muita consulta por falta, uns vinte por cento dos pacientes não aparecem, e a recepção passa o dia ligando pra confirmar.
+Marcos: E o prontuário é em papel. Quando o paciente volta depois de seis meses, a gente demora pra achar a ficha.
+Rafael: Entendi. Então são dois blocos: agendamento com confirmação automática e prontuário digital. É isso?
+Helena: Isso. Mas o agendamento é a prioridade. O prontuário pode vir numa segunda fase.
+Marina: Posso perguntar sobre o volume? Quantos dentistas e quantos atendimentos por dia?
+Marcos: São seis dentistas, três cadeiras por turno, e a gente faz em média oitenta atendimentos por dia.
+Marina: E o paciente agenda como hoje? Só por telefone?
+Marcos: Telefone e WhatsApp. A recepcionista responde no celular da clínica.
+Helena: O sonho é o paciente marcar sozinho, pelo WhatsApp ou por um link, escolhendo o dentista e o horário.
+Rafael: Perfeito. Então agendamento online com link e confirmação automática por WhatsApp um dia antes e duas horas antes. Podemos considerar isso decidido?
+Helena: Pode, isso está decidido. O lembrete por WhatsApp é essencial.
+Marina: Sobre o WhatsApp, vocês já têm a API oficial ou usam o aplicativo comum?
+Marcos: Usamos o aplicativo comum no celular da recepção. Não sei o que seria a API oficial.
+Marina: A API oficial exige cadastro na Meta e tem custo por conversa. Isso muda o orçamento, então precisamos validar com vocês se aceitam.
+Helena: Isso eu preciso conversar com o meu sócio, o doutor Paulo. Não sei se ele vai topar o custo mensal.
+Rafael: Tudo bem, fica como pendente. Marcos, vocês têm algum sistema hoje, algum software de gestão?
+Marcos: Temos um sistema de cobrança antigo, que emite os boletos. Queremos manter, não vamos trocar agora.
+Marina: Ele tem API ou exporta algum arquivo?
+Marcos: Exporta planilha, mas não sei se tem API. Preciso perguntar pro fornecedor.
+Rafael: Então a integração com o sistema de cobrança fica em aberto até o Marcos confirmar com o fornecedor.
+Marcos: Eu pergunto hoje e te respondo até sexta-feira.
+Rafael: Combinado, Marcos, anotei. Dra. Helena, sobre regras de agendamento: o paciente pode remarcar sozinho?
+Helena: Pode remarcar até vinte e quatro horas antes. Depois disso precisa falar com a recepção.
+Marcos: Na verdade eu acho que devia ser doze horas, porque tem paciente que avisa de manhã e a gente consegue encaixar outro.
+Helena: Hum, não, melhor vinte e quatro, assim a gente se protege. Mas deixa eu pensar, podemos revisar isso depois.
+Marina: Então temos uma divergência. Vou registrar como ponto a esclarecer: vinte e quatro ou doze horas.
+Rafael: Ótimo. E sobre pagamento de consulta, o sistema precisa cobrar no agendamento?
+Helena: Não. Só particular paga na hora, convênio não. A gente trabalha com três convênios. O sistema só precisa saber qual convênio o paciente usa.
+Marcos: E precisa bloquear o horário de procedimentos longos, como canal e implante, que levam duas horas.
+Marina: Então cada tipo de procedimento tem uma duração própria, certo?
+Helena: Isso. Limpeza quarenta minutos, consulta trinta, canal e implante duas horas.
+Rafael: Perfeito. Sobre prazo, vocês têm alguma data em mente?
+Helena: Queria começar a usar em dois meses, antes do início do semestre, quando a clínica enche.
+Rafael: Para o agendamento com WhatsApp isso é viável, mas depende da decisão da API oficial. A Marina confirma melhor na proposta.
+Marina: Sim, sem a API oficial eu não consigo garantir o lembrete automático de forma estável.
+Helena: Entendi. Então, Rafael, o que eu preciso fazer é falar com o doutor Paulo sobre o custo.
+Rafael: Exatamente. Dra. Helena, o senhor Paulo pode participar de uma próxima reunião?
+Helena: Posso tentar marcar para a semana que vem. Eu te passo as datas até terça.
+Rafael: Combinado. Resumindo, a Software House envia a proposta com agendamento online e lembretes, o prontuário como fase dois, a Helena fala com o Paulo sobre a API, e o Marcos confirma com o fornecedor. Obrigado a todos.
+Helena: Obrigada, Rafael. Até a próxima.
