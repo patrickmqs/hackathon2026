@@ -26,6 +26,7 @@ RUN npm run build \
 
 ENV NODE_ENV=production \
     APP_ENV=production \
+    DEMO_MODE=false \
     STORAGE_DIR=/data/storage \
     WHATSAPP_SESSION_DIR=/data/storage/whatsapp
 
