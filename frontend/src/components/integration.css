@@ -185,3 +185,6 @@
   .rv { height: auto; }
   .rv-body { overflow: visible; }
 }
+
+/* Logos recortados (sem margem): mesma altura = mesmo tamanho visível nos dois temas */
+.brand-logo-light, .brand-logo-dark { height: 48px; width: auto; }
