@@ -4,6 +4,7 @@ import {
   ExtractionOutput,
   type GapAuditOutput,
   type MeetingAnalysis,
+  type MeetingSummaryOutput,
 } from "../../../../shared/src/schemas/analysis.js";
 import { AiOutputInvalidError } from "../../core/errors.js";
 import { structuredCompletion } from "../../integrations/openai/client.js";
@@ -11,7 +12,8 @@ import type { Transcript } from "../transcription/types.js";
 import { buildExtractInput } from "./extract.js";
 import { gapAuditDetailed } from "./gapAudit.js";
 import { loadPrompt, promptId } from "./prompts/loader.js";
-import { summarizeDetailed } from "./summarize.js";
+import { summarizeDetailed, type SummarizeResult } from "./summarize.js";
+import { SUMMARY_LIMITS, openIssuePriority, validateSummary, type SummaryAnalysis } from "./summaryValidator.js";
 import { validateExtraction, validateGapAudit } from "./validators.js";
 
 export type PipelineStep = "extracting" | "auditing" | "summarizing";
@@ -60,6 +62,27 @@ async function withRepair<T, R>(
     previous = data;
   }
   throw new AiOutputInvalidError(`${label} inválida após ${MAX_ATTEMPTS} tentativas`, violations);
+}
+
+/**
+ * O resumo roda em paralelo à auditoria (sem ver os rebaixamentos nem as pendências dela). Antes de
+ * validar, ajusta as listas de ids de forma determinística: decisões que a auditoria rebaixou saem de
+ * `key_decisions` e vão para `pending_decisions`, e `open_points` passa a vir das pendências da auditoria.
+ */
+function reconcileSummary(summary: MeetingSummaryOutput, analysis: MeetingAnalysis): MeetingSummaryOutput {
+  const demoted = new Set(analysis.decisions.filter((d) => d.status !== "confirmed").map((d) => d.id));
+  const pending = [...summary.pending_decisions];
+  for (const id of summary.key_decisions) if (demoted.has(id) && !pending.includes(id)) pending.push(id);
+  const open_points = [...analysis.open_issues]
+    .sort((a, b) => openIssuePriority(b) - openIssuePriority(a))
+    .slice(0, SUMMARY_LIMITS.max_open_points)
+    .map((i) => i.id);
+  return {
+    ...summary,
+    key_decisions: summary.key_decisions.filter((id) => !demoted.has(id)),
+    pending_decisions: pending,
+    open_points,
+  };
 }
 
 /** Aplica `downgrades` da auditoria. Nunca toca em itens já tentative/conditional/pending_validation. */
@@ -120,8 +143,14 @@ export async function analyzeMeeting(
   limitations.push(...extraction.limitations, ...validated.limitations);
   extraction.limitations = [];
 
-  // 2. Auditoria + validação
+  // 2. Auditoria + validação. O resumo parte da extração e roda junto (economiza o tempo do resumo);
+  // erros dele só são tratados depois, para não gerar rejeição solta se a auditoria falhar primeiro.
   opts.onProgress?.("auditing");
+  const preAudit: SummaryAnalysis = { ...extraction, open_issues: [] };
+  const summaryRun = summarizeDetailed(transcript, preAudit, "analysis", { model: opts.model }).then(
+    (result) => ({ ok: true as const, result }),
+    (error: unknown) => ({ ok: false as const, error }),
+  );
   const gapPromptVersion = { value: "" };
   const audited = await withRepair(
     async (feedback, _previous, attempt) => {
@@ -168,9 +197,16 @@ export async function analyzeMeeting(
     },
   };
 
-  // 4. Resumo obrigatório para concluir a análise.
+  // 4. Resumo obrigatório: usa o que rodou em paralelo, reconciliado com a auditoria e revalidado
+  // (função pura). Se não passar, refaz em sequência com a análise final, como antes.
   opts.onProgress?.("summarizing");
-  const s = await summarizeDetailed(transcript, analysis, "analysis", { model: opts.model });
+  let s: Pick<SummarizeResult, "summary" | "limitations" | "promptVersion"> | null = null;
+  const settled = await summaryRun;
+  if (settled.ok) {
+    const v = validateSummary(reconcileSummary(settled.result.summary, analysis), { transcript, analysis, basis: "analysis" });
+    if (v.ok) s = { summary: v.summary, limitations: [...settled.result.limitations, ...v.limitations], promptVersion: settled.result.promptVersion };
+  }
+  if (!s) s = await summarizeDetailed(transcript, analysis, "analysis", { model: opts.model });
   analysis.meeting_summary = {
     ...s.summary,
     meta: { prompt_version: s.promptVersion, model, generated_at: new Date().toISOString(), basis: "analysis" },
