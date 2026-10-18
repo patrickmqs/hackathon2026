@@ -133,3 +133,55 @@
 /* Botões "Colar transcrição" e "Analisar reunião" mais compactos */
 .home .meeting-intake .paste-transcript,
 .home .meeting-intake .analyze-meeting { max-width: 340px; min-height: 36px; padding-top: 7px; padding-bottom: 7px; font-size: 12px; }
+
+/* Upload compacto: o card ocupa só a área necessária (não estica até o fim da tela) */
+.home > .chart-grid.intake-row { align-items: start; }
+.home > .chart-grid > .meeting-intake { align-self: start; justify-content: flex-start; padding: 18px 24px; }
+.home .meeting-intake > .card-heading { margin-bottom: 10px; }
+.home .meeting-dropzone { min-height: 0; gap: 6px; padding: 14px 16px; }
+.home .meeting-dropzone .upload-icon { width: 32px; height: 32px; }
+.home .meeting-dropzone .select-file-button { min-height: 34px; padding: 6px 14px; }
+.home > .chart-grid > .projects-card { align-self: stretch; }
+
+/* Revisão da análise (simplificada): cabeçalho, abas, resumo e três cards */
+.rv { max-width: 1180px; margin: 0 auto; }
+.rv-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.rv-head h2 { margin: 10px 0 4px; font-size: 28px; letter-spacing: -.4px; color: var(--ink); }
+.rv-head p { margin: 0; color: var(--muted); }
+.rv-head-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.rv-tabs { display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 18px; border: 1px solid var(--line); border-radius: 999px; background: transparent; }
+.rv-tabs button { display: inline-flex; align-items: center; gap: 8px; padding: 8px 18px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font: inherit; font-weight: 600; cursor: pointer; }
+.rv-tabs button:hover { color: var(--ink); }
+.rv-tabs button.active { background: var(--blue); color: #fff; }
+.rv-tabs button b { min-width: 20px; padding: 1px 6px; border-radius: 999px; background: color-mix(in srgb, var(--amber) 25%, transparent); color: var(--amber); font-size: 12px; text-align: center; }
+.rv-tabs button.active b { background: rgba(255, 255, 255, .25); color: #fff; }
+.rv-trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-bottom: 18px; }
+.rv-card { margin-bottom: 0; min-height: 0; }
+.rv-card h3 { margin: 0 0 10px; font-size: 16px; color: var(--ink); }
+.rv-card ul { margin: 0; padding-left: 18px; color: var(--ink); font-size: 14px; line-height: 1.6; }
+.rv-more-link { margin-top: 10px; padding: 0; border: 0; background: transparent; color: var(--blue); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.rv-details { margin-bottom: 18px; }
+.rv-details > summary { cursor: pointer; margin-bottom: 12px; color: var(--blue); font-weight: 600; }
+.rv-kinds { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.rv-kinds button { padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--muted); font: inherit; font-size: 13px; cursor: pointer; }
+.rv-kinds button.active { border-color: var(--blue); color: var(--blue); background: color-mix(in srgb, var(--blue) 10%, transparent); }
+.rv-kinds button b { margin-left: 4px; }
+.review-layout.rv-two { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: start; }
+@media (max-width: 1000px) { .rv-trio, .review-layout.rv-two { grid-template-columns: 1fr; } .rv-head { flex-direction: column; } .rv-head-actions { justify-content: flex-start; } }
+
+/* Revisão em tela única (hero): ocupa a altura da janela; só o conteúdo da aba rola */
+.main:has(.rv) { display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
+.content:has(> .rv) { flex: 1; min-height: 0; width: 100%; box-sizing: border-box; padding-top: 16px; padding-bottom: 20px; }
+.rv { height: 100%; max-width: 1180px; display: flex; flex-direction: column; }
+.rv-head { flex: none; margin-bottom: 12px; }
+.rv-head h2 { font-size: clamp(22px, 3.4vh, 28px); margin: 8px 0 2px; }
+.rv-tabs { flex: none; align-self: flex-start; margin-bottom: 12px; }
+.rv > .api-error { flex: none; }
+.rv-body { flex: 1; min-height: 0; overflow-y: auto; padding-right: 4px; scrollbar-width: thin; }
+.rv-body > .card:last-child, .rv-body > .rv-trio:last-child { margin-bottom: 0; }
+.rv-body .review-layout .items-panel, .rv-body .review-layout .transcript-panel { max-height: none; overflow: visible; }
+@media (max-width: 1000px) {
+  .main:has(.rv) { height: auto; overflow: visible; }
+  .rv { height: auto; }
+  .rv-body { overflow: visible; }
+}
