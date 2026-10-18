@@ -17,7 +17,10 @@ export function renderProposalHtml(content: ProposalContent): string {
 export async function generatePdf(content: ProposalContent): Promise<Buffer> {
   const html = renderProposalHtml(content);
   const { chromium } = await import("playwright");
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({
+    chromiumSandbox: false,
+    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+  });
   try {
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "networkidle" });

@@ -110,9 +110,17 @@ export function proposalsRouter(deps: AppDeps): Router {
     if (!version) throw new DomainError("NOT_FOUND", "Versão não encontrada.");
 
     const existing = await repo.getPdf(version.id);
-    const pdf = existing
-      ? storage.read(existing.path)
-      : await renderPdfSafely(version.content as ProposalContent);
+    let pdf: Buffer | null = null;
+    if (existing) {
+      try {
+        pdf = storage.read(existing.path);
+      } catch {
+        pdf = null; // arquivo perdido (ex.: storage efêmero) → regenera abaixo
+      }
+    }
+    if (!pdf) {
+      pdf = await renderPdfSafely(version.content as ProposalContent);
+    }
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", req.query.download === "1" ? "attachment" : "inline");
