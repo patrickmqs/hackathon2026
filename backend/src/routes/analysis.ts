@@ -7,16 +7,19 @@ import { EVENT_TYPES } from "../domain/events.js";
 import { requireDemoUser } from "../middleware/demo-user.js";
 import type { MeetingAnalysis } from "../schemas/analysis.js";
 import { MeetingAnalysisSchema } from "../schemas/analysis.js";
+import { ChatMessage, applyReviewActions, countPending } from "../services/review/agent.js";
 
 // Rotas de Análise — API_SPEC §4.4, montadas em /meetings/:meetingId/analysis.
 const CompleteReviewSchema = z.object({
   accept_pending_as_confirmed: z.boolean().optional(),
 });
 
+const ChatSchema = z.object({ messages: z.array(ChatMessage).max(40).default([]) });
+
 const ANALYSIS_READY = new Set(["analysis_ready", "reviewed"]);
 
 export function analysisRouter(deps: AppDeps): Router {
-  const { repo } = deps;
+  const { repo, reviewAgent } = deps;
   const router = Router({ mergeParams: true });
 
   router.get("/", async (req, res) => {
@@ -94,6 +97,39 @@ export function analysisRouter(deps: AppDeps): Router {
       payload: { meeting_id: meetingId },
     });
     res.json(updatedContent);
+  });
+
+  // Revisão agêntica: o agente investiga a transcrição, resolve o que ela já responde (com citação) e
+  // conversa com o humano sobre o resto; a resposta do humano vira a marcação dos itens. Sem mensagens = abertura.
+  router.post("/chat", requireDemoUser, async (req, res) => {
+    const meetingId = (req.params as Record<string, string>).meetingId;
+    const demoUser = res.locals.demoUser as string;
+    if (!reviewAgent) throw new DomainError("AI_PROVIDER_NOT_CONFIGURED", "O assistente de revisão não está configurado.");
+    const meeting = await repo.getMeeting(meetingId);
+    if (!meeting) throw new DomainError("NOT_FOUND", "Reunião não encontrada.");
+    const analysis = await repo.getAnalysis(meetingId);
+    if (!analysis) throw new DomainError("MEETING_NOT_READY", "Análise não encontrada.");
+    if (analysis.reviewCompleted) throw new DomainError("ANALYSIS_LOCKED", "Revisão já concluída.");
+
+    const { messages } = parseBody(ChatSchema, req.body ?? {});
+    const content = analysis.content as MeetingAnalysis;
+    const transcriptText = (await repo.getTranscript(meetingId))?.text ?? "";
+    let turn;
+    try {
+      turn = await reviewAgent({ analysis: content, messages, transcriptText });
+    } catch (err) {
+      throw new DomainError("AI_PROVIDER_ERROR", err instanceof Error ? err.message : "Falha no assistente de revisão.");
+    }
+
+    // As regras de segurança (citação verificada na transcrição; resposta do humano) vivem no agente.
+    const { analysis: updated, applied } = applyReviewActions(content, turn.actions);
+
+    let finalContent = updated;
+    if (applied.length > 0) {
+      finalContent = { ...updated, meta: { ...updated.meta, reviewed_by: demoUser, reviewed_at: new Date().toISOString() } };
+      await repo.updateAnalysis(analysis.id, { content: finalContent });
+    }
+    res.json({ reply: turn.reply, applied, pending_count: countPending(finalContent), analysis: finalContent });
   });
 
   return router;

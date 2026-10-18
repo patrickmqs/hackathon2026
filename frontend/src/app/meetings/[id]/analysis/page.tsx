@@ -2,6 +2,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, Suspense } from "react";
 import { AppShell, Badge, Button, Card } from "@/components/AppShell";
+import { ReviewChat } from "@/components/ReviewChat";
 import { ErrorBanner, Loading, errorMessage, useLoad } from "@/components/Api";
 import { ensureProposal, regenerateProposal } from "@/lib/proposal-job";
 import { api, type Analysis, type ReviewStatus, type SourceRef, type Summary } from "@/lib/api";
@@ -46,7 +47,10 @@ function AnalysisPageInner() {
   const [busy, setBusy] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [tab, setTab] = useState<"summary" | "items" | "transcript">("summary");
+  const [tab, setTabState] = useState<"items" | "transcript">("items");
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(true);
+  const setTab = (t: "items" | "transcript") => { setTabState(t); setDrawerOpen(true); };
 
   const analysis: Analysis | null = override ?? data?.analysis ?? null;
 
@@ -91,13 +95,6 @@ function AnalysisPageInner() {
   }
 
   const summary: Summary | null | undefined = analysis?.meeting_summary;
-  const byId = useMemo(() => {
-    const m = new Map<string, Row>();
-    rows.forEach((r) => m.set(r.id, r));
-    return m;
-  }, [rows]);
-  const text = (id: string) => byId.get(id)?.title ?? id;
-  const chip = (id: string) => <li key={id}><a href="#" onClick={(e) => { e.preventDefault(); const r = byId.get(id); if (r) { setSelected(r.key); setFocusQuote(null); setTab("items"); } }}>{text(id)}</a></li>;
 
   async function copySummary() {
     if (!summary) return;
@@ -130,63 +127,58 @@ function AnalysisPageInner() {
   const locked = analysis.review_completed;
   const proposalExists = Boolean(data.project.latest_proposal_id);
 
-      const needs = rows.filter((r) => r.kind === "client_needs");
-  const reqs = rows.filter((r) => r.kind === "requirements");
-  const toConfirm: string[] = summary
-    ? [...summary.pending_decisions, ...summary.open_points].map((id) => text(id))
-    : rows.filter((r) => r.kind === "open_issues").map((r) => r.title);
-  const goItems = (k: Kind | null) => { setKindFilter(k); setFilter("all"); setTab("items"); };
-  const trio = (title: string, list: string[], kind: Kind | null, empty: string) => <Card className="rv-card">
-    <h3>{title}</h3>
-    {list.length ? <ul>{list.slice(0, 5).map((t, i) => <li key={i}>{t}</li>)}</ul> : <p className="hint">{empty}</p>}
-    {list.length > 5 && <button type="button" className="rv-more-link" onClick={() => goItems(kind)}>Ver todos ({list.length}) →</button>}
-  </Card>;
-  const mainAction = () => { if (!locked && pending > 0 && !acceptPending) setTab("items"); else void finish(); };
+      const mainAction = () => { if (locked || pending === 0 || acceptPending) void finish(); };
 
   return <AppShell title="Revisão da análise" eyebrow={`${data.project.name.toUpperCase()} / ANÁLISE`}>
-    <div className="rv">
-    <header className="rv-head">
-      <div>
-        <Badge tone={locked ? "green" : "blue"}>{locked ? "Revisão concluída" : "Análise pronta"}</Badge>
-        <h2>{data.project.name}</h2>
-        <p>Revise o resumo gerado pela IA e confirme os pontos antes de gerar a proposta.</p>
-      </div>
-      <div className="rv-head-actions">
-        <Button href={`/projects/${data.project.id}`} variant="secondary">✎ Editar projeto</Button>
-        <Button onClick={mainAction}>{busy ?? (locked ? (proposalExists ? "Abrir proposta →" : "Gerar proposta →") : pending > 0 && !acceptPending ? `Confirmar ${pending} pendentes` : "Concluir e gerar proposta →")}</Button>
-      </div>
-    </header>
+    <div className="rv rv-hero">
+      <header className="rv-head">
+        <div>
+          <Badge tone={locked ? "green" : pending === 0 ? "green" : "blue"}>{locked ? "Revisão concluída" : pending === 0 ? "Pronta para a proposta" : "Análise pronta"}</Badge>
+        </div>
+      </header>
 
-    <ErrorBanner message={actionError} />
+      <ErrorBanner message={actionError} />
 
-    <nav className="rv-tabs" role="tablist" aria-label="Seções da revisão">
-      <button type="button" role="tab" aria-selected={tab === "summary"} className={tab === "summary" ? "active" : ""} onClick={() => setTab("summary")}>Resumo</button>
-      <button type="button" role="tab" aria-selected={tab === "items"} className={tab === "items" ? "active" : ""} onClick={() => setTab("items")}>Pontos para confirmar{pending > 0 && <b>{pending}</b>}</button>
-      <button type="button" role="tab" aria-selected={tab === "transcript"} className={tab === "transcript" ? "active" : ""} onClick={() => setTab("transcript")}>Transcrição</button>
-    </nav>
+      <div className={`rv-split${chatOpen ? "" : " chat-closed"}`}>
+        <div className="rv-stack card">
+          <Card className="rv-summary">
+            {summary ? <>
+              <Badge tone="purple">Resumo da negociação · gerado pela IA</Badge>
+              <h2>{summary.headline}</h2>
+              <p className="lead">{summary.executive_summary}</p>
+            </> : <>
+              <Badge>Resumo indisponível</Badge>
+              <p className="hint">O resumo não foi gerado nesta análise; a revisão pelo assistente continua disponível.</p>
+            </>}
+          <div className="rv-summary-actions">
+            <button type="button" className="button secondary" onClick={() => setTab("items")}>Ver itens detalhados</button>
+            <button type="button" className="button secondary" onClick={() => setTab("transcript")}>Ver transcrição</button>
+            {(locked || pending === 0) && <button type="button" className="button" disabled={Boolean(busy)} onClick={mainAction}>{busy ?? (locked ? (proposalExists ? "Abrir proposta →" : "Gerar proposta →") : "Gerar proposta →")}</button>}
+            {summary && <button type="button" className="button secondary" onClick={copySummary}>{copied ? "✓ Copiado" : "Copiar resumo"}</button>}
+          </div>
+          </Card>
+        </div>
 
-    <div className="rv-body">
-    {tab === "summary" && <>
-      {summary ? <Card className="summary-panel"><Badge tone="purple">Resumo da reunião · gerado pela IA</Badge>
-      <h2>{summary.headline}</h2><p className="lead">{summary.executive_summary}</p>
-      </Card> : <Card className="summary-panel"><Badge>Resumo indisponível</Badge><p className="hint">O resumo não foi gerado nesta análise (a etapa é opcional e não bloqueia a revisão). Veja as limitações da análise ao final da página.</p></Card>}
-      <div className="rv-trio">
-        {trio("Objetivo", needs.map((r) => r.title), "client_needs", "Nenhuma necessidade identificada.")}
-        {trio("Escopo inicial", reqs.map((r) => r.title), "requirements", "Nenhum requisito identificado.")}
-        {trio("Pontos para confirmar", toConfirm, null, "Nada pendente de confirmação.")}
+        <div className={`rv-chat-slot${chatOpen ? "" : " closed"}`}>
+          <ReviewChat meetingId={meetingId} pending={pending} locked={locked} onAnalysis={setAnalysis} onClose={() => setChatOpen(false)} onGenerate={locked || pending > 0 ? undefined : mainAction} generating={Boolean(busy)} />
+        </div>
       </div>
-      {summary && <details className="rv-details"><summary>Detalhes do resumo</summary><Card className="summary-panel"><div className="topics">{summary.topics.map((t) => <button className="topic" key={t.title} onClick={() => { setFocusQuote(t.source_refs[0]?.quote ?? null); setTab("transcript"); document.getElementById("transcript")?.scrollIntoView({ behavior: "smooth" }); }}><strong>{t.title}</strong><span>{t.summary}</span></button>)}</div>
-      <div className="sum-grid">
-        <div className="sum-box"><h3>Decisões confirmadas</h3><ul>{summary.key_decisions.length ? summary.key_decisions.map(chip) : <li>Nenhuma</li>}</ul></div>
-        <div className="sum-box"><h3>Decisões pendentes</h3><ul>{summary.pending_decisions.length ? summary.pending_decisions.map(chip) : <li>Nenhuma</li>}</ul></div>
-        <div className="sum-box"><h3>Próximos passos</h3><ul>{summary.next_steps.length ? summary.next_steps.map(chip) : <li>Nenhum</li>}</ul></div>
-        <div className="sum-box"><h3>Pontos em aberto</h3><ul>{summary.open_points.length ? summary.open_points.map(chip) : <li>Nenhum</li>}</ul></div>
-      </div>
-      <div className="row"><Button variant="secondary" onClick={copySummary}>{copied ? "✓ Copiado" : "Copiar resumo"}</Button><span className="meta">Gerado por {summary.meta.model} · {summary.meta.prompt_version} · o resumo é um apoio de leitura; a fonte de verdade são os itens abaixo.</span></div>
-    </Card></details>}
-    </>}
 
-    {tab === "items" && <>
+      {!chatOpen && <button type="button" className="chat-fab" onClick={() => setChatOpen(true)} aria-label="Abrir assistente de revisão">
+        <span aria-hidden="true">✦</span> Assistente{!locked && pending > 0 ? <b>{pending}</b> : null}
+      </button>}
+
+      {drawerOpen && <div className="rv-overlay" onClick={() => setDrawerOpen(false)}>
+        <aside className="rv-drawer" role="dialog" aria-label="Itens da análise" onClick={(e) => e.stopPropagation()}>
+          <header className="rv-drawer-head">
+            <div className="rv-tabs" role="tablist">
+              <button type="button" role="tab" aria-selected={tab === "items"} className={tab === "items" ? "active" : ""} onClick={() => setTabState("items")}>Itens{pending > 0 && <b>{pending}</b>}</button>
+              <button type="button" role="tab" aria-selected={tab === "transcript"} className={tab === "transcript" ? "active" : ""} onClick={() => setTabState("transcript")}>Transcrição</button>
+            </div>
+            <button type="button" className="rv-drawer-close" onClick={() => setDrawerOpen(false)} aria-label="Fechar">×</button>
+          </header>
+          <div className="rv-drawer-body">
+            {tab === "items" && <>
       <div className="rv-kinds">
         <button type="button" className={kindFilter === null ? "active" : ""} onClick={() => setKindFilter(null)}>Todos</button>
         {(Object.keys(KIND_LABEL) as Kind[]).map((k) => <button type="button" key={k} className={kindFilter === k ? "active" : ""} onClick={() => setKindFilter(k)}>{KIND_LABEL[k]} <b>{rows.filter((r) => r.kind === k).length}</b></button>)}
@@ -215,13 +207,14 @@ function AnalysisPageInner() {
 
     
       </div>
-    </>}
-
-    {tab === "transcript" && <Card className="transcript-panel" id="transcript"><div className="card-heading"><div><h2>Transcrição</h2><p>{String(data.meeting.transcript?.metadata?.provider === "openai" ? "Transcrito pela IA" : "Texto enviado")} · {lines.length} trechos</p></div></div>
+            </>}
+            {tab === "transcript" && <Card className="transcript-panel" id="transcript"><div className="card-heading"><div><h2>Transcrição</h2><p>{String(data.meeting.transcript?.metadata?.provider === "openai" ? "Transcrito pela IA" : "Texto enviado")} · {lines.length} trechos</p></div></div>
       {lines.map((l, i) => <p id={`tl-${i}`} className={`transcript-line ${i === hitIdx ? "hit" : ""}`} key={i}>{l}</p>)}
       {quote && hitIdx < 0 && <div className="transcript-highlight">Citação (não localizada literalmente no texto exibido)<br /><b>“{quote}”</b></div>}
     </Card>}
-    </div>
+          </div>
+        </aside>
+      </div>}
     </div>
   </AppShell>;
 }

@@ -7,6 +7,7 @@ import { OpenAiPipeline } from "../services/ai/openai.js";
 import type { ProposalComposer } from "../services/proposal/compose-step.js";
 import { compose } from "../services/proposal/composer.js";
 import { StubAiPipeline } from "../services/ai/stub.js";
+import { createOpenAiReviewAgent, type ReviewAgent } from "../services/review/agent.js";
 
 // Fábrica do repositório: modo demo usa memória (sem banco); produção usa Prisma.
 export function createRepository(): Repository {
@@ -26,4 +27,10 @@ export function createPipeline(): AiPipeline {
 export function createComposer(): ProposalComposer | undefined {
   if (process.env.AI_PIPELINE === "stub" || !config.aiConfigured) return undefined;
   return (analysis, estimates, vendor) => compose(analysis, estimates, vendor);
+}
+
+// Assistente de revisão por conversa: só com OPENAI_API_KEY e sem AI_PIPELINE=stub.
+export function createReviewAgent(): ReviewAgent | undefined {
+  if (process.env.AI_PIPELINE === "stub" || !config.aiConfigured) return undefined;
+  return createOpenAiReviewAgent();
 }

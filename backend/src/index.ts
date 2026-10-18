@@ -1,5 +1,5 @@
 import { config } from "./core/config.js";
-import { createComposer, createPipeline, createRepository } from "./core/container.js";
+import { createComposer, createPipeline, createRepository, createReviewAgent } from "./core/container.js";
 import { FileStorage } from "./core/storage.js";
 import { GmailOAuthAdapter } from "./integrations/gmail/gmailAdapter.js";
 import { initGmailOAuth } from "./integrations/gmail/oauth.js";
@@ -25,6 +25,7 @@ const app = createApp({
   storage,
   jobs,
   composer: createComposer(),
+  reviewAgent: createReviewAgent(),
   maxUploadMb: config.maxUploadMb,
   corsOrigins: config.corsOrigins,
   adapters: { gmail: new GmailOAuthAdapter(), whatsapp: new BaileysWhatsAppAdapter() },

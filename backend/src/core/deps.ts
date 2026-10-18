@@ -3,6 +3,7 @@ import type { DeliveryService } from "../services/delivery/service.js";
 import type { AdapterRegistry } from "../services/delivery/types.js";
 import type { JobRunner } from "../services/jobs/runner.js";
 import type { ProposalComposer } from "../services/proposal/compose-step.js";
+import type { ReviewAgent } from "../services/review/agent.js";
 import type { FileStorage } from "./storage.js";
 
 // Dependências injetadas na aplicação (rotas/rotas) — isolam a fábrica `createApp`
@@ -13,6 +14,8 @@ export interface AppDeps {
   jobs?: JobRunner;
   // Redação do texto da proposta pela IA (opcional): sem ela, o texto determinístico do builder é mantido.
   composer?: ProposalComposer;
+  // Assistente de revisão por conversa (opcional): sem ele a rota de chat responde AI_PROVIDER_NOT_CONFIGURED.
+  reviewAgent?: ReviewAgent;
   maxUploadMb?: number;
   corsOrigins?: string[];
   // Adapters de canal (gmail/whatsapp). Sem adapter, o canal vira skipped_no_credentials.

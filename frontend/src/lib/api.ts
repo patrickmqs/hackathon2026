@@ -81,6 +81,8 @@ export interface Analysis {
   meta: { model: string; prompt_version: string };
   [k: string]: unknown;
 }
+export interface ReviewApplied { id: string; kind: string; review_status: "confirmed" | "edited" | "rejected" | "needs_clarification"; title: string; by: "ai" | "human" }
+export interface ReviewChatTurn { reply: string; applied: ReviewApplied[]; pending_count: number; analysis: Analysis }
 export interface ProposalContent {
   title: string; executive_summary: string; business_context: string; objectives: string[];
   scope: { in_scope: string[]; out_of_scope: string[] };
@@ -131,6 +133,8 @@ export const api = {
   getMeeting: (id: string) => request<Meeting>("GET", `/meetings/${id}`),
   reprocess: (id: string) => request<Meeting>("POST", `/meetings/${id}/reprocess`),
   getAnalysis: (meetingId: string) => request<Analysis>("GET", `/meetings/${meetingId}/analysis`),
+  reviewChat: (meetingId: string, messages: { role: "user" | "assistant"; content: string }[]) =>
+    request<ReviewChatTurn>("POST", `/meetings/${meetingId}/analysis/chat`, { auth: true, body: { messages } }),
   saveAnalysis: (meetingId: string, a: Analysis) => request<Analysis>("PUT", `/meetings/${meetingId}/analysis`, { auth: true, body: a }),
   completeReview: (meetingId: string, acceptPending: boolean) =>
     request<Analysis>("POST", `/meetings/${meetingId}/analysis/complete-review`, { auth: true, body: { accept_pending_as_confirmed: acceptPending } }),

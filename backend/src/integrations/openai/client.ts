@@ -97,6 +97,36 @@ function logRun(entry: Record<string, unknown>) {
   }
 }
 
+/** Um passo de agente com ferramentas (Responses API): mesmo retry/backoff e log das demais chamadas. */
+export async function toolStep(params: {
+  model: string;
+  instructions: string;
+  input: OpenAI.Responses.ResponseInput;
+  tools: OpenAI.Responses.FunctionTool[];
+  temperature?: number;
+  label: string;
+}): Promise<OpenAI.Responses.Response> {
+  const started = Date.now();
+  const base = { kind: "agent", model: params.model, prompt: params.label };
+  try {
+    const res = await withRetry(() =>
+      getClient().responses.create({
+        model: params.model,
+        instructions: params.instructions,
+        input: params.input,
+        tools: params.tools,
+        temperature: params.temperature,
+      }),
+    );
+    logRun({ ...base, latencyMs: Date.now() - started, input_tokens: res.usage?.input_tokens ?? 0, output_tokens: res.usage?.output_tokens ?? 0, ok: true });
+    return res;
+  } catch (e) {
+    logRun({ ...base, latencyMs: Date.now() - started, ok: false, error: (e as Error).message });
+    if (e instanceof OpenAI.APIError) throw new AiProviderError(`Erro da OpenAI (status ${e.status}): ${e.message}`, e);
+    throw e;
+  }
+}
+
 export async function structuredCompletion<T extends z.ZodTypeAny>(opts: {
   prompt: LoadedPrompt;
   input: string;
