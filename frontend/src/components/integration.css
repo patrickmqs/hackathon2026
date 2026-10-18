@@ -238,3 +238,18 @@
 
 /* Logos recortados (sem margem): mesma altura = mesmo tamanho visível nos dois temas */
 .brand-logo-light, .brand-logo-dark { height: 48px; width: auto; }
+
+/* Proposta: apenas a visualização do PDF em tela cheia */
+.proposal-pdf-view { display: flex; flex-direction: column; }
+.proposal-pdf-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.proposal-pdf-head h2 { margin: 10px 0 4px; font-size: 22px; letter-spacing: -.3px; }
+.proposal-pdf-head p { margin: 0; color: var(--muted); }
+.proposal-pdf-actions { display: flex; align-items: center; gap: 10px; flex: none; }
+.proposal-pdf-frame .pdf-frame { height: calc(100vh - 230px); min-height: 520px; width: 100%; }
+.pdf-loading { display: grid; place-items: center; height: 60vh; color: var(--muted); font-size: 12px; }
+@media (max-width: 700px) {
+  .proposal-pdf-head { flex-direction: column; }
+  .proposal-pdf-actions { width: 100%; }
+  .proposal-pdf-actions .button { flex: 1; }
+  .proposal-pdf-frame .pdf-frame { height: 70vh; min-height: 420px; }
+}
