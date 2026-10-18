@@ -1,12 +1,17 @@
 "use client";
 import { Suspense, useState } from "react";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { AppShell, Badge, Button, Card } from "@/components/AppShell";
 import { ErrorBanner, Loading, errorMessage, useLoad } from "@/components/Api";
-import { ProjectDetailsForm, isProjectIncomplete } from "@/components/ProjectDetailsForm";
+import { ProjectDetailsForm } from "@/components/ProjectDetailsForm";
 import { ensureProposal } from "@/lib/proposal-job";
 import { STATUS_LABEL, api, timeAgo, type Analysis, type Meeting, type Proposal } from "@/lib/api";
+
+function StageGlyph({ kind }: { kind: "meeting" | "analysis" | "proposal" }) {
+  if (kind === "meeting") return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0" /><path d="M12 18v3" /></svg>;
+  if (kind === "analysis") return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z" /><path d="M18.5 15.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z" /></svg>;
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><path d="M8 13h8M8 17h5" /></svg>;
+}
 
 function ProjectPageInner() {
   const { id } = useParams<{ id: string }>();
@@ -48,18 +53,35 @@ function ProjectPageInner() {
 
   return <AppShell title={project.name} eyebrow="PROJETOS / DETALHES" action={<Button href={nextMeeting} variant="secondary">+ Adicionar reunião</Button>}>
     <div className="project-meta">{project.client.company} <span>•</span> Atualizado {timeAgo(project.updated_at)} <Badge tone={st.tone}>{st.label}</Badge></div>
-    {isProjectIncomplete(project) && <ProjectDetailsForm key={project.updated_at} project={project} onSaved={reload} />}
-    <div className="stepper">{["Reunião", "Análise", "Proposta", "Aprovação", "Envio"].map((label, i) => <div className={i < st.step ? "done" : i === st.step ? "current" : ""} key={label}><b>{i < st.step ? "✓" : i + 1}</b><span>{label}</span></div>)}</div>
     <div className="stage-grid">
-      <Card><Badge tone={meeting ? (meeting.status === "failed" ? "red" : "green") : "neutral"}>{!meeting ? "Pendente" : meeting.status === "failed" ? "Falhou" : meeting.status === "analysis_ready" || meeting.status === "reviewed" ? "Concluída" : "Processando"}</Badge><h2>Reunião</h2>
-        <p>{meeting ? (meeting.title ?? "Reunião sem título") : "Nenhuma reunião ainda"}</p>{meeting && <small>{meeting.source_type === "audio" ? "Áudio" : "Texto"} · {timeAgo(meeting.created_at)}</small>}
-        {meeting?.status === "failed" && <ErrorBanner message={meeting.error?.message ?? "Falha no processamento."} />}
-        <Link href={nextMeeting}>{meeting ? "Adicionar outra reunião →" : "Adicionar reunião →"}</Link></Card>
-      <Card><Badge tone={analysis ? "blue" : "neutral"}>{analysis ? (analysis.review_completed ? "Revisada" : "Pronta") : "Aguardando"}</Badge><h2>Análise</h2>
-        {analysis ? <><p>{analysis.review_completed ? "Revisão concluída" : "Revisão humana necessária"}</p><div className="counts"><b>{analysis.requirements.length}<small>requisitos</small></b><b>{analysis.decisions.length}<small>decisões</small></b><b>{analysis.commitments.length}<small>compromissos</small></b></div><Button href={analysisHref}>{analysis.review_completed ? "Ver análise →" : "Revisar análise →"}</Button></> : <p>Disponível quando a reunião for processada</p>}</Card>
-      <Card><Badge tone={proposal ? (proposal.approved_version ? "green" : "blue") : analysis ? "blue" : "neutral"}>{proposal ? (proposal.approved_version ? "Aprovada" : "Rascunho") : analysis ? "Disponível" : "Bloqueada"}</Badge><h2>Proposta</h2>
-        {proposal ? <><p>Versão atual v{proposal.current_version}{proposal.approved_version ? ` · aprovada v${proposal.approved_version}` : ""}</p><Button href={`/proposals/${proposal.id}`}>Abrir proposta →</Button></> : analysis ? <><p>{analysis.review_completed ? "Gere a proposta a partir da análise revisada" : "Rascunho antes da revisão humana"}</p><Button onClick={() => void openProposal()}>{opening ? "Gerando…" : "Visualizar proposta →"}</Button>{openError && <ErrorBanner message={openError} />}</> : <><p>Disponível quando a análise estiver pronta</p><small>⌁ Aguardando a análise da reunião</small></>}</Card>
+      <Card className="stage-card stage-meeting">
+        <span className="stage-watermark blue" aria-hidden="true"><StageGlyph kind="meeting" /></span>
+        <div className="stage-head"><span className="stage-icon blue"><StageGlyph kind="meeting" /></span><h2>Reunião</h2><Badge tone={meeting ? (meeting.status === "failed" ? "red" : "green") : "neutral"}>{!meeting ? "Pendente" : meeting.status === "failed" ? "Falhou" : meeting.status === "analysis_ready" || meeting.status === "reviewed" ? "Concluída" : "Processando"}</Badge></div>
+        <div className="stage-body">
+          <p>{meeting ? (meeting.title ?? "Reunião sem título") : "Nenhuma reunião ainda"}</p>
+          {meeting && <small>{meeting.source_type === "audio" ? "Áudio" : "Texto"} · {timeAgo(meeting.created_at)}</small>}
+          {meeting?.status === "failed" && <ErrorBanner message={meeting.error?.message ?? "Falha no processamento."} />}
+        </div>
+        <div className="stage-foot"><Button href={nextMeeting} variant="secondary">{meeting ? "Adicionar outra reunião →" : "Adicionar reunião →"}</Button></div>
+      </Card>
+      <Card className="stage-card stage-analysis">
+        <span className="stage-watermark purple" aria-hidden="true"><StageGlyph kind="analysis" /></span>
+        <div className="stage-head"><span className="stage-icon purple"><StageGlyph kind="analysis" /></span><h2>Análise</h2><Badge tone={analysis ? "blue" : "neutral"}>{analysis ? (analysis.review_completed ? "Revisada" : "Pronta") : "Aguardando"}</Badge></div>
+        <div className="stage-body">
+          {analysis ? <><p>{analysis.review_completed ? "Revisão concluída" : "Revisão humana necessária"}</p><div className="counts"><b>{analysis.requirements.length}<small>requisitos</small></b><b>{analysis.decisions.length}<small>decisões</small></b><b>{analysis.commitments.length}<small>compromissos</small></b></div></> : <p>Disponível quando a reunião for processada</p>}
+        </div>
+        {analysis && <div className="stage-foot"><Button href={analysisHref}>{analysis.review_completed ? "Ver análise →" : "Revisar análise →"}</Button></div>}
+      </Card>
+      <Card className="stage-card stage-proposal">
+        <span className="stage-watermark green" aria-hidden="true"><StageGlyph kind="proposal" /></span>
+        <div className="stage-head"><span className="stage-icon green"><StageGlyph kind="proposal" /></span><h2>Proposta</h2><Badge tone={proposal ? (proposal.approved_version ? "green" : "blue") : analysis ? "blue" : "neutral"}>{proposal ? (proposal.approved_version ? "Aprovada" : "Rascunho") : analysis ? "Disponível" : "Bloqueada"}</Badge></div>
+        <div className="stage-body">
+          {proposal ? <p>Versão atual v{proposal.current_version}{proposal.approved_version ? ` · aprovada v${proposal.approved_version}` : ""}</p> : analysis ? <p>{analysis.review_completed ? "Gere a proposta a partir da análise revisada" : "Rascunho antes da revisão humana"}</p> : <><p>Disponível quando a análise estiver pronta</p><small>⌁ Aguardando a análise da reunião</small></>}
+        </div>
+        {proposal ? <div className="stage-foot"><Button href={`/proposals/${proposal.id}`}>Abrir proposta →</Button></div> : analysis ? <div className="stage-foot"><Button onClick={() => void openProposal()}>{opening ? "Gerando…" : "Visualizar proposta →"}</Button>{openError && <ErrorBanner message={openError} />}</div> : null}
+      </Card>
     </div>
+    <ProjectDetailsForm key={project.updated_at} project={project} onSaved={reload} />
   </AppShell>;
 }
 

@@ -147,7 +147,7 @@ function MeetingProcessingPageInner() {
           // Começa a gerar o rascunho da proposta em paralelo e já abre a revisão (sem esperar).
           void ensureProposal(current.project_id, meetingId).catch(() => undefined);
           setAnalysisVerified(true);
-          router.replace(`/meetings/${meetingId}/analysis`);
+          router.replace(`/projects/${current.project_id}`);
           return;
         }
 

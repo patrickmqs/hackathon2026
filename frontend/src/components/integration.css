@@ -186,5 +186,55 @@
   .rv-body { overflow: visible; }
 }
 
+/* Projeto (detalhe): cards de etapa com cabeçalho, corpo e rodapé fixo, na mesma altura */
+.stage-grid { align-items: stretch; }
+.stage-grid .card.stage-card { position: relative; overflow: hidden; display: flex; flex-direction: column; min-height: 330px; padding: 26px 26px 24px; }
+.stage-card.stage-meeting { border-top: 3px solid var(--blue); }
+.stage-card.stage-analysis { border-top: 3px solid var(--purple); }
+.stage-card.stage-proposal { border-top: 3px solid var(--green); }
+.stage-grid .stage-head { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+.stage-grid .stage-head .badge { float: none; flex: none; }
+.stage-grid .stage-head h2 { margin: 0; flex: 1; font-size: 17px; }
+.stage-icon { display: grid; width: 48px; height: 48px; flex: none; place-items: center; border-radius: 14px; font-size: 22px; font-weight: 800; }
+.stage-icon.blue { background: #eaf1ff; color: var(--blue); }
+.stage-icon.purple { background: #f0ebff; color: var(--purple); }
+.stage-icon.green { background: #e7f7ef; color: var(--green); }
+.stage-icon.amber { background: #fff2df; color: var(--amber); }
+.stage-icon svg { width: 24px; height: 24px; }
+.stage-watermark { position: absolute; right: -18px; top: 22px; width: 136px; height: 136px; opacity: 0.07; pointer-events: none; }
+.stage-watermark svg { width: 100%; height: 100%; }
+.stage-watermark.blue { color: var(--blue); }
+.stage-watermark.purple { color: var(--purple); }
+.stage-watermark.green { color: var(--green); }
+.stage-grid .stage-body { flex: 1; min-width: 0; }
+.stage-grid .stage-body p { margin: 0; font-size: 13px; line-height: 1.6; }
+.stage-grid .stage-body > small { display: block; margin: 12px 0 0; font-size: 11px; }
+.stage-grid .stage-body .api-error { margin: 12px 0 0; }
+.stage-grid .stage-body .counts { display: flex; gap: 24px; margin: 20px 0 0; }
+.stage-grid .stage-body .counts b { display: flex; flex-direction: column; gap: 4px; font-size: 24px; line-height: 1; }
+.stage-grid .stage-body .counts small { display: block; margin: 0; font-size: 11px; font-weight: 600; color: var(--muted); }
+.stage-grid .stage-foot { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--line); }
+.stage-grid .stage-foot .button { width: 100%; min-height: 44px; margin-top: 0; }
+.stage-grid .stage-foot .api-error { margin: 10px 0 0; }
+[data-theme="dark"] .stage-icon.blue { background: #243b5b; color: var(--blue); }
+[data-theme="dark"] .stage-icon.purple { background: #312a52; color: var(--purple); }
+[data-theme="dark"] .stage-icon.green { background: #1d3a30; color: var(--green); }
+[data-theme="dark"] .stage-icon.amber { background: #3d3018; color: var(--amber); }
+@media (max-width: 1000px) { .stage-grid { grid-template-columns: 1fr; } .stage-grid .card.stage-card { min-height: 0; } }
+
+/* Informações do Cliente (projeto) — dropdown */
+.client-info-card { margin-top: 18px; }
+.client-info-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 0; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; font: inherit; }
+.client-info-title { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.client-info-title strong { font-size: 16px; }
+.client-info-chevron { display: grid; place-items: center; width: 22px; height: 22px; flex: none; color: var(--muted); transition: transform .18s ease; }
+.client-info-chevron.open { transform: rotate(180deg); }
+.client-info-chevron svg { width: 16px; height: 16px; }
+.client-alert { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 8px; background: #fff2df; color: var(--amber); font-size: 11px; font-weight: 700; white-space: nowrap; }
+.client-alert svg { width: 15px; height: 15px; flex: none; }
+.client-info-body { margin-top: 18px; }
+.client-info-desc { margin: 0 0 4px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+[data-theme="dark"] .client-alert { background: #3d3018; color: var(--amber); }
+
 /* Logos recortados (sem margem): mesma altura = mesmo tamanho visível nos dois temas */
 .brand-logo-light, .brand-logo-dark { height: 48px; width: auto; }
