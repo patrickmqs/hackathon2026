@@ -7,6 +7,7 @@ import { errorHandler } from "./middleware/errors.js";
 import { analysisRouter } from "./routes/analysis.js";
 import { approvalsRouter } from "./routes/approvals.js";
 import { deliveriesRouter, proposalDeliveriesRouter } from "./routes/deliveries.js";
+import { gmailAuthRouter } from "./routes/gmail.js";
 import { healthRouter } from "./routes/health.js";
 import { meetingsRouter } from "./routes/meetings.js";
 import { projectsRouter } from "./routes/projects.js";
@@ -53,6 +54,7 @@ export function createApp(deps: AppDeps): express.Express {
   app.use("/proposals", approvalsRouter(deps));
   app.use("/deliveries", deliveriesRouter(deliveryDeps));
   app.use("/auth/whatsapp", whatsappAuthRouter());
+  app.use("/auth/gmail", gmailAuthRouter());
 
   // 404 — rota não mapeada.
   app.use((_req, res) => {

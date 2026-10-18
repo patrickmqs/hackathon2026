@@ -1,6 +1,8 @@
 import { config } from "./core/config.js";
 import { createComposer, createPipeline, createRepository } from "./core/container.js";
 import { FileStorage } from "./core/storage.js";
+import { GmailOAuthAdapter } from "./integrations/gmail/gmailAdapter.js";
+import { initGmailOAuth } from "./integrations/gmail/oauth.js";
 import { BaileysWhatsAppAdapter } from "./integrations/whatsapp/baileysAdapter.js";
 import { startSocket } from "./integrations/whatsapp/socket.js";
 import { JobRunner } from "./services/jobs/runner.js";
@@ -15,6 +17,9 @@ const jobs = new JobRunner({
   staleMinutes: config.jobStaleMinutes,
 });
 
+// Repositório compartilhado pelo OAuth do Gmail (persistência dos tokens).
+initGmailOAuth(repo);
+
 const app = createApp({
   repo,
   storage,
@@ -22,7 +27,7 @@ const app = createApp({
   composer: createComposer(),
   maxUploadMb: config.maxUploadMb,
   corsOrigins: config.corsOrigins,
-  adapters: { whatsapp: new BaileysWhatsAppAdapter() },
+  adapters: { gmail: new GmailOAuthAdapter(), whatsapp: new BaileysWhatsAppAdapter() },
 });
 
 // Sobe o socket do WhatsApp no boot (restaura sessão ou gera QR/pairing code).

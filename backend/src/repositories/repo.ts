@@ -126,6 +126,13 @@ export interface ChannelEventRecord {
   at: string;
 }
 
+export interface OAuthCredentialRecord {
+  provider: string;
+  accountEmail: string;
+  token: Record<string, unknown>;
+  updatedAt: string;
+}
+
 export interface Page<T> {
   items: T[];
   total: number;
@@ -267,4 +274,9 @@ export interface Repository {
   // Events
   createEvent(input: CreateEventInput): Promise<EventRecord>;
   listEvents(projectId: string, limit: number, offset: number): Promise<Page<EventRecord>>;
+
+  // OAuth credentials (integrações externas, ex. Gmail)
+  getOAuthCredential(provider: string): Promise<OAuthCredentialRecord | null>;
+  upsertOAuthCredential(provider: string, accountEmail: string, token: Record<string, unknown>): Promise<OAuthCredentialRecord>;
+  deleteOAuthCredential(provider: string): Promise<void>;
 }

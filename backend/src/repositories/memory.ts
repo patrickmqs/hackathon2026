@@ -18,6 +18,7 @@ import type {
   DeliveryRecord,
   EventRecord,
   MeetingRecord,
+  OAuthCredentialRecord,
   Page,
   Patch,
   PdfArtifactRecord,
@@ -47,6 +48,7 @@ export class MemoryRepository implements Repository {
   private channels = new Map<string, DeliveryChannelRecord>();
   private channelEvents = new Map<string, ChannelEventRecord>();
   private events = new Map<string, EventRecord>();
+  private oauthCredentials = new Map<string, OAuthCredentialRecord>();
 
   private id(): string {
     return randomUUID();
@@ -429,5 +431,20 @@ export class MemoryRepository implements Repository {
       .filter((e) => e.projectId === projectId)
       .sort((a, b) => b.at.localeCompare(a.at));
     return { items: all.slice(offset, offset + limit), total: all.length };
+  }
+
+  // OAuth credentials
+  async getOAuthCredential(provider: string): Promise<OAuthCredentialRecord | null> {
+    return this.oauthCredentials.get(provider) ?? null;
+  }
+
+  async upsertOAuthCredential(provider: string, accountEmail: string, token: Record<string, unknown>): Promise<OAuthCredentialRecord> {
+    const rec: OAuthCredentialRecord = { provider, accountEmail, token, updatedAt: now() };
+    this.oauthCredentials.set(provider, rec);
+    return rec;
+  }
+
+  async deleteOAuthCredential(provider: string): Promise<void> {
+    this.oauthCredentials.delete(provider);
   }
 }

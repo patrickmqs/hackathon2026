@@ -19,6 +19,7 @@ import type {
   DeliveryRecord,
   EventRecord,
   MeetingRecord,
+  OAuthCredentialRecord,
   Page,
   Patch,
   PdfArtifactRecord,
@@ -647,5 +648,37 @@ export class PrismaRepository implements Repository {
       })),
       total,
     };
+  }
+
+  // OAuth credentials
+  async getOAuthCredential(provider: string): Promise<OAuthCredentialRecord | null> {
+    const c = await prisma.oAuthCredential.findUnique({ where: { provider } });
+    if (!c) return null;
+    return {
+      provider: c.provider,
+      accountEmail: c.accountEmail,
+      token: json(c.token),
+      updatedAt: iso(c.updatedAt),
+    };
+  }
+
+  async upsertOAuthCredential(provider: string, accountEmail: string, token: Record<string, unknown>): Promise<OAuthCredentialRecord> {
+    const c = await prisma.oAuthCredential.upsert({
+      where: { provider },
+      update: { accountEmail, token: token as Prisma.InputJsonValue },
+      create: { provider, accountEmail, token: token as Prisma.InputJsonValue },
+    });
+    return {
+      provider: c.provider,
+      accountEmail: c.accountEmail,
+      token: json(c.token),
+      updatedAt: iso(c.updatedAt),
+    };
+  }
+
+  async deleteOAuthCredential(provider: string): Promise<void> {
+    await prisma.oAuthCredential.delete({ where: { provider } }).catch(() => {
+      // Idempotente: não falhar se não existir.
+    });
   }
 }

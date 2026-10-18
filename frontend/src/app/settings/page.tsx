@@ -4,16 +4,21 @@ import { useEffect, useState } from "react";
 import { AppShell, Badge, Button, Card } from "@/components/AppShell";
 import { WhatsAppConnectModal } from "@/components/WhatsAppConnectModal";
 import { errorMessage } from "@/components/Api";
-import { api, type WhatsappStatus } from "@/lib/api";
-
-type GmailState = "connected" | "configured" | "disconnected";
+import { api, type GmailStatus, type WhatsappStatus } from "@/lib/api";
 
 export default function SettingsPage() {
   const [demoUser, setDemoUser] = useState("Marina Rocha");
   const [draftUser, setDraftUser] = useState("Marina Rocha");
-  const [gmailState, setGmailState] = useState<GmailState>("connected");
   const [saved, setSaved] = useState(false);
   const [message, setMessage] = useState("");
+
+  const [gmail, setGmail] = useState<GmailStatus | null>(null);
+  const [gmailDisconnecting, setGmailDisconnecting] = useState(false);
+  const [gmailTestMode, setGmailTestMode] = useState(false);
+  const [testEmail, setTestEmail] = useState("");
+  const [gmailTestBusy, setGmailTestBusy] = useState(false);
+  const [gmailTestResult, setGmailTestResult] = useState<string | null>(null);
+  const [gmailTestError, setGmailTestError] = useState<string | null>(null);
 
   const [whatsapp, setWhatsapp] = useState<WhatsappStatus | null>(null);
   const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
@@ -26,14 +31,29 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const storedUser = window.localStorage.getItem("proposal-ai-demo-user");
-    const storedGmail = window.localStorage.getItem("proposal-ai-gmail");
     if (storedUser) {
       setDemoUser(storedUser);
       setDraftUser(storedUser);
     }
-    if (storedGmail === "disconnected") setGmailState("disconnected");
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("gmail") === "connected") {
+      setMessage("Gmail conectado com sucesso.");
+      window.history.replaceState({}, "", "/settings");
+    } else if (params.get("gmail") === "error") {
+      setMessage("Não foi possível conectar o Gmail. Tente novamente.");
+      window.history.replaceState({}, "", "/settings");
+    }
+    void refreshGmail();
     void refreshWhatsapp();
   }, []);
+
+  async function refreshGmail() {
+    try {
+      setGmail(await api.gmailStatus());
+    } catch {
+      setGmail(null);
+    }
+  }
 
   async function refreshWhatsapp() {
     try {
@@ -56,10 +76,45 @@ export default function SettingsPage() {
     window.setTimeout(() => setSaved(false), 2500);
   }
 
-  function disconnectGmail() {
-    window.localStorage.setItem("proposal-ai-gmail", "disconnected");
-    setGmailState("disconnected");
-    setMessage("Gmail desconectado neste ambiente de demonstração.");
+  async function sendGmailTest() {
+    const email = testEmail.trim();
+    setGmailTestResult(null);
+    setGmailTestError(null);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setGmailTestError("Informe um e-mail válido (ex. cliente@empresa.com).");
+      return;
+    }
+    setGmailTestBusy(true);
+    try {
+      const result = await api.gmailTest(email);
+      if (result.ok) {
+        setGmailTestResult("E-mail de teste enviado! Confira a caixa de entrada do destinatário.");
+      } else {
+        setGmailTestError(result.error ?? "Não foi possível enviar o e-mail de teste.");
+      }
+    } catch (e) {
+      setGmailTestError(errorMessage(e));
+    } finally {
+      setGmailTestBusy(false);
+    }
+  }
+
+  function connectGmail() {
+    window.location.href = api.gmailStartUrl();
+  }
+
+  async function disconnectGmail() {
+    setGmailDisconnecting(true);
+    setMessage("");
+    try {
+      await api.gmailDisconnect();
+      setMessage("Gmail desconectado.");
+    } catch (e) {
+      setMessage(errorMessage(e));
+    } finally {
+      setGmailDisconnecting(false);
+      await refreshGmail();
+    }
   }
 
   async function disconnectWhatsapp() {
@@ -100,6 +155,8 @@ export default function SettingsPage() {
   }
 
   const whatsappConnected = whatsapp?.connected === true;
+  const gmailConfigured = gmail?.configured === true;
+  const gmailConnected = gmail?.connected === true;
 
   return <AppShell title="Configurações" eyebrow="WORKSPACE">
     <div className="settings-tabs"><button className="active">Workspace</button><button>Preferências</button><button>Segurança e dados</button></div>
@@ -113,7 +170,10 @@ export default function SettingsPage() {
         </Card>
         <Card>
           <div className="card-heading"><div><h2>Integrações</h2><p>Conecte os canais para enviar propostas diretamente.</p></div><span className="integration-health">● Operacional</span></div>
-          <div className="integration"><b className="channel gmail">M</b><span><strong>Gmail</strong><small>{gmailState === "connected" ? "Conectado como marina@acme.io" : gmailState === "configured" ? "Configurado, aguardando conexão" : "Nenhuma conta conectada"}</small></span><Badge tone={gmailState === "connected" ? "green" : gmailState === "configured" ? "blue" : "red"}>{gmailState === "connected" ? "Conectado" : gmailState === "configured" ? "Configurado" : "Desconectado"}</Badge>{gmailState === "connected" ? <Button variant="secondary" onClick={disconnectGmail}>Desconectar</Button> : <a className="button secondary" href="/api/v1/auth/google/start">Conectar Gmail</a>}</div>
+          <div className="integration"><b className="channel gmail">M</b><span><strong>Gmail</strong><small>{gmailConnected ? (gmail?.account_email ? `Conectado como ${gmail.account_email}` : "Conectado") : gmailConfigured ? "Conecte sua conta Google para enviar." : "Configure GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET no backend."}</small></span><Badge tone={gmailConnected ? "green" : gmailConfigured ? "blue" : "red"}>{gmailConnected ? "Conectado" : gmailConfigured ? "Não conectado" : "Não configurado"}</Badge><div className="wa-actions">{gmailConnected ? <Button variant="secondary" onClick={() => void disconnectGmail()}>{gmailDisconnecting ? "Desconectando…" : "Desconectar"}</Button> : gmailConfigured ? <Button variant="secondary" onClick={connectGmail}>Conectar</Button> : null}<Button variant="secondary" onClick={() => setGmailTestMode((value) => !value)}>Teste</Button></div></div>
+          {gmailTestMode && <div className="wa-test-row"><input value={testEmail} onChange={(event) => setTestEmail(event.target.value)} placeholder="cliente@empresa.com" aria-label="E-mail para envio de teste" /><Button variant="secondary" onClick={() => void sendGmailTest()}>{gmailTestBusy ? "Enviando…" : "Enviar \"oi\""}</Button></div>}
+          {gmailTestResult && <p className="settings-message success">{gmailTestResult}</p>}
+          {gmailTestError && <p className="settings-message">{gmailTestError}</p>}
           <div className="integration"><b className="channel whatsapp">◔</b><span><strong>WhatsApp</strong><small>{whatsappConnected ? (whatsapp?.phone_number ? `Conectado como ${whatsapp.phone_number}` : "Conectado") : "Conecte sua conta para enviar pelo WhatsApp."}</small></span><Badge tone={whatsappConnected ? "green" : "red"}>{whatsappConnected ? "Conectado" : "Não conectado"}</Badge><div className="wa-actions">{whatsappConnected ? <Button variant="secondary" onClick={() => void disconnectWhatsapp()}>{disconnecting ? "Desconectando…" : "Desconectar"}</Button> : <Button variant="secondary" onClick={() => setWhatsappModalOpen(true)}>Conectar</Button>}<Button variant="secondary" onClick={() => setTestMode((value) => !value)}>Teste</Button></div></div>
           {testMode && <div className="wa-test-row"><input value={testPhone} onChange={(event) => setTestPhone(event.target.value)} placeholder="+5511999990000" aria-label="Número para envio de teste" /><Button variant="secondary" onClick={() => void sendTest()}>{testBusy ? "Enviando…" : "Enviar \"oi\""}</Button></div>}
           {testResult && <p className="settings-message success">{testResult}</p>}

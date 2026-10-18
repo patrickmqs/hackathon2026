@@ -108,6 +108,8 @@ export interface WhatsappStatus {
   pairing_code: string | null; phone_number: string | null;
 }
 export interface WhatsappTestResult { ok: boolean; provider_message_id: string | null; error: string | null }
+export interface GmailStatus { configured: boolean; connected: boolean; account_email: string | null; mode: "oauth" }
+export interface GmailTestResult { ok: boolean; provider_message_id: string | null; error: string | null }
 
 // ---------- chamadas ----------
 export const api = {
@@ -145,6 +147,10 @@ export const api = {
   whatsappQr: () => request<{ qr: string | null }>("GET", "/auth/whatsapp/qr"),
   whatsappDisconnect: () => request<{ ok: boolean }>("DELETE", "/auth/whatsapp"),
   whatsappTest: (phone: string) => request<WhatsappTestResult>("POST", "/auth/whatsapp/test", { body: { phone } }),
+  gmailStatus: () => request<GmailStatus>("GET", "/auth/gmail/status"),
+  gmailStartUrl: () => `${API_URL}/auth/gmail/start`,
+  gmailDisconnect: () => request<{ ok: boolean }>("DELETE", "/auth/gmail"),
+  gmailTest: (email: string) => request<GmailTestResult>("POST", "/auth/gmail/test", { body: { email } }),
 };
 
 // ---------- apresentação ----------
