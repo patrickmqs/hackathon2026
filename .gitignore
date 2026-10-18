@@ -6,3 +6,6 @@ node_modules/
 logs/
 sample_data/*.mp3
 .claude/worktrees/
+
+# Áudios de teste gerados por scripts/gerar-audios-teste.ps1
+sample_data/test_meetings/*.wav

@@ -1,0 +1,42 @@
+Rafael: Bom dia, Carla, bom dia, Diego. Eu sou o Rafael, da Software House. Hoje a ideia é entender o aplicativo da rede de academias de vocês.
+Carla: Bom dia, Rafael. Eu sou a Carla, diretora comercial da Rede Movimento. O Diego é o gerente de tecnologia.
+Diego: Bom dia. Eu cuido da infraestrutura e dos sistemas das unidades.
+Rafael: Carla, qual é o objetivo principal do aplicativo?
+Carla: Reduzir cancelamento. A gente perde quinze por cento dos alunos nos três primeiros meses. Queremos engajar com treino, check-in e desafios.
+Diego: E automatizar a cobrança recorrente. Hoje parte dos alunos paga em boleto e a inadimplência está em oito por cento.
+Rafael: Então temos engajamento e cobrança. Vamos começar pelo engajamento. O que o aluno faz no aplicativo?
+Carla: Vê o treino do dia, registra a carga, faz check-in na academia e vê o ranking com os amigos.
+Diego: O check-in precisa conversar com a catraca. Temos catracas de dois fornecedores diferentes nas quinze unidades.
+Marina: Eu sou a Marina, tech lead da Software House. As catracas têm API ou usam leitor de QR code?
+Diego: Os dois modelos leem QR code. Um deles tem API local na rede da unidade, o outro só funciona por arquivo.
+Marina: Então a integração pode ser diferente para cada fornecedor. Precisamos dos manuais técnicos para estimar.
+Diego: Eu envio os manuais dos dois fornecedores até quarta-feira.
+Rafael: Ótimo, anotado, Diego. Carla, sobre os treinos: quem monta a ficha de treino?
+Carla: Os professores montam hoje em papel. No aplicativo o professor cadastra a ficha e o aluno acompanha.
+Marina: Então teremos um painel web para o professor também, além do aplicativo do aluno.
+Carla: Sim, isso mesmo. Aplicativo para iOS e Android e um painel web para professores e para a gerência.
+Rafael: Podemos considerar decidido que serão os dois sistemas operacionais e o painel web?
+Carla: Está decidido.
+Diego: Só que eu prefiro começar por Android, porque setenta por cento dos nossos alunos usam Android.
+Carla: Não, Diego, eu quero os dois juntos, senão os alunos de iPhone reclamam.
+Marina: Posso sugerir um aplicativo multiplataforma, que atende os dois com um único desenvolvimento. Isso reduz o custo e o prazo.
+Carla: Se o custo cair, ótimo. Aprovado, então. Multiplataforma.
+Rafael: Perfeito. Agora a cobrança recorrente. Como vocês cobram hoje?
+Diego: Temos um gateway de pagamento no site, mas só para planos novos. Os alunos antigos pagam boleto na recepção.
+Carla: O objetivo é migrar todo mundo para cartão recorrente dentro do aplicativo.
+Marina: Qual é o gateway? Ele aceita cobrança recorrente tokenizada?
+Diego: Não tenho certeza. Preciso consultar o contrato com eles.
+Rafael: Então vamos deixar isso como pendência. Diego, você confirma com o gateway se tem recorrência por token?
+Diego: Confirmo e te aviso na semana que vem.
+Rafael: Combinado. Carla, sobre notificações, o que vocês imaginam?
+Carla: Lembrete de treino, parabéns de aniversário, aviso de cobrança e promoções. Mas não quero encher o aluno de notificação.
+Marina: Podemos deixar o aluno configurar quais notificações recebe. Isso também ajuda na regra de privacidade.
+Carla: Gostei. Aprovado.
+Diego: Falando em privacidade, vamos ter dados de saúde, como peso e medidas. Precisamos pensar na LGPD.
+Marina: Sim, vamos tratar como dado sensível, com consentimento explícito e criptografia. Isso entra na proposta.
+Rafael: Sobre prazo, Carla, vocês têm uma data?
+Carla: Queria lançar em quatro meses, para o relançamento da marca em março.
+Marina: Sem os manuais das catracas eu não consigo avaliar se quatro meses é viável. Pode ser que a integração tome mais tempo.
+Carla: Entendi. Então primeiro eu preciso do retorno do Diego.
+Rafael: Exatamente. Resumindo: a Software House envia a proposta com aplicativo multiplataforma e painel web, o Diego envia os manuais das catracas e confirma o gateway, e a Carla aguarda a proposta. Obrigado a todos.
+Carla: Obrigada, Rafael.
