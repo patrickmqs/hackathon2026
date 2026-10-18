@@ -13,8 +13,8 @@ function ProposalPageInner() {
   const [sendOpen, setSendOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState(DEMO_ENABLED ? DEMO_CONTACT.email : "");
+  const [phone, setPhone] = useState(DEMO_ENABLED ? DEMO_CONTACT.phone : "");
   const [actionError, setActionError] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
 
@@ -74,9 +74,11 @@ function ProposalPageInner() {
   }
 
   async function sendDelivery() {
-    if (!version.approval) return;
-    const emailVal = email.trim();
-    const phoneVal = phone.trim();
+    // Na demo o envio é simulado: usa o contato padrão se os campos estiverem vazios e não exige aprovação prévia.
+    const approvalId = version.approval?.id ?? (DEMO_ENABLED ? "demo-approval" : null);
+    if (!approvalId) { setActionError("Aprove a proposta antes de enviar."); return; }
+    const emailVal = email.trim() || (DEMO_ENABLED ? DEMO_CONTACT.email : "");
+    const phoneVal = phone.trim() || (DEMO_ENABLED ? DEMO_CONTACT.phone : "");
     if (emailVal && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
       setActionError("E-mail inválido.");
       return;
@@ -113,7 +115,7 @@ function ProposalPageInner() {
     try {
       await api.updateProject(project.id, { client: { contact_email: emailVal || null, contact_phone: phoneVal || null } });
       await api.createDelivery({
-        approval_id: version.approval.id,
+        approval_id: approvalId,
         idempotency_key: crypto.randomUUID(),
         channels,
       });
