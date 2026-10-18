@@ -31,6 +31,7 @@ export function gmailAuthRouter(): Router {
       configured: s.configured,
       connected: s.connected,
       account_email: s.accountEmail,
+      scope: s.scope,
       mode: "oauth",
     });
   });

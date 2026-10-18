@@ -98,13 +98,19 @@ export interface GmailStatus {
   configured: boolean;
   connected: boolean;
   accountEmail: string | null;
+  scope: string | null;
 }
 
 export async function getGmailStatus(): Promise<GmailStatus> {
-  if (!gmailOAuthConfigured()) return { configured: false, connected: false, accountEmail: null };
-  if (!repo) return { configured: true, connected: false, accountEmail: null };
+  if (!gmailOAuthConfigured()) return { configured: false, connected: false, accountEmail: null, scope: null };
+  if (!repo) return { configured: true, connected: false, accountEmail: null, scope: null };
   const cred = await repo.getOAuthCredential(PROVIDER);
-  return { configured: true, connected: Boolean(cred), accountEmail: cred?.accountEmail ?? null };
+  return {
+    configured: true,
+    connected: Boolean(cred),
+    accountEmail: cred?.accountEmail ?? null,
+    scope: typeof cred?.token?.scope === "string" ? (cred.token.scope as string) : null,
+  };
 }
 
 export async function getAuthorizedClient(): Promise<{ client: OAuth2Client; accountEmail: string } | null> {

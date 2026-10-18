@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { google } from "googleapis";
 import { config } from "../../core/config.js";
+import { logger } from "../../core/logging.js";
 import type { Channel } from "../../schemas/common.js";
 import type {
   ChannelAdapter,
@@ -60,10 +61,15 @@ function buildRawMime(opts: {
   return Buffer.from(parts.join("\r\n"), "utf8").toString("base64url");
 }
 
-function mapError(error: unknown): ProviderError {
+export function mapError(error: unknown): ProviderError {
   const e = error as { code?: number | string; errors?: { reason?: string; message?: string }[] };
   const reason = e?.errors?.[0]?.reason ?? "";
+  const googleMessage = e?.errors?.[0]?.message ?? "";
   const status = e?.code;
+
+  // Registra o motivo real do Google (sem segredos) para diagnóstico no log de produção.
+  logger.warn("gmail.send falhou", { status, reason, message: googleMessage });
+
   if (reason === "invalid_grant" || reason === "authError") {
     return {
       code: "GMAIL_AUTH_EXPIRED",
@@ -72,10 +78,18 @@ function mapError(error: unknown): ProviderError {
       raw: error,
     };
   }
-  if (reason === "insufficientPermissions" || status === 403) {
+  if (reason === "accessNotConfigured") {
+    return {
+      code: "GMAIL_API_DISABLED",
+      message: "Gmail API não habilitada no Google Cloud. Habilite a API do Gmail e tente novamente em alguns minutos.",
+      retryable: false,
+      raw: error,
+    };
+  }
+  if (reason === "insufficientPermissions") {
     return {
       code: "GMAIL_SCOPE_MISSING",
-      message: "Permissão de envio não concedida (escopo gmail.send ausente).",
+      message: "Permissão de envio não concedida (escopo gmail.send ausente). Reconecte em Configurações.",
       retryable: false,
       raw: error,
     };
@@ -88,7 +102,7 @@ function mapError(error: unknown): ProviderError {
       raw: error,
     };
   }
-  if (reason === "rateLimitExceeded" || reason === "userRateLimitExceeded" || reason === "quotaExceeded" || status === 429) {
+  if (reason === "rateLimitExceeded" || reason === "userRateLimitExceeded" || reason === "dailyLimitExceeded" || reason === "quotaExceeded" || status === 429) {
     return {
       code: "GMAIL_RATE_LIMITED",
       message: "Limite temporário do Gmail. Tente novamente em alguns minutos.",
@@ -98,7 +112,7 @@ function mapError(error: unknown): ProviderError {
   }
   return {
     code: "GMAIL_SEND_FAILED",
-    message: "Falha ao enviar o e-mail pelo Gmail.",
+    message: `Falha ao enviar o e-mail pelo Gmail${reason ? ` (${reason})` : ""}${googleMessage ? `: ${googleMessage}` : ""}.`,
     retryable: true,
     raw: error,
   };

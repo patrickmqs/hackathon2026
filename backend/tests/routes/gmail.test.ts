@@ -5,7 +5,7 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../../src/app.js";
 import { FileStorage } from "../../src/core/storage.js";
-import { GmailOAuthAdapter } from "../../src/integrations/gmail/gmailAdapter.js";
+import { GmailOAuthAdapter, mapError } from "../../src/integrations/gmail/gmailAdapter.js";
 import { MemoryRepository } from "../../src/repositories/memory.js";
 
 function makeApp() {
@@ -68,5 +68,23 @@ describe("GmailOAuthAdapter", () => {
     });
     expect(result.ok).toBe(false);
     expect(result.error?.code).toBe("GMAIL_RECIPIENT_INVALID");
+  });
+});
+
+describe("mapError", () => {
+  it("distingue Gmail API desabilitada (accessNotConfigured) de escopo ausente", () => {
+    const apiDisabled = mapError({
+      code: 403,
+      errors: [{ reason: "accessNotConfigured", message: "Gmail API ... is disabled." }],
+    });
+    expect(apiDisabled.code).toBe("GMAIL_API_DISABLED");
+
+    const scopeMissing = mapError({ code: 403, errors: [{ reason: "insufficientPermissions" }] });
+    expect(scopeMissing.code).toBe("GMAIL_SCOPE_MISSING");
+  });
+
+  it("não rotula todo 403 como escopo ausente", () => {
+    const quota = mapError({ code: 403, errors: [{ reason: "dailyLimitExceeded" }] });
+    expect(quota.code).toBe("GMAIL_RATE_LIMITED");
   });
 });
