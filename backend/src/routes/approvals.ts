@@ -27,11 +27,6 @@ export function approvalsRouter(deps: AppDeps): Router {
 
     const proposal = await repo.getProposal(proposalId);
     if (!proposal) throw new DomainError("NOT_FOUND", "Proposta não encontrada.");
-    // Rascunhos podem ser gerados sem revisão, mas só uma análise revisada pode ser aprovada.
-    const analysis = proposal.meetingId ? await repo.getAnalysis(proposal.meetingId) : null;
-    if (analysis && !analysis.reviewCompleted && !(analysis.content as { review_completed?: boolean }).review_completed) {
-      throw new DomainError("ANALYSIS_REVIEW_INCOMPLETE", "Conclua a revisão da análise antes de aprovar a proposta.");
-    }
     const version = await repo.getVersion(proposalId, n);
     if (!version) throw new DomainError("NOT_FOUND", "Versão não encontrada.");
 
