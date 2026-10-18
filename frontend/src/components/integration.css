@@ -238,3 +238,21 @@
 
 /* Logos recortados (sem margem): mesma altura = mesmo tamanho visível nos dois temas */
 .brand-logo-light, .brand-logo-dark { height: 48px; width: auto; }
+
+/* Modo escuro: modais e avisos sem fundos claros */
+[data-theme="dark"] dialog.intake-modal { background: #182433; border-color: #2c3a4d; box-shadow: 0 22px 70px rgba(0, 0, 0, .6); }
+[data-theme="dark"] .intake-modal textarea,
+[data-theme="dark"] .intake-modal input,
+[data-theme="dark"] .intake-modal select { background: #101823; border-color: #2c3a4d; color: var(--ink); }
+[data-theme="dark"] .intake-modal textarea::placeholder,
+[data-theme="dark"] .intake-modal input::placeholder { color: #6f8097; }
+[data-theme="dark"] .intake-modal .remove-file:hover { background: rgba(120, 164, 255, .14); }
+[data-theme="dark"] .wa-pairing-code { background: #101823; border-color: #2c3a4d; color: #e7edf7; }
+/* "error" (global) e botão de perigo eram rosa-claros: versão escura em vinho */
+[data-theme="dark"] .error,
+[data-theme="dark"] .intake-message.error { background: #3a1d22; border: 1px solid #6b2c34; color: #f5b8bd; border-radius: 8px; padding: 10px 12px; }
+[data-theme="dark"] .error small { color: #d99aa0; }
+[data-theme="dark"] .button.danger { background: #3a1d22; border-color: #6b2c34; color: #f5b8bd; }
+[data-theme="dark"] .notice { background: #101823; color: var(--muted); }
+/* O QR code precisa de fundo branco para ser lido; só suaviza a moldura no escuro */
+[data-theme="dark"] .wa-qr { border-color: #2c3a4d; box-shadow: 0 0 0 4px #101823; }
