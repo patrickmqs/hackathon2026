@@ -149,13 +149,11 @@ export function proposalCreateRouter(deps: AppDeps): Router {
 
     const analysis = await repo.getAnalysis(input.meeting_id);
     if (!analysis) throw new DomainError("MEETING_NOT_READY", "Análise não encontrada.");
-    const analysisContent = analysis.content as MeetingAnalysis;
-    if (!analysis.reviewCompleted && !analysisContent.review_completed) {
-      throw new DomainError(
-        "ANALYSIS_REVIEW_INCOMPLETE",
-        "A análise precisa ser revisada antes de gerar a proposta.",
-      );
-    }
+    const stored = analysis.content as MeetingAnalysis;
+    // Sem revisão concluída gera-se um rascunho: itens pendentes entram como se confirmados (só em memória)
+    // e os rejeitados ficam de fora. Aprovar/enviar continua exigindo a revisão (ver approvals.ts).
+    const reviewed = analysis.reviewCompleted || stored.review_completed;
+    const analysisContent = reviewed ? stored : treatPendingAsConfirmed(stored);
 
     const built = buildProposalContent({
       project,
@@ -207,4 +205,16 @@ async function resolveVersion(
   }
   if (!/^\d+$/.test(n)) return null;
   return repo.getVersion(proposalId, Number(n));
+}
+
+const REVIEWABLE_KEYS = ["client_needs", "requirements", "decisions", "commitments", "open_issues", "tech_suggestions"] as const;
+
+function treatPendingAsConfirmed(a: MeetingAnalysis): MeetingAnalysis {
+  const out: Record<string, unknown> = { ...a };
+  for (const key of REVIEWABLE_KEYS) {
+    out[key] = (a[key] as { review_status: string }[]).map((i) =>
+      i.review_status === "pending" || i.review_status === "needs_clarification" ? { ...i, review_status: "confirmed" } : i,
+    );
+  }
+  return out as unknown as MeetingAnalysis;
 }

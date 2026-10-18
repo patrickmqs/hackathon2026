@@ -100,6 +100,8 @@ export class JobRunner {
       if (!transcript) {
         throw new DomainError("AI_PROVIDER_ERROR", "Transcript não encontrado.");
       }
+      // Em paralelo à análise: nome/empresa do projeto só dependem da transcrição (nunca rejeita).
+      const projectInfo = this.fillProjectFromMeeting(meeting.projectId, transcript.text);
       const analysis = await this.pipeline.analyze(transcript.text, {
         meetingId,
         language: null,
@@ -116,7 +118,7 @@ export class JobRunner {
         content: analysis,
         promptVersion: analysis.meta.prompt_version,
       });
-      await this.fillProjectFromMeeting(meeting.projectId, transcript.text);
+      await projectInfo;
       await this.repo.updateMeeting(meetingId, { status: "analysis_ready" });
       await this.repo.createEvent({
         projectId: meeting.projectId,

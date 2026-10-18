@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api, type Meeting } from "@/lib/api";
-import { errorMessage } from "@/components/Api";
+import { setPendingMeeting } from "@/lib/pending-meeting";
 import {
   formatFileSize,
   getFileExtension,
@@ -28,7 +27,6 @@ export function MeetingIntake() {
   const [sourceError, setSourceError] = useState<string | null>(null);
   const [showTranscript, setShowTranscript] = useState(false);
   const [transcriptDraft, setTranscriptDraft] = useState("");
-  const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [statusText, setStatusText] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +52,6 @@ export function MeetingIntake() {
     setError(null);
     setBusy(false);
     setStatusText("");
-    setCreatedProjectId(null);
     setShowTranscript(false);
     setTranscriptDraft("");
     if (inputRef.current) inputRef.current.value = "";
@@ -123,44 +120,10 @@ export function MeetingIntake() {
       }
     }
 
+    // Navega na hora: a criação do projeto e o envio acontecem na tela de processamento.
     setBusy(true);
-    setStatusText("Preparando a análise…");
-    try {
-      // O projeto nasce sem dados: a IA preenche nome e empresa a partir da reunião e o que
-      // faltar o usuário completa depois, na página do projeto.
-      let projectId = createdProjectId;
-      if (!projectId) {
-        const project = await api.createProject({});
-        projectId = project.id;
-        setCreatedProjectId(project.id);
-      }
-
-      setStatusText("Enviando a reunião…");
-      let meeting: Meeting;
-      if (source.kind === "text") {
-        meeting = await api.createMeetingText(projectId, {
-          transcript_text: source.text,
-          language: "pt-BR",
-        });
-      } else if (getFileExtension(source.file.name) === ".txt") {
-        const text = await source.file.text();
-        const validationError = validateTranscript(text);
-        if (validationError) throw new Error(validationError);
-        meeting = await api.createMeetingText(projectId, {
-          transcript_text: text.trim(),
-          language: "pt-BR",
-        });
-      } else {
-        meeting = await api.createMeetingAudio(projectId, source.file);
-      }
-      setStatusText(meeting.progress?.message || "Reunião recebida. Iniciando análise…");
-      router.push(`/meetings/${meeting.id}/processing`);
-      return;
-    } catch (requestError) {
-      setError(errorMessage(requestError));
-      setBusy(false);
-      setStatusText("");
-    }
+    setPendingMeeting(source);
+    router.push("/meetings/pending/processing");
   }
 
   const file = source?.kind === "file" ? source.file : null;
@@ -210,7 +173,7 @@ export function MeetingIntake() {
           onChange={(event) => chooseFiles(event.currentTarget.files ?? [])}
         />
         <button className="button primary select-file-button" type="button" onClick={() => inputRef.current?.click()} disabled={busy}>
-          Selecionar arquivos
+          Nova proposta
         </button>
       </div>
 

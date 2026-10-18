@@ -3,6 +3,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, Suspense } from "react";
 import { AppShell, Badge, Button, Card } from "@/components/AppShell";
 import { ErrorBanner, Loading, errorMessage, useLoad } from "@/components/Api";
+import { ensureProposal, regenerateProposal } from "@/lib/proposal-job";
 import { api, type Analysis, type ReviewStatus, type SourceRef, type Summary } from "@/lib/api";
 
 type Kind = "client_needs" | "requirements" | "decisions" | "commitments" | "open_issues" | "tech_suggestions";
@@ -110,8 +111,12 @@ function AnalysisPageInner() {
     setActionError(null);
     try {
       if (!analysis.review_completed) await api.completeReview(meetingId, acceptPending || pending === 0);
-      const existing = data.project.latest_proposal_id;
-      const p = existing ?? (await api.createProposal(data.project.id, meetingId)).id;
+      // O rascunho é gerado em paralelo desde o processamento (itens pendentes contam como confirmados).
+      // Se a revisão rejeitou/editou/marcou itens, gera de novo para refletir a análise revisada.
+      const changed = rows.some((r) => r.review === "rejected" || r.review === "edited" || r.review === "needs_clarification");
+      const p = !analysis.review_completed && changed
+        ? await regenerateProposal(data.project.id, meetingId)
+        : await ensureProposal(data.project.id, meetingId);
       router.push(`/proposals/${p}`);
     } catch (e) {
       setActionError(errorMessage(e));

@@ -35,7 +35,7 @@ async function createReviewedMeeting(app: ReturnType<typeof makeApp>["app"], job
 }
 
 describe("propostas e aprovação", () => {
-  it("rejeita criar proposta sem revisão concluída", async () => {
+  it("sem revisão concluída gera rascunho, mas não deixa aprovar", async () => {
     const { app, jobs } = makeApp();
     const project = (await request(app).post("/projects").send({ name: "P", client: { company: "Acme" } })).body;
     const meeting = (
@@ -46,8 +46,15 @@ describe("propostas e aprovação", () => {
       .post(`/projects/${project.id}/proposals`)
       .set("X-Demo-User", "Marina")
       .send({ meeting_id: meeting.id });
-    expect(res.status).toBe(409);
-    expect(res.body.error.code).toBe("ANALYSIS_REVIEW_INCOMPLETE");
+    expect(res.status).toBe(201);
+
+    const version = (await request(app).get(`/proposals/${res.body.id}/versions/1`)).body;
+    const approve = await request(app)
+      .post(`/proposals/${res.body.id}/versions/1/approve`)
+      .set("X-Demo-User", "Marina")
+      .send({ content_hash: version.content_hash });
+    expect(approve.status).toBe(409);
+    expect(approve.body.error.code).toBe("ANALYSIS_REVIEW_INCOMPLETE");
   });
 
   it("fluxo completo: cria, lê versão, aprova e registra eventos", async () => {

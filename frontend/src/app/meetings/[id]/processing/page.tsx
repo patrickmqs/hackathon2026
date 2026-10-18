@@ -5,19 +5,21 @@ import { useEffect, useRef, useState, Suspense } from "react";
 import { AppShell, Card } from "@/components/AppShell";
 import { ErrorBanner, Loading, errorMessage } from "@/components/Api";
 import { api, type Analysis, type Meeting } from "@/lib/api";
+import { launchPendingMeeting } from "@/lib/pending-meeting";
+import { ensureProposal } from "@/lib/proposal-job";
 import "./processing.css";
 
 const AUDIO_STEPS = [
   { key: "created", label: "Arquivo recebido", detail: "Seu áudio foi enviado e está pronto para processamento." },
   { key: "transcribing", label: "Transcrevendo", detail: "A IA está convertendo o áudio em texto para extrair os principais pontos." },
   { key: "analyzing", label: "Analisando", detail: "Estamos identificando necessidades, requisitos, decisões e pendências." },
-  { key: "analysis_ready", label: "Resumo pronto", detail: "A análise final está pronta para revisão e aprovação." },
+  { key: "analysis_ready", label: "Análise pronta", detail: "Resumo e itens extraídos da reunião." },
 ] as const;
 
 const TEXT_STEPS = [
   { key: "created", label: "Transcrição recebida", detail: "Sua transcrição foi registrada no sistema." },
   { key: "analyzing", label: "Analisando", detail: "A IA está identificando necessidades, requisitos, decisões e pendências." },
-  { key: "analysis_ready", label: "Resumo pronto", detail: "A análise final está pronta para revisão e aprovação." },
+  { key: "analysis_ready", label: "Análise pronta", detail: "Resumo e itens extraídos da reunião." },
 ] as const;
 
 // Atividades típicas de cada fase. O backend só informa a fase atual; estas linhas descrevem o
@@ -80,13 +82,29 @@ function MeetingProcessingPageInner() {
   const { id: meetingId } = useParams<{ id: string }>();
   const router = useRouter();
   const [meeting, setMeeting] = useState<Meeting | null>(null);
-  const [loading, setLoading] = useState(true);
+  const isPending = meetingId === "pending";
+  const [loading, setLoading] = useState(!isPending);
   const [error, setError] = useState<string | null>(null);
   const [analysisVerified, setAnalysisVerified] = useState(false);
   const [retrying, setRetrying] = useState(false);
   const [pollVersion, setPollVersion] = useState(0);
 
+  // "pending": a reunião ainda será criada aqui (a tela inicial navega na hora, sem esperar o envio).
+  const [launchTry, setLaunchTry] = useState(0);
   useEffect(() => {
+    if (!isPending) return;
+    const launch = launchPendingMeeting();
+    if (!launch) { router.replace("/"); return; }
+    let cancelled = false;
+    launch.then(
+      (created) => { if (!cancelled) router.replace(`/meetings/${created.id}/processing`); },
+      (requestError) => { if (!cancelled) setError(errorMessage(requestError)); },
+    );
+    return () => { cancelled = true; };
+  }, [isPending, launchTry, router]);
+
+  useEffect(() => {
+    if (isPending) return;
     let active = true;
     let timer: ReturnType<typeof setTimeout> | null = null;
 
@@ -115,6 +133,8 @@ function MeetingProcessingPageInner() {
             return;
           }
           if (!active) return;
+          // Começa a gerar o rascunho da proposta em paralelo e já abre a revisão (sem esperar).
+          void ensureProposal(current.project_id, meetingId).catch(() => undefined);
           setAnalysisVerified(true);
           router.replace(`/meetings/${meetingId}/analysis`);
           return;
@@ -140,12 +160,13 @@ function MeetingProcessingPageInner() {
       active = false;
       if (timer) clearTimeout(timer);
     };
-  }, [meetingId, pollVersion, router]);
+  }, [meetingId, isPending, pollVersion, router]);
 
   const sourceType = meeting?.source_type ?? "audio";
   const steps = sourceType === "audio" ? AUDIO_STEPS : TEXT_STEPS;
   const currentStep = getStepIndex(meeting, sourceType);
-  const isFailed = meeting?.status === "failed";
+  const launchFailed = isPending && Boolean(error);
+  const isFailed = meeting?.status === "failed" || launchFailed;
   const canRetry = Boolean(meeting && (
     isFailed ||
     ((meeting.status === "analysis_ready" || meeting.status === "reviewed") && !analysisVerified && error)
@@ -168,8 +189,8 @@ function MeetingProcessingPageInner() {
 
   const stepKey: string = steps[currentStep]?.key ?? "created";
   const done = analysisVerified;
-  const hasMeeting = Boolean(meeting);
-  const progressMessage = meeting?.progress?.message;
+  const hasMeeting = Boolean(meeting) || isPending;
+  const progressMessage = meeting?.progress?.message ?? (isPending && !launchFailed ? "Enviando a reunião…" : undefined);
 
   // Cronômetro desde a abertura da tela.
   const [elapsed, setElapsed] = useState(0);
@@ -264,6 +285,12 @@ function MeetingProcessingPageInner() {
               </div>
               <h2>{stageTitle}</h2>
               <p>{stageText}</p>
+              {launchFailed && (
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button type="button" className="button primary" onClick={() => { setError(null); setLaunchTry((n) => n + 1); }}>Tentar novamente</button>
+                  <button type="button" className="button secondary" onClick={() => router.push("/")}>Voltar ao início</button>
+                </div>
+              )}
               {canRetry && (
                 <button type="button" className="button primary" onClick={() => void retryProcessing()} disabled={retrying}>
                   {retrying ? "Reiniciando análise…" : "Tentar novamente"}
