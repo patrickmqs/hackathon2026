@@ -79,9 +79,14 @@ function getStatusMessage(
 }
 
 function MeetingProcessingPageInner() {
-  const { id: meetingId } = useParams<{ id: string }>();
+  const { id: routeId } = useParams<{ id: string }>();
   const router = useRouter();
   const [meeting, setMeeting] = useState<Meeting | null>(null);
+  // Vindo da tela inicial a rota é "pending"; ao criar a reunião guardamos o id real aqui e só trocamos
+  // a URL (sem remontar a página), para o log, o cronômetro e a animação não reiniciarem.
+  const fromPending = routeId === "pending";
+  const [launchedId, setLaunchedId] = useState<string | null>(null);
+  const meetingId = launchedId ?? routeId;
   const isPending = meetingId === "pending";
   const [loading, setLoading] = useState(!isPending);
   const [error, setError] = useState<string | null>(null);
@@ -92,16 +97,22 @@ function MeetingProcessingPageInner() {
   // "pending": a reunião ainda será criada aqui (a tela inicial navega na hora, sem esperar o envio).
   const [launchTry, setLaunchTry] = useState(0);
   useEffect(() => {
-    if (!isPending) return;
+    if (!fromPending || launchedId) return;
     const launch = launchPendingMeeting();
     if (!launch) { router.replace("/"); return; }
     let cancelled = false;
     launch.then(
-      (created) => { if (!cancelled) router.replace(`/meetings/${created.id}/processing`); },
+      (created) => {
+        if (cancelled) return;
+        setMeeting(created);
+        setLoading(false);
+        setLaunchedId(created.id);
+        window.history.replaceState(null, "", `/meetings/${created.id}/processing`);
+      },
       (requestError) => { if (!cancelled) setError(errorMessage(requestError)); },
     );
     return () => { cancelled = true; };
-  }, [isPending, launchTry, router]);
+  }, [fromPending, launchedId, launchTry, router]);
 
   useEffect(() => {
     if (isPending) return;

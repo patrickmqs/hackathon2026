@@ -30,15 +30,16 @@ export function hasPendingMeeting() {
   return pending !== null;
 }
 
-/** Dispara o envio uma única vez (seguro contra efeitos duplicados); em erro, permite nova tentativa. */
+/**
+ * Dispara o envio uma única vez (seguro contra efeitos duplicados); em erro, permite nova tentativa.
+ * Depois de concluído, continua devolvendo a mesma reunião (não limpa o estado): se o efeito da tela
+ * rodar de novo antes da troca de rota, ele não confunde "já enviado" com "nada pendente" e não volta ao início.
+ */
 export function launchPendingMeeting(): Promise<Meeting> | null {
   if (!pending) return null;
   const current = pending;
   current.promise ??= startMeeting(current.source).then(
-    (meeting) => {
-      if (pending === current) pending = null;
-      return meeting;
-    },
+    (meeting) => meeting,
     (error) => {
       current.promise = null;
       throw error;

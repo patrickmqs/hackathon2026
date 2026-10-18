@@ -235,3 +235,6 @@
 .client-info-body { margin-top: 18px; }
 .client-info-desc { margin: 0 0 4px; color: var(--muted); font-size: 12px; line-height: 1.5; }
 [data-theme="dark"] .client-alert { background: #3d3018; color: var(--amber); }
+
+/* Logos recortados (sem margem): mesma altura = mesmo tamanho visível nos dois temas */
+.brand-logo-light, .brand-logo-dark { height: 48px; width: auto; }

@@ -3,8 +3,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import logoDark from "@/logo/dark.png";
-import logoLight from "@/logo/ligth.png";
+import logoDark from "@/logo/dark-trim.png";
+import logoLight from "@/logo/light-trim.png";
 
 export function AppShell({ children, title, eyebrow, action }: { children: ReactNode; title: string; eyebrow?: string; action?: ReactNode }) {
   const [darkMode, setDarkMode] = useState(false);
