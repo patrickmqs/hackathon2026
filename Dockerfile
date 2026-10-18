@@ -15,6 +15,8 @@ COPY backend/prisma ./prisma
 RUN npx prisma generate
 
 COPY shared /app/shared
+# ../shared importa `zod`: faz o node_modules do backend ser resolvível a partir de /app/shared
+RUN ln -s /app/backend/node_modules /app/node_modules
 COPY backend/tsconfig.json ./
 COPY backend/src ./src
 RUN npm run build \
