@@ -327,3 +327,13 @@
 [data-theme="dark"] .select-file-button { background: #2b4c9b; color: #eaf1ff; border: 1px solid #3a5db3; }
 [data-theme="dark"] .select-file-button:hover:not(:disabled) { background: #345ab5; }
 [data-theme="dark"] .select-file-button:disabled { opacity: .6; }
+
+/* Popup de envio: conferência dos dados do cliente antes de enviar */
+.send-modal { text-align: left; }
+.send-modal > h2, .send-modal > .send-client { text-align: center; }
+.send-client-box { margin: 14px 0; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); padding: 6px 14px 14px; }
+.send-client-box .kv b { text-align: right; }
+[data-theme="dark"] .send-client-box { background: #101823; }
+.send-field { display: grid; gap: 6px; margin-top: 12px; text-align: left; color: var(--muted); font-size: 11px; font-weight: 600; }
+.send-field input { width: 100%; box-sizing: border-box; border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; color: var(--ink); background: transparent; font: inherit; font-size: 12px; }
+[data-theme="dark"] .send-field input { background: #0d1623; }

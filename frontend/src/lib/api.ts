@@ -99,7 +99,7 @@ export interface Proposal {
 }
 export interface ProposalVersion {
   proposal_id: string; number: number; status: "draft" | "approved" | "superseded"; content: ProposalContent; content_hash: string;
-  created_by: string; created_at: string; approval: { approved_by: string; approved_at: string; note: string | null } | null;
+  created_by: string; created_at: string; approval: { id: string; approved_by: string; approved_at: string; note: string | null } | null;
   pdf: { url: string; generated_at: string; size_bytes: number } | null;
 }
 export interface ProjectEvent { id: string; type: string; actor: string | null; at: string; payload: Record<string, unknown> }
@@ -110,6 +110,8 @@ export interface WhatsappStatus {
 export interface WhatsappTestResult { ok: boolean; provider_message_id: string | null; error: string | null }
 export interface GmailStatus { configured: boolean; connected: boolean; account_email: string | null; mode: "oauth" }
 export interface GmailTestResult { ok: boolean; provider_message_id: string | null; error: string | null }
+export interface DeliveryChannel { id: string; channel: string; recipient: { email: string | null; phone: string | null; name: string | null }; status: string; provider_message_id: string | null; error: { code: string; message: string } | null; sent_at: string | null }
+export interface Delivery { id: string; approval_id: string; proposal_id: string; proposal_version: number; idempotency_key: string; authorized_by: string; authorized_at: string; status: string; channels: DeliveryChannel[] }
 
 // ---------- chamadas ----------
 export const api = {
@@ -151,6 +153,9 @@ export const api = {
   gmailStartUrl: () => `${API_URL}/auth/gmail/start`,
   gmailDisconnect: () => request<{ ok: boolean }>("DELETE", "/auth/gmail"),
   gmailTest: (email: string) => request<GmailTestResult>("POST", "/auth/gmail/test", { body: { email } }),
+  createDelivery: (body: { approval_id: string; idempotency_key: string; channels: { channel: string; recipient: Record<string, unknown>; options?: Record<string, unknown> }[] }) =>
+    request<Delivery>("POST", "/deliveries", { auth: true, body }),
+  getDelivery: (id: string) => request<Delivery>("GET", `/deliveries/${id}`),
 };
 
 // ---------- apresentação ----------

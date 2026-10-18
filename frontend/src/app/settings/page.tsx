@@ -100,6 +100,10 @@ export default function SettingsPage() {
   }
 
   function connectGmail() {
+    if (!gmail?.configured) {
+      setMessage("Gmail não configurado no backend. Adicione GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET.");
+      return;
+    }
     window.location.href = api.gmailStartUrl();
   }
 
@@ -170,7 +174,7 @@ export default function SettingsPage() {
         </Card>
         <Card>
           <div className="card-heading"><div><h2>Integrações</h2><p>Conecte os canais para enviar propostas diretamente.</p></div><span className="integration-health">● Operacional</span></div>
-          <div className="integration"><b className="channel gmail">M</b><span><strong>Gmail</strong><small>{gmailConnected ? (gmail?.account_email ? `Conectado como ${gmail.account_email}` : "Conectado") : gmailConfigured ? "Conecte sua conta Google para enviar." : "Configure GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET no backend."}</small></span><Badge tone={gmailConnected ? "green" : gmailConfigured ? "blue" : "red"}>{gmailConnected ? "Conectado" : gmailConfigured ? "Não conectado" : "Não configurado"}</Badge><div className="wa-actions">{gmailConnected ? <Button variant="secondary" onClick={() => void disconnectGmail()}>{gmailDisconnecting ? "Desconectando…" : "Desconectar"}</Button> : gmailConfigured ? <Button variant="secondary" onClick={connectGmail}>Conectar</Button> : null}<Button variant="secondary" onClick={() => setGmailTestMode((value) => !value)}>Teste</Button></div></div>
+          <div className="integration"><b className="channel gmail">M</b><span><strong>Gmail</strong><small>{gmailConnected ? (gmail?.account_email ? `Conectado como ${gmail.account_email}` : "Conectado") : gmailConfigured ? "Conecte sua conta Google para enviar." : "Configure GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET no backend."}</small></span><Badge tone={gmailConnected ? "green" : gmailConfigured ? "blue" : "red"}>{gmailConnected ? "Conectado" : gmailConfigured ? "Não conectado" : "Não configurado"}</Badge><div className="wa-actions">{gmailConnected ? <Button variant="secondary" onClick={() => void disconnectGmail()}>{gmailDisconnecting ? "Desconectando…" : "Desconectar"}</Button> : <Button variant="secondary" onClick={connectGmail}>Conectar</Button>}<Button variant="secondary" onClick={() => setGmailTestMode((value) => !value)}>Teste</Button></div></div>
           {gmailTestMode && <div className="wa-test-row"><input value={testEmail} onChange={(event) => setTestEmail(event.target.value)} placeholder="cliente@empresa.com" aria-label="E-mail para envio de teste" /><Button variant="secondary" onClick={() => void sendGmailTest()}>{gmailTestBusy ? "Enviando…" : "Enviar \"oi\""}</Button></div>}
           {gmailTestResult && <p className="settings-message success">{gmailTestResult}</p>}
           {gmailTestError && <p className="settings-message">{gmailTestError}</p>}
